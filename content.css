@@ -86,17 +86,44 @@
   display: block;
 }
 
-.cinema-hint {
-  position: absolute;
-  top: -42px;
-  left: 0;
-  color: rgba(255, 255, 255, 0.75);
-  font: 12px/1.4 system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
-  background: rgba(0, 0, 0, 0.4);
-  padding: 4px 10px;
-  border-radius: 6px;
-  white-space: nowrap;
+.cinema-control-bar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 2147483647;
+  pointer-events: auto;
+  background: rgba(15, 15, 15, 0.85);
+  padding: 8px 14px;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   user-select: none;
   -webkit-user-select: none;
-  pointer-events: none;
+}
+
+.cinema-ctrl-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font: 13px/1 system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  padding: 8px 12px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease, border-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.cinema-ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.cinema-ctrl-btn:active {
+  transform: translateY(0) scale(0.96);
 }

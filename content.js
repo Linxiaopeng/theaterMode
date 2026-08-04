@@ -130,6 +130,35 @@
     stage.appendChild(exitBtn);
     stage.appendChild(hint);
     stage.appendChild(player);
+
+    // 创建快进/回退控制栏 (横向排列于影院模式屏幕中央下方)
+    const controlBar = document.createElement('div');
+    controlBar.className = 'cinema-control-bar';
+    
+    const buttonsConfig = [
+      { label: '-10m', delta: -600, title: '回退 10 分钟' },
+      { label: '-1m', delta: -60, title: '回退 1 分钟' },
+      { label: '-10s', delta: -10, title: '回退 10 秒' },
+      { label: '+10s', delta: 10, title: '快进 10 秒' },
+      { label: '+1m', delta: 60, title: '快进 1 分钟' },
+      { label: '+10m', delta: 600, title: '快进 10 分钟' }
+    ];
+
+    buttonsConfig.forEach(cfg => {
+      const b = document.createElement('button');
+      b.className = 'cinema-ctrl-btn';
+      b.textContent = cfg.label;
+      b.title = cfg.title;
+      b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (video && !isNaN(video.duration)) {
+          video.currentTime = Math.min(Math.max(0, video.currentTime + cfg.delta), video.duration);
+        }
+      });
+      controlBar.appendChild(b);
+    });
+
+    overlay.appendChild(controlBar);
     overlay.appendChild(stage);
     ROOT().appendChild(overlay);
 
