@@ -93,7 +93,7 @@
     const vr =
       video.videoWidth && video.videoHeight
         ? video.videoWidth / video.videoHeight
-        : 16 / 9;
+        : (video.clientWidth && video.clientHeight ? video.clientWidth / video.clientHeight : 16 / 9);
     return Math.min(vw * 0.94, vh * 0.94 * vr);
   }
 
