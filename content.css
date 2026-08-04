@@ -1,0 +1,102 @@
+#cinema-mode-toggle-btn {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(15, 15, 15, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  color: #fff;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2147483646;
+  opacity: 0;
+  transition: transform 0.15s ease, opacity 0.2s ease, background 0.15s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#cinema-mode-toggle-btn.visible {
+  display: flex;
+  opacity: 1;
+}
+
+#cinema-mode-toggle-btn:hover {
+  transform: scale(1.08);
+  background: rgba(45, 45, 45, 0.95);
+}
+
+#cinema-mode-toggle-btn:active {
+  transform: scale(0.96);
+}
+
+#cinema-mode-toggle-btn svg {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+#cinema-mode-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483645;
+  background: rgba(0, 0, 0, 0.78);
+  pointer-events: none;
+}
+
+.cinema-stage {
+  position: relative;
+  margin: 0 auto;
+  pointer-events: auto;
+  box-shadow: 0 12px 60px rgba(0, 0, 0, 0.6);
+}
+
+.cinema-stage video {
+  border-radius: 6px;
+}
+
+.cinema-exit-btn {
+  position: absolute;
+  top: -48px;
+  right: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.cinema-exit-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.cinema-exit-btn svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.cinema-hint {
+  position: absolute;
+  top: -42px;
+  left: 0;
+  color: rgba(255, 255, 255, 0.75);
+  font: 12px/1.4 system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+}

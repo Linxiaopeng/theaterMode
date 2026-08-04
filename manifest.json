@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "一键影院模式",
+  "version": "1.0.0",
+  "description": "检测到页面有视频播放时显示悬浮按钮，一键进入影院模式，按 ESC 退出。",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ]
+}
