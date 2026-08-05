@@ -266,6 +266,7 @@
     if (!cinema) return;
     if (e.key === 'Escape') {
       e.preventDefault();
+      e.stopImmediatePropagation();
       exitCinema();
       return;
     }
@@ -279,9 +280,11 @@
 
     if (key === 'j') {
       e.preventDefault();
+      e.stopImmediatePropagation();
       v.currentTime = Math.max(0, v.currentTime - currentSettings.jDuration);
     } else if (key === 'l') {
       e.preventDefault();
+      e.stopImmediatePropagation();
       v.currentTime = Math.min(v.duration, v.currentTime + currentSettings.lDuration);
     }
   }, true);
