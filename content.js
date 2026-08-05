@@ -271,7 +271,7 @@
     }
     // 忽略在输入框中的按键
     const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-    if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if (tag === 'input' || tag === 'textarea' || tag === 'select' || (document.activeElement && document.activeElement.isContentEditable)) return;
 
     const key = e.key.toLowerCase();
     const v = cinema.video;
@@ -284,7 +284,7 @@
       e.preventDefault();
       v.currentTime = Math.min(v.duration, v.currentTime + currentSettings.lDuration);
     }
-  });
+  }, true);
 
   window.addEventListener('resize', () => {
     if (cinema && stage) {
