@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>影院模式设置</title>
+  <style>
+    body {
+      width: 280px;
+      margin: 0;
+      padding: 16px;
+      font-family: system-ui, -apple-system, "PingFang SC", sans-serif;
+      background: #18181b;
+      color: #f4f4f5;
+    }
+    h2 {
+      font-size: 16px;
+      margin: 0 0 16px 0;
+      font-weight: 600;
+      border-bottom: 1px solid #27272a;
+      padding-bottom: 8px;
+    }
+    .form-group {
+      margin-bottom: 14px;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      color: #a1a1aa;
+      margin-bottom: 6px;
+    }
+    .row {
+      display: flex;
+      gap: 8px;
+    }
+    input, select {
+      flex: 1;
+      background: #27272a;
+      border: 1px solid #3f3f46;
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+    }
+    input:focus, select:focus {
+      border-color: #3b82f6;
+    }
+    .save-btn {
+      width: 100%;
+      background: #3b82f6;
+      color: #white;
+      border: none;
+      padding: 8px;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: background 0.15s;
+    }
+    .save-btn:hover {
+      background: #2563eb;
+    }
+    .tip {
+      font-size: 11px;
+      color: #71717a;
+      margin-top: 8px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h2>影院模式设置</h2>
+  <div class="form-group">
+    <label>快捷键 J 动作时长</label>
+    <div class="row">
+      <input type="number" id="jValue" min="1" step="any" value="60">
+      <select id="jUnit">
+        <option value="s">秒 (s)</option>
+        <option value="m" selected>分钟 (m)</option>
+        <option value="h">小时 (h)</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-group">
+    <label>快捷键 L 动作时长</label>
+    <div class="row">
+      <input type="number" id="lValue" min="1" step="any" value="60">
+      <select id="lUnit">
+        <option value="s">秒 (s)</option>
+        <option value="m" selected>分钟 (m)</option>
+        <option value="h">小时 (h)</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-group">
+    <label>遮罩层透明度 (0.0 - 1.0)</label>
+    <input type="number" id="opacity" min="0" max="1" step="0.05" value="0.88">
+  </div>
+  <button class="save-btn" id="save">保存设置</button>
+  <div class="tip" id="status">设置修改后即时生效</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -11,6 +11,30 @@
   let stage = null;
   let cinema = null;
 
+  let currentSettings = {
+    jDuration: 60,
+    lDuration: 60,
+    overlayOpacity: 0.88
+  };
+
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+    chrome.storage.sync.get(currentSettings, (items) => {
+      currentSettings = items;
+    });
+    chrome.storage.onChanged.addListener((changes, namespace) => {
+      if (namespace === 'sync') {
+        if (changes.jDuration) currentSettings.jDuration = changes.jDuration.newValue;
+        if (changes.lDuration) currentSettings.lDuration = changes.lDuration.newValue;
+        if (changes.overlayOpacity) {
+          currentSettings.overlayOpacity = changes.overlayOpacity.newValue;
+          if (overlay) {
+            overlay.style.backgroundColor = `rgba(0, 0, 0, ${currentSettings.overlayOpacity})`;
+          }
+        }
+      }
+    });
+  }
+
   const px = (n) => `${n}px`;
 
   /* ---------- 检测 ---------- */
@@ -110,6 +134,7 @@
 
     overlay = document.createElement('div');
     overlay.id = OVERLAY_ID;
+    overlay.style.backgroundColor = `rgba(0, 0, 0, ${currentSettings.overlayOpacity})`;
 
     stage = document.createElement('div');
     stage.className = 'cinema-stage';
@@ -238,9 +263,26 @@
   document.addEventListener('pause', () => updateButton(), true);
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && cinema) {
+    if (!cinema) return;
+    if (e.key === 'Escape') {
       e.preventDefault();
       exitCinema();
+      return;
+    }
+    // 忽略在输入框中的按键
+    const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+    if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+
+    const key = e.key.toLowerCase();
+    const v = cinema.video;
+    if (!v || isNaN(v.duration)) return;
+
+    if (key === 'j') {
+      e.preventDefault();
+      v.currentTime = Math.max(0, v.currentTime - currentSettings.jDuration);
+    } else if (key === 'l') {
+      e.preventDefault();
+      v.currentTime = Math.min(v.duration, v.currentTime + currentSettings.lDuration);
     }
   });
 
