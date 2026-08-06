@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "一键影院模式",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "检测到页面有视频播放时显示悬浮按钮，一键进入影院模式，支持快进/回退、快捷键及自定义设置。",
   "permissions": ["storage"],
   "action": {
