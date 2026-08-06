@@ -10,11 +10,11 @@
       padding: 0;
     }
     body {
-      width: 330px;
+      width: 280px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       background: #0f1015;
       color: #e4e4e7;
-      padding: 14px;
+      padding: 10px;
       user-select: none;
     }
 
@@ -23,22 +23,22 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
-      padding-bottom: 10px;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
     .brand {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 14px;
+      gap: 6px;
+      font-size: 13.5px;
       font-weight: 600;
       color: #ffffff;
       letter-spacing: -0.2px;
     }
     .brand-icon {
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       color: #3b82f6;
     }
 
@@ -46,9 +46,9 @@
     .tabs-container {
       display: flex;
       background: rgba(255, 255, 255, 0.05);
-      border-radius: 8px;
-      padding: 3px;
-      margin-bottom: 14px;
+      border-radius: 7px;
+      padding: 2.5px;
+      margin-bottom: 10px;
       border: 1px solid rgba(255, 255, 255, 0.06);
     }
     .tab-btn {
@@ -56,13 +56,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 4px;
       background: transparent;
       border: none;
       color: #a1a1aa;
-      padding: 7px 0;
-      border-radius: 6px;
-      font-size: 12.5px;
+      padding: 5.5px 0;
+      border-radius: 5px;
+      font-size: 12px;
       font-weight: 500;
       cursor: pointer;
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -70,22 +70,22 @@
     .tab-btn.active {
       background: #27272a;
       color: #ffffff;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
     }
     .tab-btn:hover:not(.active) {
       color: #e4e4e7;
     }
     .tab-icon {
-      width: 14px;
-      height: 14px;
+      width: 13px;
+      height: 13px;
       stroke-width: 2;
     }
     .badge {
       background: rgba(59, 130, 246, 0.2);
       color: #60a5fa;
-      font-size: 10.5px;
+      font-size: 10px;
       font-weight: 600;
-      padding: 1px 6px;
+      padding: 1px 5px;
       border-radius: 10px;
       line-height: 1.2;
     }
@@ -94,38 +94,38 @@
     .card {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.07);
-      border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 12px;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
     }
     .card-title {
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 600;
       color: #94a3b8;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
     }
 
     /* 表单与输入框 */
     .form-group {
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
     .form-group:last-child {
       margin-bottom: 0;
     }
     label {
       display: block;
-      font-size: 11.5px;
+      font-size: 11px;
       color: #a1a1aa;
-      margin-bottom: 5px;
+      margin-bottom: 4px;
     }
     .row {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       align-items: center;
     }
 
@@ -133,11 +133,12 @@
       background: #18181b;
       border: 1px solid #3f3f46;
       color: #f4f4f5;
-      padding: 6px 9px;
-      border-radius: 6px;
-      font-size: 12.5px;
+      padding: 5px 8px;
+      border-radius: 5px;
+      font-size: 12px;
       outline: none;
       transition: all 0.15s ease;
+      min-width: 0;
     }
     input[type="number"]:focus, select:focus, input[type="text"]:focus {
       border-color: #3b82f6;
@@ -158,11 +159,12 @@
 
     /* 颜色选择器 */
     .color-picker {
-      height: 32px;
+      height: 28px;
       padding: 2px;
       cursor: pointer;
       background: #18181b;
-      border-radius: 6px;
+      border-radius: 5px;
+      width: 100%;
     }
 
     /* 主操作按钮 */
@@ -171,9 +173,9 @@
       background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
       color: #ffffff;
       border: none;
-      padding: 9px;
-      border-radius: 8px;
-      font-size: 13px;
+      padding: 8px;
+      border-radius: 7px;
+      font-size: 12.5px;
       font-weight: 600;
       cursor: pointer;
       box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
@@ -188,9 +190,9 @@
       transform: translateY(0);
     }
     .tip-status {
-      font-size: 11px;
+      font-size: 10.5px;
       color: #71717a;
-      margin-top: 8px;
+      margin-top: 6px;
       text-align: center;
       transition: color 0.2s;
     }
@@ -200,20 +202,20 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       padding: 0 2px;
     }
     .history-sub {
-      font-size: 11.5px;
+      font-size: 11px;
       color: #71717a;
     }
     .clear-btn {
       background: rgba(239, 68, 68, 0.12);
       color: #f87171;
       border: 1px solid rgba(239, 68, 68, 0.25);
-      border-radius: 5px;
-      padding: 3px 8px;
-      font-size: 11px;
+      border-radius: 4px;
+      padding: 2.5px 7px;
+      font-size: 10.5px;
       font-weight: 500;
       cursor: pointer;
       transition: all 0.15s;
@@ -224,11 +226,11 @@
     }
 
     .history-list {
-      max-height: 380px;
+      max-height: 350px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 7px;
+      gap: 6px;
       padding-right: 2px;
     }
     .history-list::-webkit-scrollbar {
@@ -242,12 +244,12 @@
     .history-item {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 8px;
-      padding: 8px 10px;
+      border-radius: 7px;
+      padding: 7px 9px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
+      gap: 6px;
       transition: all 0.15s ease;
     }
     .history-item:hover {
@@ -261,20 +263,20 @@
     }
     .history-title {
       display: block;
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 500;
       color: #60a5fa;
       text-decoration: none;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
     }
     .history-title:hover {
       text-decoration: underline;
     }
     .history-time {
-      font-size: 10.5px;
+      font-size: 10px;
       color: #71717a;
     }
     .history-delete-btn {
@@ -282,9 +284,9 @@
       border: none;
       color: #71717a;
       cursor: pointer;
-      padding: 4px 6px;
+      padding: 3px 5px;
       border-radius: 4px;
-      font-size: 13px;
+      font-size: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -300,16 +302,16 @@
     }
     .history-empty {
       text-align: center;
-      padding: 36px 0;
+      padding: 30px 0;
       color: #71717a;
     }
     .history-empty-icon {
-      font-size: 28px;
-      margin-bottom: 6px;
+      font-size: 24px;
+      margin-bottom: 4px;
       opacity: 0.6;
     }
     .history-empty-text {
-      font-size: 12px;
+      font-size: 11.5px;
     }
   </style>
 </head>
@@ -345,7 +347,7 @@
       <div class="form-group">
         <label>回退按键 & 时长</label>
         <div class="row">
-          <div style="flex:2.2; display:flex; gap:6px;">
+          <div style="flex:2.2; display:flex; gap:4px;">
             <input type="number" id="jValue" min="1" step="any" value="60" style="flex:2;">
             <select id="jUnit" style="flex:1.2;">
               <option value="s">秒</option>
@@ -362,7 +364,7 @@
       <div class="form-group">
         <label>快进按键 & 时长</label>
         <div class="row">
-          <div style="flex:2.2; display:flex; gap:6px;">
+          <div style="flex:2.2; display:flex; gap:4px;">
             <input type="number" id="lValue" min="1" step="any" value="60" style="flex:2;">
             <select id="lUnit" style="flex:1.2;">
               <option value="s">秒</option>
@@ -432,7 +434,7 @@
   <!-- 历史记录面板 -->
   <div id="historyTab" style="display:none;">
     <div class="history-header">
-      <span class="history-sub">自动保留最新 90 条</span>
+      <span class="history-sub">自动保留播放满1分钟（最新90条）</span>
       <button id="clearHistoryBtn" class="clear-btn">清空全部</button>
     </div>
     <div id="historyList" class="history-list">

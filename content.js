@@ -63,14 +63,19 @@
     });
   }
 
-  /* ---------- 历史记录管理 (最多90条) ---------- */
+  /* ---------- 历史记录管理 (最多90条，播放满1分钟方可入库) ---------- */
   let recordedUrlForPage = '';
 
-  function recordWatchHistory() {
+  function recordWatchHistory(video) {
     try {
       const url = window.location.href;
       if (!url || url.startsWith('chrome://') || url.startsWith('chrome-extension://') || url.startsWith('about:')) return;
       if (recordedUrlForPage === url) return;
+
+      // 必须播放达到或超过 1 分钟 (60秒) 才录入，防止误记
+      if (!video || typeof video.currentTime !== 'number' || video.currentTime < 60) {
+        return;
+      }
 
       const rawTitle = document.title || url;
       const title = rawTitle.trim().replace(/\s+/g, ' ');
@@ -194,7 +199,7 @@
   function enterCinema(video) {
     if (cinema) return;
 
-    recordWatchHistory();
+    recordWatchHistory(video);
 
     const player = findPlayerContainer(video);
     const saved = {
@@ -373,6 +378,11 @@
   }
 
   setInterval(() => {
+    const activeVideo = cinema ? cinema.video : findBestVideo();
+    if (activeVideo && isActiveVideo(activeVideo)) {
+      recordWatchHistory(activeVideo);
+    }
+
     if (cinema) {
       if (!cinema.video.isConnected || !cinema.player.isConnected) {
         exitCinema();
@@ -382,13 +392,13 @@
       return;
     }
     updateButton();
-  }, 100);
+  }, 500);
 
   document.addEventListener('play', () => {
     updateButton();
     const best = findBestVideo();
     if (best && isActiveVideo(best)) {
-      recordWatchHistory();
+      recordWatchHistory(best);
     }
   }, true);
   document.addEventListener('pause', () => updateButton(), true);
