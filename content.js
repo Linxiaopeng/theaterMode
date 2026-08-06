@@ -13,7 +13,9 @@
 
   let currentSettings = {
     jDuration: 60,
+    jKey: 'j',
     lDuration: 60,
+    lKey: 'l',
     overlayOpacity: 0.88,
     subFontSize: 18,
     subFontColor: '#ffffff',
@@ -30,7 +32,9 @@
     chrome.storage.onChanged.addListener((changes, namespace) => {
       if (namespace === 'sync') {
         if (changes.jDuration) currentSettings.jDuration = changes.jDuration.newValue;
+        if (changes.jKey) currentSettings.jKey = changes.jKey.newValue;
         if (changes.lDuration) currentSettings.lDuration = changes.lDuration.newValue;
+        if (changes.lKey) currentSettings.lKey = changes.lKey.newValue;
         if (changes.overlayOpacity) {
           currentSettings.overlayOpacity = changes.overlayOpacity.newValue;
           if (overlay) {
@@ -355,11 +359,14 @@
     const v = cinema.video;
     if (!v || isNaN(v.duration)) return;
 
-    if (key === 'j') {
+    const jKey = (currentSettings.jKey || 'j').toLowerCase();
+    const lKey = (currentSettings.lKey || 'l').toLowerCase();
+
+    if (key === jKey) {
       e.preventDefault();
       e.stopImmediatePropagation();
       v.currentTime = Math.max(0, v.currentTime - currentSettings.jDuration);
-    } else if (key === 'l') {
+    } else if (key === lKey) {
       e.preventDefault();
       e.stopImmediatePropagation();
       v.currentTime = Math.min(v.duration, v.currentTime + currentSettings.lDuration);

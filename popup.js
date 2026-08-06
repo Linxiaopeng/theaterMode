@@ -1,8 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
   const jValueInput = document.getElementById('jValue');
   const jUnitSelect = document.getElementById('jUnit');
+  const jKeyInput = document.getElementById('jKey');
   const lValueInput = document.getElementById('lValue');
   const lUnitSelect = document.getElementById('lUnit');
+  const lKeyInput = document.getElementById('lKey');
   const opacityInput = document.getElementById('opacity');
 
   const subFontSizeInput = document.getElementById('subFontSize');
@@ -17,7 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // 加载存储的配置
   chrome.storage.sync.get({
     jDuration: 60,  // 默认60秒（1分钟）
+    jKey: 'j',
     lDuration: 60,
+    lKey: 'l',
     overlayOpacity: 0.88,
     subFontSize: 18,
     subFontColor: '#ffffff',
@@ -28,7 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }, (items) => {
     // 转换为合适单位展示
     parseToUI(items.jDuration, jValueInput, jUnitSelect);
+    jKeyInput.value = items.jKey || 'j';
     parseToUI(items.lDuration, lValueInput, lUnitSelect);
+    lKeyInput.value = items.lKey || 'l';
     opacityInput.value = items.overlayOpacity;
 
     subFontSizeInput.value = items.subFontSize;
@@ -41,7 +47,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('save').addEventListener('click', () => {
     const jSec = parseToSeconds(jValueInput.value, jUnitSelect.value);
+    const jKey = (jKeyInput.value || 'j').trim().toLowerCase().charAt(0) || 'j';
     const lSec = parseToSeconds(lValueInput.value, lUnitSelect.value);
+    const lKey = (lKeyInput.value || 'l').trim().toLowerCase().charAt(0) || 'l';
     const opacity = Math.max(0, Math.min(1, parseFloat(opacityInput.value) || 0.88));
 
     const subFontSize = Math.max(12, Math.min(48, parseFloat(subFontSizeInput.value) || 18));
@@ -59,7 +67,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     chrome.storage.sync.set({
       jDuration: jSec,
+      jKey,
       lDuration: lSec,
+      lKey,
       overlayOpacity: opacity,
       subFontSize,
       subFontColor,
