@@ -5,7 +5,7 @@
   <title>影院模式设置</title>
   <style>
     :root {
-      /* 默认暗色模式 YouTube Ambient Design Tokens */
+      /* 默认暗色模式 Design Tokens */
       --bg-color: #0f0f0f;
       --text-main: #f1f1f1;
       --text-title: #ffffff;
@@ -40,11 +40,13 @@
 
       --btn-primary-bg: #3ea6ff;
       --btn-primary-text: #0f0f0f;
+
+      --window-shadow: rgba(0, 0, 0, 0.4);
     }
 
     @media (prefers-color-scheme: light) {
       :root {
-        /* 设备亮色模式 YouTube Design Tokens */
+        /* 设备亮色模式 Design Tokens */
         --bg-color: #ffffff;
         --text-main: #0f0f0f;
         --text-title: #0f0f0f;
@@ -79,6 +81,8 @@
 
         --btn-primary-bg: #065fd4;
         --btn-primary-text: #ffffff;
+
+        --window-shadow: rgba(0, 0, 0, 0.1);
       }
     }
 
@@ -88,30 +92,30 @@
       padding: 0;
     }
 
-    /* 关键：最外层整个 HTML 元素的独立大圆角背景与裁切 */
-    html {
+    /* 宿主基础框：透明、无边框、无滚动条 */
+    html, body {
       width: 280px;
-      height: max-content;
       margin: 0;
       padding: 0;
-      background: var(--bg-color);
-      border-radius: 16px; /* 直接赋予整个 html 根容器 16px 大圆角 */
-      overflow: hidden;
-      transition: background-color 0.2s ease;
-    }
-
-    body {
-      width: 280px;
-      height: auto;
-      margin: 0;
-      padding: 12px;
-      background: var(--bg-color);
-      border-radius: 16px; /* 与 html 根边界完全契合重合 */
+      background: transparent;
       font-family: "YouTube Noto", Roboto, Arial, -apple-system, BlinkMacSystemFont, sans-serif;
       color: var(--text-main);
       user-select: none;
       overflow: hidden;
-      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    /* 独立全封包大圆角主卡片容器 */
+    #app-wrapper {
+      width: 280px;
+      margin: 0;
+      padding: 10px 11px;
+      background: var(--bg-color);
+      border-radius: 16px; /* 真正的 16px 大圆角！ */
+      border: 1px solid var(--card-border);
+      box-shadow: 0 4px 16px var(--window-shadow);
+      box-sizing: border-box;
+      overflow: hidden;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
     }
 
     /* 顶部 Header */
@@ -119,8 +123,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 10px;
-      padding-bottom: 8px;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
       border-bottom: 1px solid var(--header-border);
       width: 100%;
     }
@@ -144,8 +148,8 @@
       display: flex;
       background: var(--tabs-bg);
       border-radius: 12px;
-      padding: 3px;
-      margin-bottom: 10px;
+      padding: 2.5px;
+      margin-bottom: 8px;
       border: 1px solid var(--tabs-border);
       width: 100%;
     }
@@ -158,7 +162,7 @@
       background: transparent;
       border: none;
       color: var(--tab-btn-text);
-      padding: 6px 0;
+      padding: 5.5px 0;
       border-radius: 9px;
       font-size: 11.5px;
       font-weight: 500;
@@ -197,8 +201,8 @@
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 12px;
-      padding: 10px 11px;
-      margin-bottom: 10px;
+      padding: 8px 10px;
+      margin-bottom: 8px;
       width: 100%;
       transition: background-color 0.2s ease, border-color 0.2s ease;
     }
@@ -208,7 +212,7 @@
       color: var(--card-title);
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       display: flex;
       align-items: center;
       gap: 4px;
@@ -216,7 +220,7 @@
 
     /* 表单控件圆角与规范 */
     .form-group {
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       width: 100%;
     }
     .form-group:last-child {
@@ -226,11 +230,11 @@
       display: block;
       font-size: 10.5px;
       color: var(--text-muted);
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
     .row {
       display: flex;
-      gap: 6px;
+      gap: 5px;
       align-items: center;
       width: 100%;
     }
@@ -239,7 +243,7 @@
       background: var(--input-bg);
       border: 1px solid var(--input-border);
       color: var(--input-text);
-      padding: 5px 8px;
+      padding: 4.5px 7px;
       border-radius: 8px;
       font-size: 11.5px;
       outline: none;
@@ -271,7 +275,7 @@
 
     /* 颜色选择器 Webkit 圆角修正 */
     .color-picker {
-      height: 28px;
+      height: 26px;
       padding: 2px;
       cursor: pointer;
       background: var(--input-bg);
@@ -293,7 +297,7 @@
       background: var(--btn-primary-bg);
       color: var(--btn-primary-text);
       border: none;
-      padding: 8.5px;
+      padding: 7.5px;
       border-radius: 20px;
       font-size: 12px;
       font-weight: 600;
@@ -310,7 +314,7 @@
     .tip-status {
       font-size: 10px;
       color: var(--text-muted);
-      margin-top: 5px;
+      margin-top: 4px;
       margin-bottom: 0;
       text-align: center;
       transition: color 0.2s;
@@ -322,7 +326,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       width: 100%;
     }
     .history-sub {
@@ -346,11 +350,11 @@
     }
 
     .history-list {
-      max-height: 320px;
+      max-height: 310px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
       width: 100%;
     }
     .history-list::-webkit-scrollbar {
@@ -365,7 +369,7 @@
       background: var(--history-item-bg);
       border: 1px solid var(--history-item-border);
       border-radius: 10px;
-      padding: 7px 10px;
+      padding: 6px 9px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -441,125 +445,128 @@
   </style>
 </head>
 <body>
-  <!-- Header 头部品牌栏 -->
-  <div class="header">
-    <div class="brand">
-      <svg class="brand-icon" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-      </svg>
-      一键影院模式
-    </div>
-  </div>
-
-  <!-- 分段选项卡 Segmented Control -->
-  <div class="tabs-container">
-    <button class="tab-btn active" id="tabSettingsBtn">
-      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      偏好设置
-    </button>
-    <button class="tab-btn" id="tabHistoryBtn">
-      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      观看历史 <span id="historyCount" class="badge">0</span>
-    </button>
-  </div>
-
-  <!-- 偏好设置面板 -->
-  <div id="settingsTab" class="tab-panel">
-    <div class="card">
-      <div class="card-title">快捷键与时间步长</div>
-      <div class="form-group">
-        <label>回退时长 & 触发键</label>
-        <div class="row">
-          <input type="number" id="jValue" min="1" step="any" value="60" style="flex:1;">
-          <select id="jUnit" style="width: 52px; flex-shrink: 0;">
-            <option value="s">秒</option>
-            <option value="m" selected>分</option>
-            <option value="h">时</option>
-          </select>
-          <div style="display:flex; align-items:center; gap:4px; flex-shrink: 0;">
-            <span style="font-size:11px; color:var(--text-muted);">键:</span>
-            <input type="text" id="jKey" class="kbd-input" maxlength="1" value="j" title="触发按键">
-          </div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>快进时长 & 触发键</label>
-        <div class="row">
-          <input type="number" id="lValue" min="1" step="any" value="60" style="flex:1;">
-          <select id="lUnit" style="width: 52px; flex-shrink: 0;">
-            <option value="s">秒</option>
-            <option value="m" selected>分</option>
-            <option value="h">时</option>
-          </select>
-          <div style="display:flex; align-items:center; gap:4px; flex-shrink: 0;">
-            <span style="font-size:11px; color:var(--text-muted);">键:</span>
-            <input type="text" id="lKey" class="kbd-input" maxlength="1" value="l" title="触发按键">
-          </div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>遮罩层透明度 (0.0 - 1.0)</label>
-        <input type="number" id="opacity" min="0" max="1" step="0.05" value="0.88">
+  <!-- 大圆角绝对封包容器 -->
+  <div id="app-wrapper">
+    <!-- Header 头部品牌栏 -->
+    <div class="header">
+      <div class="brand">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+        </svg>
+        一键影院模式
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-title">字幕外观配置</div>
-      <div class="form-group">
-        <label>字体大小 (px)</label>
-        <input type="number" id="subFontSize" min="12" max="48" step="1" value="18">
-      </div>
+    <!-- 分段选项卡 Segmented Control -->
+    <div class="tabs-container">
+      <button class="tab-btn active" id="tabSettingsBtn">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        偏好设置
+      </button>
+      <button class="tab-btn" id="tabHistoryBtn">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        观看历史 <span id="historyCount" class="badge">0</span>
+      </button>
+    </div>
 
-      <div class="form-group">
-        <div class="row">
-          <div style="flex:1;">
-            <label>字体颜色</label>
-            <input type="color" id="subFontColor" class="color-picker" value="#ffffff">
-          </div>
-          <div style="flex:1;">
-            <label>背景颜色</label>
-            <input type="color" id="subBgColor" class="color-picker" value="#000000">
-          </div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <div class="row">
-          <div style="flex:1;">
-            <label>背景透明度 (0-1)</label>
-            <input type="number" id="subBgOpacity" min="0" max="1" step="0.05" value="0.6">
-          </div>
-          <div style="flex:1;">
-            <label>字体粗细</label>
-            <select id="subFontWeight">
-              <option value="400">常规 (Normal)</option>
-              <option value="500" selected>中等 (Medium)</option>
-              <option value="700">加粗 (Bold)</option>
+    <!-- 偏好设置面板 -->
+    <div id="settingsTab" class="tab-panel">
+      <div class="card">
+        <div class="card-title">快捷键与时间步长</div>
+        <div class="form-group">
+          <label>回退时长 & 触发键</label>
+          <div class="row">
+            <input type="number" id="jValue" min="1" step="any" value="60" style="flex:1;">
+            <select id="jUnit" style="width: 52px; flex-shrink: 0;">
+              <option value="s">秒</option>
+              <option value="m" selected>分</option>
+              <option value="h">时</option>
             </select>
+            <div style="display:flex; align-items:center; gap:4px; flex-shrink: 0;">
+              <span style="font-size:11px; color:var(--text-muted);">键:</span>
+              <input type="text" id="jKey" class="kbd-input" maxlength="1" value="j" title="触发按键">
+            </div>
           </div>
+        </div>
+
+        <div class="form-group">
+          <label>快进时长 & 触发键</label>
+          <div class="row">
+            <input type="number" id="lValue" min="1" step="any" value="60" style="flex:1;">
+            <select id="lUnit" style="width: 52px; flex-shrink: 0;">
+              <option value="s">秒</option>
+              <option value="m" selected>分</option>
+              <option value="h">时</option>
+            </select>
+            <div style="display:flex; align-items:center; gap:4px; flex-shrink: 0;">
+              <span style="font-size:11px; color:var(--text-muted);">键:</span>
+              <input type="text" id="lKey" class="kbd-input" maxlength="1" value="l" title="触发按键">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>遮罩层透明度 (0.0 - 1.0)</label>
+          <input type="number" id="opacity" min="0" max="1" step="0.05" value="0.88">
         </div>
       </div>
 
-      <div class="form-group">
-        <label>底部偏移量 (px)</label>
-        <input type="number" id="subBottomOffset" min="10" max="200" step="5" value="30">
+      <div class="card">
+        <div class="card-title">字幕外观配置</div>
+        <div class="form-group">
+          <label>字体大小 (px)</label>
+          <input type="number" id="subFontSize" min="12" max="48" step="1" value="18">
+        </div>
+
+        <div class="form-group">
+          <div class="row">
+            <div style="flex:1;">
+              <label>字体颜色</label>
+              <input type="color" id="subFontColor" class="color-picker" value="#ffffff">
+            </div>
+            <div style="flex:1;">
+              <label>背景颜色</label>
+              <input type="color" id="subBgColor" class="color-picker" value="#000000">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="row">
+            <div style="flex:1;">
+              <label>背景透明度 (0-1)</label>
+              <input type="number" id="subBgOpacity" min="0" max="1" step="0.05" value="0.6">
+            </div>
+            <div style="flex:1;">
+              <label>字体粗细</label>
+              <select id="subFontWeight">
+                <option value="400">常规 (Normal)</option>
+                <option value="500" selected>中等 (Medium)</option>
+                <option value="700">加粗 (Bold)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>底部偏移量 (px)</label>
+          <input type="number" id="subBottomOffset" min="10" max="200" step="5" value="30">
+        </div>
       </div>
+
+      <button class="save-btn" id="save">保存偏好设置</button>
+      <div class="tip-status" id="status">修改设置后即时生效</div>
     </div>
 
-    <button class="save-btn" id="save">保存偏好设置</button>
-    <div class="tip-status" id="status">修改设置后即时生效</div>
-  </div>
-
-  <!-- 历史记录面板 -->
-  <div id="historyTab" class="tab-panel" style="display:none;">
-    <div class="history-header">
-      <span class="history-sub">自动保留播放满1分钟（最新90条）</span>
-      <button id="clearHistoryBtn" class="clear-btn">清空全部</button>
-    </div>
-    <div id="historyList" class="history-list">
-      <!-- 动态插入历史卡片 -->
+    <!-- 历史记录面板 -->
+    <div id="historyTab" class="tab-panel" style="display:none;">
+      <div class="history-header">
+        <span class="history-sub">自动保留播放满1分钟（最新90条）</span>
+        <button id="clearHistoryBtn" class="clear-btn">清空全部</button>
+      </div>
+      <div id="historyList" class="history-list">
+        <!-- 动态插入历史卡片 -->
+      </div>
     </div>
   </div>
 
