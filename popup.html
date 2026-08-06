@@ -5,74 +5,80 @@
   <title>影院模式设置</title>
   <style>
     :root {
-      /* 默认暗色模式 Design Tokens */
-      --bg-color: #0f1015;
-      --text-main: #e4e4e7;
+      /* 默认暗色模式 YouTube Ambient Design Tokens */
+      --bg-color: #0f0f0f;
+      --text-main: #f1f1f1;
       --text-title: #ffffff;
-      --text-muted: #71717a;
-      --header-border: rgba(255, 255, 255, 0.08);
+      --text-muted: #aaaaaa;
+      --header-border: rgba(255, 255, 255, 0.1);
       
-      --tabs-bg: rgba(255, 255, 255, 0.05);
-      --tabs-border: rgba(255, 255, 255, 0.06);
-      --tab-btn-text: #a1a1aa;
-      --tab-active-bg: #27272a;
-      --tab-active-text: #ffffff;
-      --tab-active-shadow: rgba(0, 0, 0, 0.4);
+      --tabs-bg: rgba(255, 255, 255, 0.08);
+      --tabs-border: transparent;
+      --tab-btn-text: #aaaaaa;
+      --tab-active-bg: #ffffff;
+      --tab-active-text: #0f0f0f;
+      --tab-active-shadow: rgba(0, 0, 0, 0.3);
       
-      --card-bg: rgba(255, 255, 255, 0.03);
-      --card-border: rgba(255, 255, 255, 0.07);
-      --card-title: #94a3b8;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-title: #3ea6ff;
       
-      --input-bg: #18181b;
-      --input-border: #3f3f46;
-      --input-text: #f4f4f5;
+      --input-bg: rgba(255, 255, 255, 0.08);
+      --input-border: rgba(255, 255, 255, 0.12);
+      --input-text: #f1f1f1;
       
-      --kbd-bg: #27272a;
-      --kbd-border: #52525b;
+      --kbd-bg: rgba(255, 255, 255, 0.12);
+      --kbd-border: rgba(255, 255, 255, 0.2);
       --kbd-shadow: rgba(0, 0, 0, 0.4);
-      --kbd-text: #60a5fa;
+      --kbd-text: #3ea6ff;
 
-      --history-item-bg: rgba(255, 255, 255, 0.03);
-      --history-item-border: rgba(255, 255, 255, 0.06);
-      --history-item-hover-bg: rgba(255, 255, 255, 0.06);
-      --history-item-hover-border: rgba(255, 255, 255, 0.12);
-      --history-title-color: #60a5fa;
+      --history-item-bg: rgba(255, 255, 255, 0.04);
+      --history-item-border: rgba(255, 255, 255, 0.07);
+      --history-item-hover-bg: rgba(255, 255, 255, 0.08);
+      --history-item-hover-border: rgba(255, 255, 255, 0.15);
+      --history-title-color: #3ea6ff;
+
+      --btn-primary-bg: #3ea6ff;
+      --btn-primary-text: #0f0f0f;
     }
 
     @media (prefers-color-scheme: light) {
       :root {
-        /* 设备亮色模式 Design Tokens */
-        --bg-color: #f8fafc;
-        --text-main: #334155;
-        --text-title: #0f172a;
-        --text-muted: #64748b;
-        --header-border: #e2e8f0;
+        /* 设备亮色模式 YouTube Design Tokens */
+        --bg-color: #ffffff;
+        --text-main: #0f0f0f;
+        --text-title: #0f0f0f;
+        --text-muted: #606060;
+        --header-border: #e5e5e5;
         
-        --tabs-bg: #e2e8f0;
-        --tabs-border: #cbd5e1;
-        --tab-btn-text: #64748b;
-        --tab-active-bg: #ffffff;
-        --tab-active-text: #0f172a;
-        --tab-active-shadow: rgba(148, 163, 184, 0.25);
+        --tabs-bg: #f2f2f2;
+        --tabs-border: transparent;
+        --tab-btn-text: #606060;
+        --tab-active-bg: #0f0f0f;
+        --tab-active-text: #ffffff;
+        --tab-active-shadow: rgba(0, 0, 0, 0.15);
         
-        --card-bg: #ffffff;
-        --card-border: #e2e8f0;
-        --card-title: #475569;
+        --card-bg: #f9f9f9;
+        --card-border: #e5e5e5;
+        --card-title: #065fd4;
         
-        --input-bg: #f8fafc;
-        --input-border: #cbd5e1;
-        --input-text: #0f172a;
+        --input-bg: #ffffff;
+        --input-border: #ccc;
+        --input-text: #0f0f0f;
         
-        --kbd-bg: #ffffff;
-        --kbd-border: #cbd5e1;
-        --kbd-shadow: #cbd5e1;
-        --kbd-text: #2563eb;
+        --kbd-bg: #f2f2f2;
+        --kbd-border: #ccc;
+        --kbd-shadow: #e5e5e5;
+        --kbd-text: #065fd4;
 
-        --history-item-bg: #ffffff;
-        --history-item-border: #e2e8f0;
-        --history-item-hover-bg: #f1f5f9;
-        --history-item-hover-border: #cbd5e1;
-        --history-title-color: #2563eb;
+        --history-item-bg: #f9f9f9;
+        --history-item-border: #e5e5e5;
+        --history-item-hover-bg: #f2f2f2;
+        --history-item-hover-border: #ccc;
+        --history-title-color: #065fd4;
+
+        --btn-primary-bg: #065fd4;
+        --btn-primary-text: #ffffff;
       }
     }
 
@@ -93,9 +99,9 @@
       width: 280px;
       height: auto;
       margin: 0;
-      padding: 10px;
+      padding: 12px;
       background: var(--bg-color);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-family: "YouTube Noto", Roboto, Arial, -apple-system, BlinkMacSystemFont, sans-serif;
       color: var(--text-main);
       user-select: none;
       overflow: hidden;
@@ -107,8 +113,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 8px;
-      padding-bottom: 6px;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
       border-bottom: 1px solid var(--header-border);
       width: 100%;
     }
@@ -116,24 +122,24 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      font-size: 13px;
+      font-size: 13.5px;
       font-weight: 600;
       color: var(--text-title);
       letter-spacing: -0.2px;
     }
     .brand-icon {
-      width: 16px;
-      height: 16px;
-      color: #3b82f6;
+      width: 18px;
+      height: 18px;
+      color: #ff0000; /* YouTube 标志性红色点缀 */
     }
 
-    /* 分段 Segmented Control (Tabs) */
+    /* YouTube 风格圆角 Segmented Control (Pill Chips) */
     .tabs-container {
       display: flex;
       background: var(--tabs-bg);
-      border-radius: 6px;
-      padding: 2px;
-      margin-bottom: 8px;
+      border-radius: 12px; /* 圆角几何数提升 */
+      padding: 3px;
+      margin-bottom: 10px;
       border: 1px solid var(--tabs-border);
       width: 100%;
     }
@@ -146,33 +152,33 @@
       background: transparent;
       border: none;
       color: var(--tab-btn-text);
-      padding: 5px 0;
-      border-radius: 4.5px;
+      padding: 6px 0;
+      border-radius: 9px; /* YouTube 胶囊小内嵌圆角 */
       font-size: 11.5px;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.18s ease-in-out;
     }
     .tab-btn.active {
       background: var(--tab-active-bg);
       color: var(--tab-active-text);
-      box-shadow: 0 2px 6px var(--tab-active-shadow);
+      box-shadow: 0 2px 8px var(--tab-active-shadow);
     }
     .tab-btn:hover:not(.active) {
       color: var(--text-title);
     }
     .tab-icon {
-      width: 12px;
-      height: 12px;
+      width: 13px;
+      height: 13px;
       stroke-width: 2;
     }
     .badge {
-      background: rgba(59, 130, 246, 0.18);
-      color: #2563eb;
+      background: rgba(62, 166, 255, 0.18);
+      color: var(--card-title);
       font-size: 9.5px;
       font-weight: 600;
-      padding: 1px 4.5px;
-      border-radius: 8px;
+      padding: 1.5px 6px;
+      border-radius: 12px; /* Pill 边缘弧度 */
       line-height: 1.2;
     }
 
@@ -180,13 +186,13 @@
       width: 100%;
     }
 
-    /* 卡片式区块 (Card Sections) */
+    /* YouTube 风格的大圆角 Card */
     .card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
-      border-radius: 7px;
-      padding: 8px;
-      margin-bottom: 8px;
+      border-radius: 12px; /* YouTube 标志性 12px 圆角 */
+      padding: 10px 11px;
+      margin-bottom: 10px;
       width: 100%;
       transition: background-color 0.2s ease, border-color 0.2s ease;
     }
@@ -196,15 +202,15 @@
       color: var(--card-title);
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       display: flex;
       align-items: center;
       gap: 4px;
     }
 
-    /* 表单与输入框 */
+    /* 表单控件圆角与规范 */
     .form-group {
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       width: 100%;
     }
     .form-group:last-child {
@@ -214,11 +220,11 @@
       display: block;
       font-size: 10.5px;
       color: var(--text-muted);
-      margin-bottom: 3px;
+      margin-bottom: 4px;
     }
     .row {
       display: flex;
-      gap: 5px;
+      gap: 6px;
       align-items: center;
       width: 100%;
     }
@@ -227,8 +233,8 @@
       background: var(--input-bg);
       border: 1px solid var(--input-border);
       color: var(--input-text);
-      padding: 4.5px 7px;
-      border-radius: 5px;
+      padding: 5px 8px;
+      border-radius: 8px; /* 输入框圆角增大至 8px */
       font-size: 11.5px;
       outline: none;
       transition: all 0.15s ease;
@@ -236,11 +242,11 @@
       width: 100%;
     }
     input[type="number"]:focus, select:focus, input[type="text"]:focus {
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+      border-color: var(--card-title);
+      box-shadow: 0 0 0 2px rgba(62, 166, 255, 0.2);
     }
 
-    /* 快捷键 KBD 单字符样式（紧凑固定小键帽） */
+    /* 快捷键 KBD 键帽圆角 */
     .kbd-input {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       text-align: center;
@@ -248,6 +254,7 @@
       font-weight: 700;
       background: var(--kbd-bg) !important;
       border-color: var(--kbd-border) !important;
+      border-radius: 7px !important; /* 物理按键独立圆角 */
       box-shadow: inset 0 -2px 0 var(--kbd-shadow);
       color: var(--kbd-text) !important;
       width: 30px !important;
@@ -256,14 +263,14 @@
       flex-shrink: 0;
     }
 
-    /* 颜色选择器 Webkit 标准修正 */
+    /* 颜色选择器 Webkit 圆角修正 */
     .color-picker {
-      height: 26px;
+      height: 28px;
       padding: 2px;
       cursor: pointer;
       background: var(--input-bg);
       border: 1px solid var(--input-border);
-      border-radius: 5px;
+      border-radius: 8px;
       width: 100%;
     }
     input[type="color"]::-webkit-color-swatch-wrapper {
@@ -271,27 +278,25 @@
     }
     input[type="color"]::-webkit-color-swatch {
       border: none;
-      border-radius: 3px;
+      border-radius: 6px; /* 色块内部圆角化 */
     }
 
-    /* 主操作按钮 */
+    /* YouTube Pill Button 纯圆角主按钮 (20px 圆角) */
     .save-btn {
       width: 100%;
-      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-      color: #ffffff;
+      background: var(--btn-primary-bg);
+      color: var(--btn-primary-text);
       border: none;
-      padding: 7px;
-      border-radius: 6px;
+      padding: 8.5px;
+      border-radius: 20px; /* 经典 YouTube 胶囊式 Pill 按钮大圆角 */
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
-      transition: all 0.15s ease;
+      transition: all 0.18s ease-in-out;
     }
     .save-btn:hover {
-      opacity: 0.92;
+      opacity: 0.9;
       transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
     }
     .save-btn:active {
       transform: translateY(0);
@@ -299,19 +304,19 @@
     .tip-status {
       font-size: 10px;
       color: var(--text-muted);
-      margin-top: 4px;
+      margin-top: 5px;
       margin-bottom: 0;
       text-align: center;
       transition: color 0.2s;
       line-height: 1.2;
     }
 
-    /* 历史记录 Tab 相关 */
+    /* 历史记录圆角项 */
     .history-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       width: 100%;
     }
     .history-sub {
@@ -322,8 +327,8 @@
       background: rgba(239, 68, 68, 0.12);
       color: #ef4444;
       border: 1px solid rgba(239, 68, 68, 0.25);
-      border-radius: 4px;
-      padding: 2px 6px;
+      border-radius: 12px; /* 圆角清空按钮 */
+      padding: 2.5px 8px;
       font-size: 10px;
       font-weight: 500;
       cursor: pointer;
@@ -332,7 +337,6 @@
     }
     .clear-btn:hover {
       background: rgba(239, 68, 68, 0.25);
-      color: #dc2626;
     }
 
     .history-list {
@@ -340,7 +344,7 @@
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 6px;
       width: 100%;
     }
     .history-list::-webkit-scrollbar {
@@ -348,19 +352,19 @@
     }
     .history-list::-webkit-scrollbar-thumb {
       background: var(--input-border);
-      border-radius: 4px;
+      border-radius: 10px;
     }
 
     .history-item {
       background: var(--history-item-bg);
       border: 1px solid var(--history-item-border);
-      border-radius: 6px;
-      padding: 6px 8px;
+      border-radius: 10px; /* 历史纪录卡片圆角提升 */
+      padding: 7px 10px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 5px;
-      transition: all 0.15s ease;
+      gap: 6px;
+      transition: all 0.18s ease;
       width: 100%;
     }
     .history-item:hover {
@@ -397,8 +401,8 @@
       border: none;
       color: var(--text-muted);
       cursor: pointer;
-      padding: 2.5px 4px;
-      border-radius: 4px;
+      padding: 3px 5px;
+      border-radius: 6px;
       font-size: 11px;
       display: flex;
       align-items: center;
@@ -434,10 +438,8 @@
   <!-- Header 头部品牌栏 -->
   <div class="header">
     <div class="brand">
-      <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="2" y="3" width="20" height="14" rx="2"/>
-        <line x1="8" y1="21" x2="16" y2="21"/>
-        <line x1="12" y1="17" x2="12" y2="21"/>
+      <svg class="brand-icon" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
       </svg>
       一键影院模式
     </div>
