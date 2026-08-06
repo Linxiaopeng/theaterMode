@@ -40,6 +40,8 @@
 
       --btn-primary-bg: #3ea6ff;
       --btn-primary-text: #0f0f0f;
+
+      --window-shadow: rgba(0, 0, 0, 0.4);
     }
 
     @media (prefers-color-scheme: light) {
@@ -79,6 +81,8 @@
 
         --btn-primary-bg: #065fd4;
         --btn-primary-text: #ffffff;
+
+        --window-shadow: rgba(0, 0, 0, 0.1);
       }
     }
 
@@ -92,7 +96,7 @@
       height: max-content;
       margin: 0;
       padding: 0;
-      background: var(--bg-color);
+      background: transparent;
       overflow: hidden;
     }
     body {
@@ -101,11 +105,14 @@
       margin: 0;
       padding: 12px;
       background: var(--bg-color);
+      border-radius: 16px; /* 最外层菜单背景增加 16px 大圆角设计 */
+      border: 1px solid var(--card-border);
+      box-shadow: 0 6px 20px var(--window-shadow);
       font-family: "YouTube Noto", Roboto, Arial, -apple-system, BlinkMacSystemFont, sans-serif;
       color: var(--text-main);
       user-select: none;
       overflow: hidden;
-      transition: background-color 0.2s ease, color 0.2s ease;
+      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
     }
 
     /* 顶部 Header */
@@ -130,14 +137,14 @@
     .brand-icon {
       width: 18px;
       height: 18px;
-      color: #ff0000; /* YouTube 标志性红色点缀 */
+      color: #ff0000;
     }
 
     /* YouTube 风格圆角 Segmented Control (Pill Chips) */
     .tabs-container {
       display: flex;
       background: var(--tabs-bg);
-      border-radius: 12px; /* 圆角几何数提升 */
+      border-radius: 12px;
       padding: 3px;
       margin-bottom: 10px;
       border: 1px solid var(--tabs-border);
@@ -153,7 +160,7 @@
       border: none;
       color: var(--tab-btn-text);
       padding: 6px 0;
-      border-radius: 9px; /* YouTube 胶囊小内嵌圆角 */
+      border-radius: 9px;
       font-size: 11.5px;
       font-weight: 500;
       cursor: pointer;
@@ -178,7 +185,7 @@
       font-size: 9.5px;
       font-weight: 600;
       padding: 1.5px 6px;
-      border-radius: 12px; /* Pill 边缘弧度 */
+      border-radius: 12px;
       line-height: 1.2;
     }
 
@@ -190,7 +197,7 @@
     .card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
-      border-radius: 12px; /* YouTube 标志性 12px 圆角 */
+      border-radius: 12px;
       padding: 10px 11px;
       margin-bottom: 10px;
       width: 100%;
@@ -234,7 +241,7 @@
       border: 1px solid var(--input-border);
       color: var(--input-text);
       padding: 5px 8px;
-      border-radius: 8px; /* 输入框圆角增大至 8px */
+      border-radius: 8px;
       font-size: 11.5px;
       outline: none;
       transition: all 0.15s ease;
@@ -254,7 +261,7 @@
       font-weight: 700;
       background: var(--kbd-bg) !important;
       border-color: var(--kbd-border) !important;
-      border-radius: 7px !important; /* 物理按键独立圆角 */
+      border-radius: 7px !important;
       box-shadow: inset 0 -2px 0 var(--kbd-shadow);
       color: var(--kbd-text) !important;
       width: 30px !important;
@@ -278,7 +285,7 @@
     }
     input[type="color"]::-webkit-color-swatch {
       border: none;
-      border-radius: 6px; /* 色块内部圆角化 */
+      border-radius: 6px;
     }
 
     /* YouTube Pill Button 纯圆角主按钮 (20px 圆角) */
@@ -288,7 +295,7 @@
       color: var(--btn-primary-text);
       border: none;
       padding: 8.5px;
-      border-radius: 20px; /* 经典 YouTube 胶囊式 Pill 按钮大圆角 */
+      border-radius: 20px;
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
@@ -327,7 +334,7 @@
       background: rgba(239, 68, 68, 0.12);
       color: #ef4444;
       border: 1px solid rgba(239, 68, 68, 0.25);
-      border-radius: 12px; /* 圆角清空按钮 */
+      border-radius: 12px;
       padding: 2.5px 8px;
       font-size: 10px;
       font-weight: 500;
@@ -358,7 +365,7 @@
     .history-item {
       background: var(--history-item-bg);
       border: 1px solid var(--history-item-border);
-      border-radius: 10px; /* 历史纪录卡片圆角提升 */
+      border-radius: 10px;
       padding: 7px 10px;
       display: flex;
       align-items: center;
