@@ -40,8 +40,6 @@
 
       --btn-primary-bg: #3ea6ff;
       --btn-primary-text: #0f0f0f;
-
-      --window-shadow: rgba(0, 0, 0, 0.4);
     }
 
     @media (prefers-color-scheme: light) {
@@ -81,8 +79,6 @@
 
         --btn-primary-bg: #065fd4;
         --btn-primary-text: #ffffff;
-
-        --window-shadow: rgba(0, 0, 0, 0.1);
       }
     }
 
@@ -91,28 +87,31 @@
       margin: 0;
       padding: 0;
     }
+
+    /* 关键：最外层整个 HTML 元素的独立大圆角背景与裁切 */
     html {
       width: 280px;
       height: max-content;
       margin: 0;
       padding: 0;
-      background: transparent;
+      background: var(--bg-color);
+      border-radius: 16px; /* 直接赋予整个 html 根容器 16px 大圆角 */
       overflow: hidden;
+      transition: background-color 0.2s ease;
     }
+
     body {
       width: 280px;
       height: auto;
       margin: 0;
       padding: 12px;
       background: var(--bg-color);
-      border-radius: 16px; /* 最外层菜单背景增加 16px 大圆角设计 */
-      border: 1px solid var(--card-border);
-      box-shadow: 0 6px 20px var(--window-shadow);
+      border-radius: 16px; /* 与 html 根边界完全契合重合 */
       font-family: "YouTube Noto", Roboto, Arial, -apple-system, BlinkMacSystemFont, sans-serif;
       color: var(--text-main);
       user-select: none;
       overflow: hidden;
-      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
 
     /* 顶部 Header */
