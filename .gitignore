@@ -1,0 +1,17 @@
+# macOS 系统文件
+.DS_Store
+.AppleDouble
+.lsd-cache
+
+# 操作系统/编辑器生成
+Thumbs.db
+ehthumbs.db
+.vscode/
+.idea/
+
+# 浏览器插件打包产物与压缩包
+*.crx
+*.pem
+*.zip
+dist/
+build/
