@@ -14,7 +14,13 @@
   let currentSettings = {
     jDuration: 60,
     lDuration: 60,
-    overlayOpacity: 0.88
+    overlayOpacity: 0.88,
+    subFontSize: 18,
+    subFontColor: '#ffffff',
+    subBgColor: '#000000',
+    subBgOpacity: 0.6,
+    subFontWeight: '500',
+    subBottomOffset: 30
   };
 
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
@@ -30,6 +36,24 @@
           if (overlay) {
             overlay.style.backgroundColor = `rgba(0, 0, 0, ${currentSettings.overlayOpacity})`;
           }
+        }
+        if (changes.subFontSize) currentSettings.subFontSize = changes.subFontSize.newValue;
+        if (changes.subFontColor) currentSettings.subFontColor = changes.subFontColor.newValue;
+        if (changes.subBgColor) currentSettings.subBgColor = changes.subBgColor.newValue;
+        if (changes.subBgOpacity) currentSettings.subBgOpacity = changes.subBgOpacity.newValue;
+        if (changes.subFontWeight) currentSettings.subFontWeight = changes.subFontWeight.newValue;
+        if (changes.subBottomOffset) currentSettings.subBottomOffset = changes.subBottomOffset.newValue;
+
+        // 如果字幕渲染器已存在，实时更新其样式设置
+        if (cinema && cinema.subtitleRenderer) {
+          cinema.subtitleRenderer.updateSettings({
+            fontSize: currentSettings.subFontSize,
+            fontColor: currentSettings.subFontColor,
+            bgColor: currentSettings.subBgColor,
+            bgOpacity: currentSettings.subBgOpacity,
+            fontWeight: currentSettings.subFontWeight,
+            bottomOffset: currentSettings.subBottomOffset
+          });
         }
       }
     });
@@ -156,7 +180,7 @@
     stage.appendChild(hint);
     stage.appendChild(player);
 
-    // 创建快进/回退控制栏 (横向排列于影院模式屏幕中央下方)
+    // 创建快进/回退控制栏与字幕加载按钮
     const controlBar = document.createElement('div');
     controlBar.className = 'cinema-control-bar';
     
@@ -183,6 +207,43 @@
       controlBar.appendChild(b);
     });
 
+    // 新增：字幕加载按钮（支持 .srt, .vtt, .ass）
+    const uploadBtn = document.createElement('label');
+    uploadBtn.className = 'cinema-upload-btn';
+    uploadBtn.title = '加载本地字幕文件 (.srt, .vtt)';
+    uploadBtn.innerHTML = '📂 加载字幕';
+
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.srt,.vtt,.ass';
+    fileInput.style.display = 'none';
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          const content = evt.target.result;
+          const cues = SubtitleParser.parse(content, file.name);
+          if (subtitleRenderer) {
+            subtitleRenderer.setCues(cues);
+          }
+          const shortName = file.name.length > 8 ? file.name.slice(0, 8) + '...' : file.name;
+          uploadBtn.innerHTML = `✅ ${shortName}`;
+          uploadBtn.title = `已加载字幕: ${file.name} (${cues.length}条)`;
+        } catch (err) {
+          alert(`字幕解析失败：\n${err.message}`);
+          uploadBtn.innerHTML = '📂 加载失败';
+        }
+      };
+      reader.onerror = () => {
+        alert('读取字幕文件失败！');
+      };
+      reader.readAsText(file, 'utf-8');
+    });
+    uploadBtn.appendChild(fileInput);
+    controlBar.appendChild(uploadBtn);
+
     overlay.appendChild(controlBar);
     overlay.appendChild(stage);
     ROOT().appendChild(overlay);
@@ -197,7 +258,17 @@
     video.style.maxHeight = '100%';
     video.style.objectFit = 'contain';
 
-    cinema = { video, player, saved };
+    // 初始化字幕渲染器模块
+    const subtitleRenderer = new SubtitleRenderer(stage, {
+      fontSize: currentSettings.subFontSize,
+      fontColor: currentSettings.subFontColor,
+      bgColor: currentSettings.subBgColor,
+      bgOpacity: currentSettings.subBgOpacity,
+      fontWeight: currentSettings.subFontWeight,
+      bottomOffset: currentSettings.subBottomOffset
+    });
+
+    cinema = { video, player, saved, subtitleRenderer };
     setButtonVisible(false);
 
     requestAnimationFrame(() => {
@@ -207,8 +278,12 @@
 
   function exitCinema() {
     if (!cinema) return;
-    const { video, player, saved } = cinema;
+    const { video, player, saved, subtitleRenderer } = cinema;
     const stageRef = stage;
+
+    if (subtitleRenderer) {
+      subtitleRenderer.destroy();
+    }
 
     if (stageRef && player.parentNode === stageRef) {
       stageRef.removeChild(player);
@@ -253,11 +328,13 @@
     if (cinema) {
       if (!cinema.video.isConnected || !cinema.player.isConnected) {
         exitCinema();
+      } else if (cinema.subtitleRenderer && cinema.video) {
+        cinema.subtitleRenderer.syncTime(cinema.video.currentTime);
       }
       return;
     }
     updateButton();
-  }, SCAN_INTERVAL);
+  }, 100);
 
   document.addEventListener('play', () => updateButton(), true);
   document.addEventListener('pause', () => updateButton(), true);
