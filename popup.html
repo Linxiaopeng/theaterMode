@@ -9,21 +9,24 @@
       margin: 0;
       padding: 0;
     }
-    html, body {
+    html {
       width: 280px;
-      min-width: 280px;
-      max-width: 280px;
+      height: max-content;
       margin: 0;
       padding: 0;
       background: #0f1015;
-      height: auto; /* 允许高度完全根据内容自适应 */
+      overflow: hidden;
     }
     body {
-      padding: 12px;
+      width: 280px;
+      height: auto;
+      margin: 0;
+      padding: 10px;
+      background: #0f1015;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       color: #e4e4e7;
       user-select: none;
-      width: 100%;
+      overflow: hidden;
     }
 
     /* 顶部 Header */
@@ -31,8 +34,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 10px;
-      padding-bottom: 8px;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       width: 100%;
     }
@@ -40,14 +43,14 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 600;
       color: #ffffff;
       letter-spacing: -0.2px;
     }
     .brand-icon {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       color: #3b82f6;
     }
 
@@ -55,9 +58,9 @@
     .tabs-container {
       display: flex;
       background: rgba(255, 255, 255, 0.05);
-      border-radius: 7px;
-      padding: 2.5px;
-      margin-bottom: 10px;
+      border-radius: 6px;
+      padding: 2px;
+      margin-bottom: 8px;
       border: 1px solid rgba(255, 255, 255, 0.06);
       width: 100%;
     }
@@ -70,9 +73,9 @@
       background: transparent;
       border: none;
       color: #a1a1aa;
-      padding: 5.5px 0;
-      border-radius: 5px;
-      font-size: 12px;
+      padding: 5px 0;
+      border-radius: 4.5px;
+      font-size: 11.5px;
       font-weight: 500;
       cursor: pointer;
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -86,17 +89,17 @@
       color: #e4e4e7;
     }
     .tab-icon {
-      width: 13px;
-      height: 13px;
+      width: 12px;
+      height: 12px;
       stroke-width: 2;
     }
     .badge {
       background: rgba(59, 130, 246, 0.2);
       color: #60a5fa;
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 600;
-      padding: 1px 5px;
-      border-radius: 10px;
+      padding: 1px 4.5px;
+      border-radius: 8px;
       line-height: 1.2;
     }
 
@@ -108,26 +111,26 @@
     .card {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.07);
-      border-radius: 8px;
-      padding: 10px;
+      border-radius: 7px;
+      padding: 8px;
       margin-bottom: 8px;
       width: 100%;
     }
     .card-title {
-      font-size: 11.5px;
+      font-size: 11px;
       font-weight: 600;
       color: #94a3b8;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
     }
 
     /* 表单与输入框 */
     .form-group {
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       width: 100%;
     }
     .form-group:last-child {
@@ -135,13 +138,13 @@
     }
     label {
       display: block;
-      font-size: 11px;
+      font-size: 10.5px;
       color: #a1a1aa;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
     .row {
       display: flex;
-      gap: 6px;
+      gap: 5px;
       align-items: center;
       width: 100%;
     }
@@ -150,9 +153,9 @@
       background: #18181b;
       border: 1px solid #3f3f46;
       color: #f4f4f5;
-      padding: 5px 8px;
+      padding: 4.5px 7px;
       border-radius: 5px;
-      font-size: 12px;
+      font-size: 11.5px;
       outline: none;
       transition: all 0.15s ease;
       min-width: 0;
@@ -173,15 +176,15 @@
       border-color: #52525b !important;
       box-shadow: inset 0 -2px 0 rgba(0,0,0,0.4);
       color: #60a5fa !important;
-      width: 32px !important;
-      height: 28px;
+      width: 30px !important;
+      height: 26px;
       padding: 0 !important;
       flex-shrink: 0;
     }
 
     /* 颜色选择器 Webkit 标准修正 */
     .color-picker {
-      height: 28px;
+      height: 26px;
       padding: 2px;
       cursor: pointer;
       background: #18181b;
@@ -203,9 +206,9 @@
       background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
       color: #ffffff;
       border: none;
-      padding: 7.5px;
-      border-radius: 7px;
-      font-size: 12.5px;
+      padding: 7px;
+      border-radius: 6px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
@@ -220,11 +223,13 @@
       transform: translateY(0);
     }
     .tip-status {
-      font-size: 10.5px;
+      font-size: 10px;
       color: #71717a;
-      margin-top: 5px;
+      margin-top: 4px;
+      margin-bottom: 0;
       text-align: center;
       transition: color 0.2s;
+      line-height: 1.2;
     }
 
     /* 历史记录 Tab 相关 */
@@ -232,11 +237,11 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       width: 100%;
     }
     .history-sub {
-      font-size: 10.5px;
+      font-size: 10px;
       color: #71717a;
     }
     .clear-btn {
@@ -244,8 +249,8 @@
       color: #f87171;
       border: 1px solid rgba(239, 68, 68, 0.25);
       border-radius: 4px;
-      padding: 2.5px 7px;
-      font-size: 10.5px;
+      padding: 2px 6px;
+      font-size: 10px;
       font-weight: 500;
       cursor: pointer;
       transition: all 0.15s;
@@ -257,11 +262,11 @@
     }
 
     .history-list {
-      max-height: 350px;
+      max-height: 320px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
       width: 100%;
     }
     .history-list::-webkit-scrollbar {
@@ -275,12 +280,12 @@
     .history-item {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 7px;
-      padding: 7px 9px;
+      border-radius: 6px;
+      padding: 6px 8px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 6px;
+      gap: 5px;
       transition: all 0.15s ease;
       width: 100%;
     }
@@ -296,7 +301,7 @@
     }
     .history-title {
       display: block;
-      font-size: 11.5px;
+      font-size: 11px;
       font-weight: 500;
       color: #60a5fa;
       text-decoration: none;
@@ -310,7 +315,7 @@
       text-decoration: underline;
     }
     .history-time {
-      font-size: 10px;
+      font-size: 9.5px;
       color: #71717a;
     }
     .history-delete-btn {
@@ -318,9 +323,9 @@
       border: none;
       color: #71717a;
       cursor: pointer;
-      padding: 3px 5px;
+      padding: 2.5px 4px;
       border-radius: 4px;
-      font-size: 12px;
+      font-size: 11px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -337,17 +342,17 @@
     }
     .history-empty {
       text-align: center;
-      padding: 30px 0;
+      padding: 24px 0;
       color: #71717a;
       width: 100%;
     }
     .history-empty-icon {
-      font-size: 24px;
-      margin-bottom: 4px;
+      font-size: 22px;
+      margin-bottom: 3px;
       opacity: 0.6;
     }
     .history-empty-text {
-      font-size: 11.5px;
+      font-size: 11px;
     }
   </style>
 </head>
