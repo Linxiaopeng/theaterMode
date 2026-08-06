@@ -1,6 +1,14 @@
-# Changelog
+## [1.4.0] - 2026-08-07
 
-本项目遵循 [Semantic Versioning (语义化版本 2.0.0)](https://semver.org/lang/zh-CN/) 规范。
+### 🚀 Added
+- **视频观看历史记录**：新增本地视频播放历史保存（使用 `chrome.storage.local`，上限 90 条），包含网址链接、网页标题以及具体观看日期与时间。
+- **播放门槛防护**：新增视频累计播放满 1 分钟（`currentTime >= 60s`）录入规则，防止误试看多余记错。
+- **Popup 历史记录面板**：Popup 弹窗新增「观看历史」Tab，支持快速查看、新标签页一键访问、单条删除及一键清空全部历史。
+- **设备主题自适应**：支持 `@media (prefers-color-scheme: light)` 随系统/设备外观设置自动切换亮色/暗色界面主题模式。
+- **YouTube 规范圆角 UI**：引入 YouTube 风格 Ambient / Rounded 界面设计美学，包含最外框 16px 大圆角包裹、内衬 Pill 胶囊按键与卡片布局。
+
+### 🐛 Fixed
+- 修复 Chromium 原生 View Shell 弹窗外框引起的滚动条残留、抖动及外边距不对称问题。
 
 ---
 
