@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>影院模式设置</title>
   <style>
-    * {
+    *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
@@ -16,13 +16,14 @@
       margin: 0;
       padding: 0;
       background: #0f1015;
-      overflow-x: hidden;
+      overflow: hidden; /* 彻底杜绝全局外框产生滚动条导致的不对称 */
     }
     body {
-      padding: 10px;
+      padding: 12px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       color: #e4e4e7;
       user-select: none;
+      width: 100%;
     }
 
     /* 顶部 Header */
@@ -101,7 +102,6 @@
 
     .tab-panel {
       width: 100%;
-      box-sizing: border-box;
     }
 
     /* 卡片式区块 (Card Sections) */
@@ -156,6 +156,7 @@
       outline: none;
       transition: all 0.15s ease;
       min-width: 0;
+      width: 100%;
     }
     input[type="number"]:focus, select:focus, input[type="text"]:focus {
       border-color: #3b82f6;
@@ -178,14 +179,22 @@
       flex-shrink: 0;
     }
 
-    /* 颜色选择器 */
+    /* 颜色选择器 Webkit 标准修正 */
     .color-picker {
       height: 28px;
       padding: 2px;
       cursor: pointer;
       background: #18181b;
+      border: 1px solid #3f3f46;
       border-radius: 5px;
       width: 100%;
+    }
+    input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+    input[type="color"]::-webkit-color-swatch {
+      border: none;
+      border-radius: 3px;
     }
 
     /* 主操作按钮 */
@@ -224,7 +233,6 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 8px;
-      padding: 0 2px;
       width: 100%;
     }
     .history-sub {
@@ -275,7 +283,6 @@
       gap: 6px;
       transition: all 0.15s ease;
       width: 100%;
-      box-sizing: border-box;
     }
     .history-item:hover {
       background: rgba(255, 255, 255, 0.06);
@@ -407,7 +414,7 @@
 
       <div class="form-group">
         <label>遮罩层透明度 (0.0 - 1.0)</label>
-        <input type="number" id="opacity" min="0" max="1" step="0.05" value="0.88" style="width:100%;">
+        <input type="number" id="opacity" min="0" max="1" step="0.05" value="0.88">
       </div>
     </div>
 
@@ -415,7 +422,7 @@
       <div class="card-title">字幕外观配置</div>
       <div class="form-group">
         <label>字体大小 (px)</label>
-        <input type="number" id="subFontSize" min="12" max="48" step="1" value="18" style="width:100%;">
+        <input type="number" id="subFontSize" min="12" max="48" step="1" value="18">
       </div>
 
       <div class="form-group">
@@ -439,7 +446,7 @@
           </div>
           <div style="flex:1;">
             <label>字体粗细</label>
-            <select id="subFontWeight" style="width:100%;">
+            <select id="subFontWeight">
               <option value="400">常规 (Normal)</option>
               <option value="500" selected>中等 (Medium)</option>
               <option value="700">加粗 (Bold)</option>
@@ -450,7 +457,7 @@
 
       <div class="form-group">
         <label>底部偏移量 (px)</label>
-        <input type="number" id="subBottomOffset" min="10" max="200" step="5" value="30" style="width:100%;">
+        <input type="number" id="subBottomOffset" min="10" max="200" step="5" value="30">
       </div>
     </div>
 
