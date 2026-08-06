@@ -16,7 +16,7 @@
       margin: 0;
       padding: 0;
       background: #0f1015;
-      overflow: hidden; /* 彻底杜绝全局外框产生滚动条导致的不对称 */
+      height: auto; /* 允许高度完全根据内容自适应 */
     }
     body {
       padding: 12px;
@@ -110,7 +110,7 @@
       border: 1px solid rgba(255, 255, 255, 0.07);
       border-radius: 8px;
       padding: 10px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       width: 100%;
     }
     .card-title {
@@ -203,7 +203,7 @@
       background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
       color: #ffffff;
       border: none;
-      padding: 8px;
+      padding: 7.5px;
       border-radius: 7px;
       font-size: 12.5px;
       font-weight: 600;
@@ -222,7 +222,7 @@
     .tip-status {
       font-size: 10.5px;
       color: #71717a;
-      margin-top: 6px;
+      margin-top: 5px;
       text-align: center;
       transition: color 0.2s;
     }
