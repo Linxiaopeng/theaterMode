@@ -4,6 +4,78 @@
   <meta charset="UTF-8">
   <title>影院模式设置</title>
   <style>
+    :root {
+      /* 默认暗色模式 Design Tokens */
+      --bg-color: #0f1015;
+      --text-main: #e4e4e7;
+      --text-title: #ffffff;
+      --text-muted: #71717a;
+      --header-border: rgba(255, 255, 255, 0.08);
+      
+      --tabs-bg: rgba(255, 255, 255, 0.05);
+      --tabs-border: rgba(255, 255, 255, 0.06);
+      --tab-btn-text: #a1a1aa;
+      --tab-active-bg: #27272a;
+      --tab-active-text: #ffffff;
+      --tab-active-shadow: rgba(0, 0, 0, 0.4);
+      
+      --card-bg: rgba(255, 255, 255, 0.03);
+      --card-border: rgba(255, 255, 255, 0.07);
+      --card-title: #94a3b8;
+      
+      --input-bg: #18181b;
+      --input-border: #3f3f46;
+      --input-text: #f4f4f5;
+      
+      --kbd-bg: #27272a;
+      --kbd-border: #52525b;
+      --kbd-shadow: rgba(0, 0, 0, 0.4);
+      --kbd-text: #60a5fa;
+
+      --history-item-bg: rgba(255, 255, 255, 0.03);
+      --history-item-border: rgba(255, 255, 255, 0.06);
+      --history-item-hover-bg: rgba(255, 255, 255, 0.06);
+      --history-item-hover-border: rgba(255, 255, 255, 0.12);
+      --history-title-color: #60a5fa;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        /* 设备亮色模式 Design Tokens */
+        --bg-color: #f8fafc;
+        --text-main: #334155;
+        --text-title: #0f172a;
+        --text-muted: #64748b;
+        --header-border: #e2e8f0;
+        
+        --tabs-bg: #e2e8f0;
+        --tabs-border: #cbd5e1;
+        --tab-btn-text: #64748b;
+        --tab-active-bg: #ffffff;
+        --tab-active-text: #0f172a;
+        --tab-active-shadow: rgba(148, 163, 184, 0.25);
+        
+        --card-bg: #ffffff;
+        --card-border: #e2e8f0;
+        --card-title: #475569;
+        
+        --input-bg: #f8fafc;
+        --input-border: #cbd5e1;
+        --input-text: #0f172a;
+        
+        --kbd-bg: #ffffff;
+        --kbd-border: #cbd5e1;
+        --kbd-shadow: #cbd5e1;
+        --kbd-text: #2563eb;
+
+        --history-item-bg: #ffffff;
+        --history-item-border: #e2e8f0;
+        --history-item-hover-bg: #f1f5f9;
+        --history-item-hover-border: #cbd5e1;
+        --history-title-color: #2563eb;
+      }
+    }
+
     *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
@@ -14,7 +86,7 @@
       height: max-content;
       margin: 0;
       padding: 0;
-      background: #0f1015;
+      background: var(--bg-color);
       overflow: hidden;
     }
     body {
@@ -22,11 +94,12 @@
       height: auto;
       margin: 0;
       padding: 10px;
-      background: #0f1015;
+      background: var(--bg-color);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      color: #e4e4e7;
+      color: var(--text-main);
       user-select: none;
       overflow: hidden;
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
 
     /* 顶部 Header */
@@ -36,7 +109,7 @@
       justify-content: space-between;
       margin-bottom: 8px;
       padding-bottom: 6px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      border-bottom: 1px solid var(--header-border);
       width: 100%;
     }
     .brand {
@@ -45,7 +118,7 @@
       gap: 6px;
       font-size: 13px;
       font-weight: 600;
-      color: #ffffff;
+      color: var(--text-title);
       letter-spacing: -0.2px;
     }
     .brand-icon {
@@ -57,11 +130,11 @@
     /* 分段 Segmented Control (Tabs) */
     .tabs-container {
       display: flex;
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--tabs-bg);
       border-radius: 6px;
       padding: 2px;
       margin-bottom: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--tabs-border);
       width: 100%;
     }
     .tab-btn {
@@ -72,7 +145,7 @@
       gap: 4px;
       background: transparent;
       border: none;
-      color: #a1a1aa;
+      color: var(--tab-btn-text);
       padding: 5px 0;
       border-radius: 4.5px;
       font-size: 11.5px;
@@ -81,12 +154,12 @@
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .tab-btn.active {
-      background: #27272a;
-      color: #ffffff;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+      background: var(--tab-active-bg);
+      color: var(--tab-active-text);
+      box-shadow: 0 2px 6px var(--tab-active-shadow);
     }
     .tab-btn:hover:not(.active) {
-      color: #e4e4e7;
+      color: var(--text-title);
     }
     .tab-icon {
       width: 12px;
@@ -94,8 +167,8 @@
       stroke-width: 2;
     }
     .badge {
-      background: rgba(59, 130, 246, 0.2);
-      color: #60a5fa;
+      background: rgba(59, 130, 246, 0.18);
+      color: #2563eb;
       font-size: 9.5px;
       font-weight: 600;
       padding: 1px 4.5px;
@@ -109,17 +182,18 @@
 
     /* 卡片式区块 (Card Sections) */
     .card {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
       border-radius: 7px;
       padding: 8px;
       margin-bottom: 8px;
       width: 100%;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
     }
     .card-title {
       font-size: 11px;
       font-weight: 600;
-      color: #94a3b8;
+      color: var(--card-title);
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin-bottom: 6px;
@@ -139,7 +213,7 @@
     label {
       display: block;
       font-size: 10.5px;
-      color: #a1a1aa;
+      color: var(--text-muted);
       margin-bottom: 3px;
     }
     .row {
@@ -150,9 +224,9 @@
     }
 
     input[type="number"], select, input[type="text"] {
-      background: #18181b;
-      border: 1px solid #3f3f46;
-      color: #f4f4f5;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      color: var(--input-text);
       padding: 4.5px 7px;
       border-radius: 5px;
       font-size: 11.5px;
@@ -172,10 +246,10 @@
       text-align: center;
       text-transform: lowercase;
       font-weight: 700;
-      background: #27272a !important;
-      border-color: #52525b !important;
-      box-shadow: inset 0 -2px 0 rgba(0,0,0,0.4);
-      color: #60a5fa !important;
+      background: var(--kbd-bg) !important;
+      border-color: var(--kbd-border) !important;
+      box-shadow: inset 0 -2px 0 var(--kbd-shadow);
+      color: var(--kbd-text) !important;
       width: 30px !important;
       height: 26px;
       padding: 0 !important;
@@ -187,8 +261,8 @@
       height: 26px;
       padding: 2px;
       cursor: pointer;
-      background: #18181b;
-      border: 1px solid #3f3f46;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
       border-radius: 5px;
       width: 100%;
     }
@@ -224,7 +298,7 @@
     }
     .tip-status {
       font-size: 10px;
-      color: #71717a;
+      color: var(--text-muted);
       margin-top: 4px;
       margin-bottom: 0;
       text-align: center;
@@ -242,11 +316,11 @@
     }
     .history-sub {
       font-size: 10px;
-      color: #71717a;
+      color: var(--text-muted);
     }
     .clear-btn {
       background: rgba(239, 68, 68, 0.12);
-      color: #f87171;
+      color: #ef4444;
       border: 1px solid rgba(239, 68, 68, 0.25);
       border-radius: 4px;
       padding: 2px 6px;
@@ -258,7 +332,7 @@
     }
     .clear-btn:hover {
       background: rgba(239, 68, 68, 0.25);
-      color: #ef4444;
+      color: #dc2626;
     }
 
     .history-list {
@@ -273,13 +347,13 @@
       width: 4px;
     }
     .history-list::-webkit-scrollbar-thumb {
-      background: #3f3f46;
+      background: var(--input-border);
       border-radius: 4px;
     }
 
     .history-item {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: var(--history-item-bg);
+      border: 1px solid var(--history-item-border);
       border-radius: 6px;
       padding: 6px 8px;
       display: flex;
@@ -290,8 +364,8 @@
       width: 100%;
     }
     .history-item:hover {
-      background: rgba(255, 255, 255, 0.06);
-      border-color: rgba(255, 255, 255, 0.12);
+      background: var(--history-item-hover-bg);
+      border-color: var(--history-item-hover-border);
       transform: translateY(-1px);
     }
     .history-info {
@@ -303,7 +377,7 @@
       display: block;
       font-size: 11px;
       font-weight: 500;
-      color: #60a5fa;
+      color: var(--history-title-color);
       text-decoration: none;
       white-space: nowrap;
       overflow: hidden;
@@ -316,12 +390,12 @@
     }
     .history-time {
       font-size: 9.5px;
-      color: #71717a;
+      color: var(--text-muted);
     }
     .history-delete-btn {
       background: transparent;
       border: none;
-      color: #71717a;
+      color: var(--text-muted);
       cursor: pointer;
       padding: 2.5px 4px;
       border-radius: 4px;
@@ -343,7 +417,7 @@
     .history-empty {
       text-align: center;
       padding: 24px 0;
-      color: #71717a;
+      color: var(--text-muted);
       width: 100%;
     }
     .history-empty-icon {
@@ -395,7 +469,7 @@
             <option value="h">时</option>
           </select>
           <div style="display:flex; align-items:center; gap:4px; flex-shrink: 0;">
-            <span style="font-size:11px; color:#71717a;">键:</span>
+            <span style="font-size:11px; color:var(--text-muted);">键:</span>
             <input type="text" id="jKey" class="kbd-input" maxlength="1" value="j" title="触发按键">
           </div>
         </div>
@@ -411,7 +485,7 @@
             <option value="h">时</option>
           </select>
           <div style="display:flex; align-items:center; gap:4px; flex-shrink: 0;">
-            <span style="font-size:11px; color:#71717a;">键:</span>
+            <span style="font-size:11px; color:var(--text-muted);">键:</span>
             <input type="text" id="lKey" class="kbd-input" maxlength="1" value="l" title="触发按键">
           </div>
         </div>
