@@ -5,22 +5,49 @@
   <title>影院模式设置</title>
   <style>
     body {
-      width: 280px;
+      width: 320px;
       margin: 0;
-      padding: 16px;
+      padding: 14px;
       font-family: system-ui, -apple-system, "PingFang SC", sans-serif;
       background: #18181b;
       color: #f4f4f5;
     }
-    h2 {
-      font-size: 16px;
-      margin: 0 0 16px 0;
-      font-weight: 600;
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
       border-bottom: 1px solid #27272a;
       padding-bottom: 8px;
     }
+    .tab-btn {
+      flex: 1;
+      background: #27272a;
+      border: 1px solid #3f3f46;
+      color: #a1a1aa;
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tab-btn.active {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      color: #ffffff;
+    }
+    .tab-btn:hover:not(.active) {
+      background: #3f3f46;
+      color: #ffffff;
+    }
+    h2 {
+      font-size: 14px;
+      margin: 0 0 12px 0;
+      font-weight: 600;
+      color: #e4e4e7;
+    }
     .form-group {
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
     label {
       display: block;
@@ -48,7 +75,7 @@
     .save-btn {
       width: 100%;
       background: #3b82f6;
-      color: #white;
+      color: #ffffff;
       border: none;
       padding: 8px;
       border-radius: 6px;
@@ -66,92 +93,200 @@
       margin-top: 8px;
       text-align: center;
     }
+
+    /* 历史记录 Tab 样式 */
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .history-tip {
+      font-size: 11px;
+      color: #71717a;
+    }
+    .clear-btn {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 4px;
+      padding: 3px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .clear-btn:hover {
+      background: rgba(239, 68, 68, 0.3);
+    }
+    .history-list {
+      max-height: 380px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-right: 2px;
+    }
+    .history-item {
+      background: #27272a;
+      border: 1px solid #3f3f46;
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      transition: border-color 0.15s;
+    }
+    .history-item:hover {
+      border-color: #52525b;
+    }
+    .history-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .history-title {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: #60a5fa;
+      text-decoration: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 4px;
+    }
+    .history-title:hover {
+      text-decoration: underline;
+    }
+    .history-time {
+      font-size: 11px;
+      color: #71717a;
+    }
+    .history-delete-btn {
+      background: none;
+      border: none;
+      color: #71717a;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-size: 14px;
+      line-height: 1;
+    }
+    .history-delete-btn:hover {
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.1);
+    }
+    .history-empty {
+      text-align: center;
+      padding: 28px 0;
+      color: #71717a;
+      font-size: 13px;
+    }
   </style>
 </head>
 <body>
-  <h2>影院模式设置</h2>
-  <div class="form-group">
-    <label>回退快捷键与时长设定</label>
-    <div class="row">
-      <div style="flex:2; display:flex; gap:6px;">
-        <input type="number" id="jValue" min="1" step="any" value="60" style="flex:2;">
-        <select id="jUnit" style="flex:1;">
-          <option value="s">秒</option>
-          <option value="m" selected>分</option>
-          <option value="h">时</option>
-        </select>
-      </div>
-      <div style="flex:1;">
-        <input type="text" id="jKey" maxlength="1" value="j" title="触发按键" style="text-align:center; text-transform:lowercase; font-weight:bold;">
+  <div class="tabs">
+    <button class="tab-btn active" id="tabSettingsBtn">⚙️ 偏好设置</button>
+    <button class="tab-btn" id="tabHistoryBtn">📜 观看历史 (<span id="historyCount">0</span>)</button>
+  </div>
+
+  <!-- 偏好设置 Tab -->
+  <div id="settingsTab">
+    <h2>快捷键与播放设置</h2>
+    <div class="form-group">
+      <label>回退快捷键与时长设定</label>
+      <div class="row">
+        <div style="flex:2; display:flex; gap:6px;">
+          <input type="number" id="jValue" min="1" step="any" value="60" style="flex:2;">
+          <select id="jUnit" style="flex:1;">
+            <option value="s">秒</option>
+            <option value="m" selected>分</option>
+            <option value="h">时</option>
+          </select>
+        </div>
+        <div style="flex:1;">
+          <input type="text" id="jKey" maxlength="1" value="j" title="触发按键" style="text-align:center; text-transform:lowercase; font-weight:bold;">
+        </div>
       </div>
     </div>
-  </div>
-  <div class="form-group">
-    <label>快进快捷键与时长设定</label>
-    <div class="row">
-      <div style="flex:2; display:flex; gap:6px;">
-        <input type="number" id="lValue" min="1" step="any" value="60" style="flex:2;">
-        <select id="lUnit" style="flex:1;">
-          <option value="s">秒</option>
-          <option value="m" selected>分</option>
-          <option value="h">时</option>
-        </select>
-      </div>
-      <div style="flex:1;">
-        <input type="text" id="lKey" maxlength="1" value="l" title="触发按键" style="text-align:center; text-transform:lowercase; font-weight:bold;">
-      </div>
-    </div>
-  </div>
-  <div class="form-group">
-    <label>遮罩层透明度 (0.0 - 1.0)</label>
-    <input type="number" id="opacity" min="0" max="1" step="0.05" value="0.88">
-  </div>
-
-  <hr style="border: none; border-top: 1px solid #27272a; margin: 16px 0;">
-  <h2>字幕样式设置</h2>
-
-  <div class="form-group">
-    <label>字体大小 (px)</label>
-    <input type="number" id="subFontSize" min="12" max="48" step="1" value="18">
-  </div>
-
-  <div class="form-group">
-    <div class="row">
-      <div style="flex:1;">
-        <label>字体颜色</label>
-        <input type="color" id="subFontColor" value="#ffffff" style="height:36px; padding:2px; cursor:pointer;">
-      </div>
-      <div style="flex:1;">
-        <label>背景颜色</label>
-        <input type="color" id="subBgColor" value="#000000" style="height:36px; padding:2px; cursor:pointer;">
+    <div class="form-group">
+      <label>快进快捷键与时长设定</label>
+      <div class="row">
+        <div style="flex:2; display:flex; gap:6px;">
+          <input type="number" id="lValue" min="1" step="any" value="60" style="flex:2;">
+          <select id="lUnit" style="flex:1;">
+            <option value="s">秒</option>
+            <option value="m" selected>分</option>
+            <option value="h">时</option>
+          </select>
+        </div>
+        <div style="flex:1;">
+          <input type="text" id="lKey" maxlength="1" value="l" title="触发按键" style="text-align:center; text-transform:lowercase; font-weight:bold;">
+        </div>
       </div>
     </div>
-  </div>
+    <div class="form-group">
+      <label>遮罩层透明度 (0.0 - 1.0)</label>
+      <input type="number" id="opacity" min="0" max="1" step="0.05" value="0.88">
+    </div>
 
-  <div class="form-group">
-    <div class="row">
-      <div style="flex:1;">
-        <label>背景透明度 (0-1)</label>
-        <input type="number" id="subBgOpacity" min="0" max="1" step="0.05" value="0.6">
-      </div>
-      <div style="flex:1;">
-        <label>字体粗细</label>
-        <select id="subFontWeight">
-          <option value="400">常规 (Normal)</option>
-          <option value="500" selected>中等 (Medium)</option>
-          <option value="700">加粗 (Bold)</option>
-        </select>
+    <hr style="border: none; border-top: 1px solid #27272a; margin: 14px 0;">
+    <h2>字幕样式设置</h2>
+
+    <div class="form-group">
+      <label>字体大小 (px)</label>
+      <input type="number" id="subFontSize" min="12" max="48" step="1" value="18">
+    </div>
+
+    <div class="form-group">
+      <div class="row">
+        <div style="flex:1;">
+          <label>字体颜色</label>
+          <input type="color" id="subFontColor" value="#ffffff" style="height:36px; padding:2px; cursor:pointer;">
+        </div>
+        <div style="flex:1;">
+          <label>背景颜色</label>
+          <input type="color" id="subBgColor" value="#000000" style="height:36px; padding:2px; cursor:pointer;">
+        </div>
       </div>
     </div>
+
+    <div class="form-group">
+      <div class="row">
+        <div style="flex:1;">
+          <label>背景透明度 (0-1)</label>
+          <input type="number" id="subBgOpacity" min="0" max="1" step="0.05" value="0.6">
+        </div>
+        <div style="flex:1;">
+          <label>字体粗细</label>
+          <select id="subFontWeight">
+            <option value="400">常规 (Normal)</option>
+            <option value="500" selected>中等 (Medium)</option>
+            <option value="700">加粗 (Bold)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>底部偏移量 (px)</label>
+      <input type="number" id="subBottomOffset" min="10" max="200" step="5" value="30">
+    </div>
+
+    <button class="save-btn" id="save">保存设置</button>
+    <div class="tip" id="status">设置修改后即时生效</div>
   </div>
 
-  <div class="form-group">
-    <label>底部偏移量 (px)</label>
-    <input type="number" id="subBottomOffset" min="10" max="200" step="5" value="30">
+  <!-- 历史记录 Tab -->
+  <div id="historyTab" style="display:none;">
+    <div class="history-header">
+      <span class="history-tip">最多保存 90 条播放记录</span>
+      <button id="clearHistoryBtn" class="clear-btn">清空历史</button>
+    </div>
+    <div id="historyList" class="history-list">
+      <!-- 动态插入历史卡片 -->
+    </div>
   </div>
-
-  <button class="save-btn" id="save">保存设置</button>
-  <div class="tip" id="status">设置修改后即时生效</div>
 
   <script src="popup.js"></script>
 </body>

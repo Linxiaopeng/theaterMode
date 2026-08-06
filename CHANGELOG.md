@@ -1,6 +1,8 @@
-# Changelog
+## [Unreleased]
 
-本项目遵循 [Semantic Versioning (语义化版本 2.0.0)](https://semver.org/lang/zh-CN/) 规范。
+### 🚀 Added
+- **视频观看历史记录**：新增本地视频播放历史保存（使用 `chrome.storage.local`，上限 90 条），自动记录播放视频的 URL 链接、网页标题以及具体观看日期与时间。
+- **Popup 历史记录面板**：Popup 弹窗新增「观看历史」Tab，支持快速查看、新标签页一键访问、单条删除及一键清空全部历史。
 
 ---
 

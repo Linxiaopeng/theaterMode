@@ -63,6 +63,48 @@
     });
   }
 
+  /* ---------- 历史记录管理 (最多90条) ---------- */
+  let recordedUrlForPage = '';
+
+  function recordWatchHistory() {
+    try {
+      const url = window.location.href;
+      if (!url || url.startsWith('chrome://') || url.startsWith('chrome-extension://') || url.startsWith('about:')) return;
+      if (recordedUrlForPage === url) return;
+
+      const rawTitle = document.title || url;
+      const title = rawTitle.trim().replace(/\s+/g, ' ');
+      const now = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      const timeString = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        chrome.storage.local.get({ history: [] }, (res) => {
+          let list = Array.isArray(res.history) ? res.history : [];
+          // 如果已有相同 URL 记录，滤除旧项，最新放至队首
+          list = list.filter(item => item && item.url !== url);
+          list.unshift({
+            url: url,
+            title: title,
+            time: timeString,
+            timestamp: now.getTime()
+          });
+
+          // 保留最多 90 条历史记录
+          if (list.length > 90) {
+            list = list.slice(0, 90);
+          }
+
+          chrome.storage.local.set({ history: list }, () => {
+            recordedUrlForPage = url;
+          });
+        });
+      }
+    } catch (e) {
+      console.warn('[Theater Mode] Failed to record watch history:', e);
+    }
+  }
+
   const px = (n) => `${n}px`;
 
   /* ---------- 检测 ---------- */
@@ -151,6 +193,8 @@
 
   function enterCinema(video) {
     if (cinema) return;
+
+    recordWatchHistory();
 
     const player = findPlayerContainer(video);
     const saved = {
@@ -340,7 +384,13 @@
     updateButton();
   }, 100);
 
-  document.addEventListener('play', () => updateButton(), true);
+  document.addEventListener('play', () => {
+    updateButton();
+    const best = findBestVideo();
+    if (best && isActiveVideo(best)) {
+      recordWatchHistory();
+    }
+  }, true);
   document.addEventListener('pause', () => updateButton(), true);
 
   document.addEventListener('keydown', (e) => {

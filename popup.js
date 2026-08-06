@@ -1,4 +1,26 @@
 document.addEventListener('DOMContentLoaded', () => {
+  // Tab 切换逻辑
+  const tabSettingsBtn = document.getElementById('tabSettingsBtn');
+  const tabHistoryBtn = document.getElementById('tabHistoryBtn');
+  const settingsTab = document.getElementById('settingsTab');
+  const historyTab = document.getElementById('historyTab');
+
+  tabSettingsBtn.addEventListener('click', () => {
+    tabSettingsBtn.classList.add('active');
+    tabHistoryBtn.classList.remove('active');
+    settingsTab.style.display = 'block';
+    historyTab.style.display = 'none';
+  });
+
+  tabHistoryBtn.addEventListener('click', () => {
+    tabHistoryBtn.classList.add('active');
+    tabSettingsBtn.classList.remove('active');
+    historyTab.style.display = 'block';
+    settingsTab.style.display = 'none';
+    loadHistory();
+  });
+
+  // 偏好设置 DOM
   const jValueInput = document.getElementById('jValue');
   const jUnitSelect = document.getElementById('jUnit');
   const jKeyInput = document.getElementById('jKey');
@@ -16,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const statusDiv = document.getElementById('status');
 
-  // 加载存储的配置
+  // 加载存储的偏好配置
   chrome.storage.sync.get({
     jDuration: 60,  // 默认60秒（1分钟）
     jKey: 'j',
@@ -30,7 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
     subFontWeight: '500',
     subBottomOffset: 30
   }, (items) => {
-    // 转换为合适单位展示
     parseToUI(items.jDuration, jValueInput, jUnitSelect);
     jKeyInput.value = items.jKey || 'j';
     parseToUI(items.lDuration, lValueInput, lUnitSelect);
@@ -45,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
     subBottomOffsetInput.value = items.subBottomOffset;
   });
 
+  // 保存偏好配置
   document.getElementById('save').addEventListener('click', () => {
     const jSec = parseToSeconds(jValueInput.value, jUnitSelect.value);
     const jKey = (jKeyInput.value || 'j').trim().toLowerCase().charAt(0) || 'j';
@@ -85,6 +107,83 @@ document.addEventListener('DOMContentLoaded', () => {
         statusDiv.style.color = '#71717a';
       }, 2000);
     });
+  });
+
+  // 历史记录加载与管理
+  const historyList = document.getElementById('historyList');
+  const historyCountSpan = document.getElementById('historyCount');
+  const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+  function loadHistory() {
+    chrome.storage.local.get({ history: [] }, (res) => {
+      const list = Array.isArray(res.history) ? res.history : [];
+      historyCountSpan.textContent = list.length;
+
+      if (list.length === 0) {
+        historyList.innerHTML = '<div class="history-empty">尚无观看历史记录</div>';
+        return;
+      }
+
+      historyList.innerHTML = '';
+      list.forEach((item, index) => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'history-item';
+
+        const infoEl = document.createElement('div');
+        infoEl.className = 'history-info';
+
+        const titleLink = document.createElement('a');
+        titleLink.className = 'history-title';
+        titleLink.href = item.url;
+        titleLink.target = '_blank';
+        titleLink.title = `${item.title}\n${item.url}`;
+        titleLink.textContent = item.title || item.url;
+
+        const timeEl = document.createElement('div');
+        timeEl.className = 'history-time';
+        timeEl.textContent = item.time || '';
+
+        infoEl.appendChild(titleLink);
+        infoEl.appendChild(timeEl);
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'history-delete-btn';
+        delBtn.title = '删除此条记录';
+        delBtn.innerHTML = '&times;';
+        delBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteHistoryItem(index);
+        });
+
+        itemEl.appendChild(infoEl);
+        itemEl.appendChild(delBtn);
+        historyList.appendChild(itemEl);
+      });
+    });
+  }
+
+  function deleteHistoryItem(indexToDelete) {
+    chrome.storage.local.get({ history: [] }, (res) => {
+      let list = Array.isArray(res.history) ? res.history : [];
+      list.splice(indexToDelete, 1);
+      chrome.storage.local.set({ history: list }, () => {
+        loadHistory();
+      });
+    });
+  }
+
+  clearHistoryBtn.addEventListener('click', () => {
+    if (confirm('确定要清空全部观看历史记录吗？')) {
+      chrome.storage.local.set({ history: [] }, () => {
+        loadHistory();
+      });
+    }
+  });
+
+  // 初始时加载历史数量标记
+  chrome.storage.local.get({ history: [] }, (res) => {
+    const list = Array.isArray(res.history) ? res.history : [];
+    historyCountSpan.textContent = list.length;
   });
 });
 
