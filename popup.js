@@ -36,6 +36,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const subFontWeightSelect = document.getElementById('subFontWeight');
   const subBottomOffsetInput = document.getElementById('subBottomOffset');
 
+  const ambilightEnabledInput = document.getElementById('ambilightEnabled');
+  const ambilightIntensityInput = document.getElementById('ambilightIntensity');
+
   const statusDiv = document.getElementById('status');
 
   // 加载存储的偏好配置
@@ -50,7 +53,9 @@ document.addEventListener('DOMContentLoaded', () => {
     subBgColor: '#000000',
     subBgOpacity: 0.6,
     subFontWeight: '500',
-    subBottomOffset: 30
+    subBottomOffset: 30,
+    ambilightEnabled: true,
+    ambilightIntensity: 0.65
   }, (items) => {
     parseToUI(items.jDuration, jValueInput, jUnitSelect);
     jKeyInput.value = items.jKey || 'j';
@@ -64,6 +69,9 @@ document.addEventListener('DOMContentLoaded', () => {
     subBgOpacityInput.value = items.subBgOpacity;
     subFontWeightSelect.value = items.subFontWeight;
     subBottomOffsetInput.value = items.subBottomOffset;
+
+    ambilightEnabledInput.checked = items.ambilightEnabled;
+    ambilightIntensityInput.value = items.ambilightIntensity;
   });
 
   // 保存偏好配置
@@ -80,6 +88,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const subBgOpacity = Math.max(0, Math.min(1, parseFloat(subBgOpacityInput.value) || 0.6));
     const subFontWeight = subFontWeightSelect.value || '500';
     const subBottomOffset = Math.max(10, Math.min(200, parseFloat(subBottomOffsetInput.value) || 30));
+
+    const ambilightEnabled = ambilightEnabledInput.checked;
+    const ambilightIntensity = Math.max(0.1, Math.min(1.0, parseFloat(ambilightIntensityInput.value) || 0.65));
 
     if (isNaN(jSec) || isNaN(lSec) || jSec <= 0 || lSec <= 0) {
       statusDiv.textContent = '⚠️ 请输入有效的时间数值！';
@@ -98,7 +109,9 @@ document.addEventListener('DOMContentLoaded', () => {
       subBgColor,
       subBgOpacity,
       subFontWeight,
-      subBottomOffset
+      subBottomOffset,
+      ambilightEnabled,
+      ambilightIntensity
     }, () => {
       statusDiv.textContent = '✓ 保存成功，配置即时生效';
       statusDiv.style.color = '#34d399';

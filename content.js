@@ -22,7 +22,9 @@
     subBgColor: '#000000',
     subBgOpacity: 0.6,
     subFontWeight: '500',
-    subBottomOffset: 30
+    subBottomOffset: 30,
+    ambilightEnabled: true,
+    ambilightIntensity: 0.65
   };
 
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
@@ -47,6 +49,13 @@
         if (changes.subBgOpacity) currentSettings.subBgOpacity = changes.subBgOpacity.newValue;
         if (changes.subFontWeight) currentSettings.subFontWeight = changes.subFontWeight.newValue;
         if (changes.subBottomOffset) currentSettings.subBottomOffset = changes.subBottomOffset.newValue;
+        if (changes.ambilightEnabled) currentSettings.ambilightEnabled = changes.ambilightEnabled.newValue;
+        if (changes.ambilightIntensity) {
+          currentSettings.ambilightIntensity = changes.ambilightIntensity.newValue;
+          if (cinema && cinema.ambilightEl) {
+            cinema.ambilightEl.style.opacity = currentSettings.ambilightIntensity;
+          }
+        }
 
         // 如果字幕渲染器已存在，实时更新其样式设置
         if (cinema && cinema.subtitleRenderer) {
@@ -321,7 +330,34 @@
       bottomOffset: currentSettings.subBottomOffset
     });
 
-    cinema = { video, player, saved, subtitleRenderer };
+    // 网页背景氛围光（Ambilight）
+    let ambilightEl = null;
+    let ambilightInterval = null;
+    let glowVideo = null;
+    if (currentSettings.ambilightEnabled) {
+      ambilightEl = document.createElement('div');
+      ambilightEl.className = 'cinema-ambilight-glow';
+      ambilightEl.style.opacity = currentSettings.ambilightIntensity;
+
+      glowVideo = video.cloneNode(true);
+      glowVideo.muted = true;
+      glowVideo.removeAttribute('id');
+      glowVideo.style.cssText = 'width:100%; height:100%; object-fit:cover;';
+      ambilightEl.appendChild(glowVideo);
+      stage.appendChild(ambilightEl);
+
+      ambilightInterval = setInterval(() => {
+        if (!glowVideo || !video) return;
+        if (glowVideo.paused !== video.paused) {
+          video.paused ? glowVideo.pause() : glowVideo.play().catch(() => {});
+        }
+        if (Math.abs(glowVideo.currentTime - video.currentTime) > 0.4) {
+          glowVideo.currentTime = video.currentTime;
+        }
+      }, 300);
+    }
+
+    cinema = { video, player, saved, subtitleRenderer, ambilightEl, ambilightInterval, glowVideo };
     setButtonVisible(false);
 
     requestAnimationFrame(() => {
@@ -331,11 +367,18 @@
 
   function exitCinema() {
     if (!cinema) return;
-    const { video, player, saved, subtitleRenderer } = cinema;
+    const { video, player, saved, subtitleRenderer, ambilightEl, ambilightInterval, glowVideo } = cinema;
     const stageRef = stage;
 
     if (subtitleRenderer) {
       subtitleRenderer.destroy();
+    }
+
+    if (ambilightInterval) {
+      clearInterval(ambilightInterval);
+    }
+    if (ambilightEl) {
+      ambilightEl.remove();
     }
 
     if (stageRef && player.parentNode === stageRef) {
