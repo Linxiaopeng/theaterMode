@@ -330,34 +330,34 @@
       bottomOffset: currentSettings.subBottomOffset
     });
 
-    // 网页背景氛围光（Ambilight）
+    // 网页背景氛围光（Ambilight Canvas 渲染版，完美支持 YouTube/Bilibili 等所有 MSE 视频）
     let ambilightEl = null;
     let ambilightInterval = null;
-    let glowVideo = null;
     if (currentSettings.ambilightEnabled) {
       ambilightEl = document.createElement('div');
       ambilightEl.className = 'cinema-ambilight-glow';
       ambilightEl.style.opacity = currentSettings.ambilightIntensity;
 
-      glowVideo = video.cloneNode(true);
-      glowVideo.muted = true;
-      glowVideo.removeAttribute('id');
-      glowVideo.style.cssText = 'width:100%; height:100%; object-fit:cover;';
-      ambilightEl.appendChild(glowVideo);
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 36;
+      canvas.style.cssText = 'width: 100%; height: 100%; object-fit: cover; display: block;';
+      const ctx = canvas.getContext('2d', { alpha: false });
+
+      ambilightEl.appendChild(canvas);
       stage.appendChild(ambilightEl);
 
       ambilightInterval = setInterval(() => {
-        if (!glowVideo || !video) return;
-        if (glowVideo.paused !== video.paused) {
-          video.paused ? glowVideo.pause() : glowVideo.play().catch(() => {});
+        if (!video || video.paused || video.ended || !video.isConnected) return;
+        try {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        } catch (e) {
+          // 忽略跨域绘制受限等异常
         }
-        if (Math.abs(glowVideo.currentTime - video.currentTime) > 0.4) {
-          glowVideo.currentTime = video.currentTime;
-        }
-      }, 300);
+      }, 100);
     }
 
-    cinema = { video, player, saved, subtitleRenderer, ambilightEl, ambilightInterval, glowVideo };
+    cinema = { video, player, saved, subtitleRenderer, ambilightEl, ambilightInterval };
     setButtonVisible(false);
 
     requestAnimationFrame(() => {
@@ -367,7 +367,7 @@
 
   function exitCinema() {
     if (!cinema) return;
-    const { video, player, saved, subtitleRenderer, ambilightEl, ambilightInterval, glowVideo } = cinema;
+    const { video, player, saved, subtitleRenderer, ambilightEl, ambilightInterval } = cinema;
     const stageRef = stage;
 
     if (subtitleRenderer) {

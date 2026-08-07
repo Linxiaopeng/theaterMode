@@ -49,8 +49,13 @@
   align-items: center;
   justify-content: center;
   pointer-events: auto;
-  overflow-y: auto;
+  overflow: hidden;
+  scrollbar-width: none;
   padding: 40px 0;
+}
+
+#cinema-mode-overlay::-webkit-scrollbar {
+  display: none;
 }
 
 .cinema-stage {
