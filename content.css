@@ -317,12 +317,14 @@ html.cinema-mode-active .bilibili-player-video-area {
   flex: 1 1 100% !important;
 }
 
-/* 影院模式下：无操作静止 2.5s 或离开封面时，自动柔和隐藏播放器进度条、标题与 UP 主头像等 UI */
+/* 影院模式与音乐模式下：无操作静止 2.5s 或离开封面时，自动柔和隐藏播放器进度条、标题、UP 主头像与暂停遮罩等 UI */
 .cinema-stage.user-idle .bpx-player-control-wrap,
 .cinema-stage.user-idle .bpx-player-top-wrap,
+.cinema-stage.user-idle .bpx-player-state-wrap,
 .cinema-stage.user-idle .bpx-player-control-bottom,
 .cinema-stage.user-idle .bilibili-player-video-control,
 .cinema-stage.user-idle .bilibili-player-video-top,
+.cinema-stage.user-idle .bilibili-player-video-state,
 .cinema-stage.user-idle .ytp-chrome-bottom,
 .cinema-stage.user-idle .ytp-chrome-top,
 .cinema-stage.user-idle .ytp-gradient-bottom,
@@ -337,7 +339,30 @@ html.cinema-mode-active .bilibili-player-video-area {
 .cinema-stage.user-idle .art-controls,
 .cinema-stage.user-idle .dplayer-controller,
 .cinema-stage.user-idle .vjs-control-bar,
-.cinema-stage.user-idle .plyr__controls {
+.cinema-stage.user-idle .plyr__controls,
+
+.music-artwork-card.user-idle .bpx-player-control-wrap,
+.music-artwork-card.user-idle .bpx-player-top-wrap,
+.music-artwork-card.user-idle .bpx-player-state-wrap,
+.music-artwork-card.user-idle .bpx-player-control-bottom,
+.music-artwork-card.user-idle .bilibili-player-video-control,
+.music-artwork-card.user-idle .bilibili-player-video-top,
+.music-artwork-card.user-idle .bilibili-player-video-state,
+.music-artwork-card.user-idle .ytp-chrome-bottom,
+.music-artwork-card.user-idle .ytp-chrome-top,
+.music-artwork-card.user-idle .ytp-gradient-bottom,
+.music-artwork-card.user-idle .ytp-gradient-top,
+.music-artwork-card.user-idle .txp_control_bar,
+.music-artwork-card.user-idle .txp_top_bar,
+.music-artwork-card.user-idle .iqp-control-wrap,
+.music-artwork-card.user-idle .iqp-top-wrap,
+.music-artwork-card.user-idle .youku-layer-control,
+.music-artwork-card.user-idle .youku-layer-title,
+.music-artwork-card.user-idle .xgplayer-controls,
+.music-artwork-card.user-idle .art-controls,
+.music-artwork-card.user-idle .dplayer-controller,
+.music-artwork-card.user-idle .vjs-control-bar,
+.music-artwork-card.user-idle .plyr__controls {
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
@@ -346,9 +371,11 @@ html.cinema-mode-active .bilibili-player-video-area {
 
 .cinema-stage.user-active .bpx-player-control-wrap,
 .cinema-stage.user-active .bpx-player-top-wrap,
+.cinema-stage.user-active .bpx-player-state-wrap,
 .cinema-stage.user-active .bpx-player-control-bottom,
 .cinema-stage.user-active .bilibili-player-video-control,
 .cinema-stage.user-active .bilibili-player-video-top,
+.cinema-stage.user-active .bilibili-player-video-state,
 .cinema-stage.user-active .ytp-chrome-bottom,
 .cinema-stage.user-active .ytp-chrome-top,
 .cinema-stage.user-active .ytp-gradient-bottom,
@@ -363,7 +390,30 @@ html.cinema-mode-active .bilibili-player-video-area {
 .cinema-stage.user-active .art-controls,
 .cinema-stage.user-active .dplayer-controller,
 .cinema-stage.user-active .vjs-control-bar,
-.cinema-stage.user-active .plyr__controls {
+.cinema-stage.user-active .plyr__controls,
+
+.music-artwork-card.user-active .bpx-player-control-wrap,
+.music-artwork-card.user-active .bpx-player-top-wrap,
+.music-artwork-card.user-active .bpx-player-state-wrap,
+.music-artwork-card.user-active .bpx-player-control-bottom,
+.music-artwork-card.user-active .bilibili-player-video-control,
+.music-artwork-card.user-active .bilibili-player-video-top,
+.music-artwork-card.user-active .bilibili-player-video-state,
+.music-artwork-card.user-active .ytp-chrome-bottom,
+.music-artwork-card.user-active .ytp-chrome-top,
+.music-artwork-card.user-active .ytp-gradient-bottom,
+.music-artwork-card.user-active .ytp-gradient-top,
+.music-artwork-card.user-active .txp_control_bar,
+.music-artwork-card.user-active .txp_top_bar,
+.music-artwork-card.user-active .iqp-control-wrap,
+.music-artwork-card.user-active .iqp-top-wrap,
+.music-artwork-card.user-active .youku-layer-control,
+.music-artwork-card.user-active .youku-layer-title,
+.music-artwork-card.user-active .xgplayer-controls,
+.music-artwork-card.user-active .art-controls,
+.music-artwork-card.user-active .dplayer-controller,
+.music-artwork-card.user-active .vjs-control-bar,
+.music-artwork-card.user-active .plyr__controls {
   opacity: 1 !important;
   visibility: visible !important;
   pointer-events: auto !important;

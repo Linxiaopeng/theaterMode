@@ -993,15 +993,47 @@
 
     ROOT().appendChild(overlayEl);
 
+    // 鼠标在封面/播放器卡片上划过与无操作 2.5s 自动柔和隐藏播放器内置控件/头像/暂停图标
+    let musicMouseIdleTimer = null;
+    const showMusicControls = () => {
+      artworkCard.classList.add('user-active');
+      artworkCard.classList.remove('user-idle');
+    };
+    const hideMusicControls = () => {
+      artworkCard.classList.remove('user-active');
+      artworkCard.classList.add('user-idle');
+    };
+    const handleMusicMouseMove = () => {
+      showMusicControls();
+      if (musicMouseIdleTimer) clearTimeout(musicMouseIdleTimer);
+      musicMouseIdleTimer = setTimeout(() => {
+        hideMusicControls();
+      }, 2500);
+    };
+    const handleMusicMouseLeave = () => {
+      if (musicMouseIdleTimer) clearTimeout(musicMouseIdleTimer);
+      hideMusicControls();
+    };
+
+    artworkCard.addEventListener('mousemove', handleMusicMouseMove);
+    artworkCard.addEventListener('mouseenter', handleMusicMouseMove);
+    artworkCard.addEventListener('mouseleave', handleMusicMouseLeave);
+
+    handleMusicMouseMove();
+
     musicCinema = {
       video,
       player,
       saved,
       overlayEl,
       stageEl,
+      artworkCard,
       clockTimer,
       updateBgColorTimer,
-      syncProgressTimer
+      syncProgressTimer,
+      musicMouseIdleTimer,
+      handleMusicMouseMove,
+      handleMusicMouseLeave
     };
 
     setButtonVisible(false);
@@ -1009,12 +1041,19 @@
 
   function exitMusicMode() {
     if (!musicCinema) return;
-    const { video, player, saved, overlayEl, clockTimer, updateBgColorTimer, syncProgressTimer } = musicCinema;
+    const { video, player, saved, overlayEl, artworkCard, clockTimer, updateBgColorTimer, syncProgressTimer, musicMouseIdleTimer, handleMusicMouseMove, handleMusicMouseLeave } = musicCinema;
 
     document.documentElement.classList.remove('music-mode-active');
     document.body.classList.remove('music-mode-active');
     document.documentElement.classList.remove('clean-player-active');
     document.body.classList.remove('clean-player-active');
+
+    if (artworkCard && handleMusicMouseMove && handleMusicMouseLeave) {
+      artworkCard.removeEventListener('mousemove', handleMusicMouseMove);
+      artworkCard.removeEventListener('mouseenter', handleMusicMouseMove);
+      artworkCard.removeEventListener('mouseleave', handleMusicMouseLeave);
+    }
+    if (musicMouseIdleTimer) clearTimeout(musicMouseIdleTimer);
 
     if (clockTimer) clearInterval(clockTimer);
     if (updateBgColorTimer) clearInterval(updateBgColorTimer);
