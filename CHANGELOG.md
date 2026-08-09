@@ -1,3 +1,11 @@
+## [2.0.6] - 2026-08-09
+
+### 🚀 Added & 🎨 Improved
+- **音乐模式全真 Ambilight 背景实时流光渲染**：音乐模式背景切换为与影院模式完全一致的 Canvas/视频帧实时流光绘制引擎。根据封面画面色彩动态渲染全屏 `blur(${musicBlurRadius}px)` 高阶光晕，并融合 `has-edge-wave` 无感有机边缘波动动画。
+- **iOS 玻璃态面板阴影轻量化微调**：降低了封面卡片 (`.music-artwork-card`) 与控件面板 (`.music-controls-card`) 过深的阴影透明度，修改为精致轻盈的 `0 12px 32px rgba(0,0,0,0.22)` 浮动玻璃投影。
+
+---
+
 ## [2.0.5] - 2026-08-09
 
 ### 🎨 Improved & 🚀 Added
