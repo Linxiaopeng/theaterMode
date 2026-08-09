@@ -26,7 +26,11 @@
     subBottomOffset: 30,
     ambilightEnabled: true,
     ambilightWaveEnabled: true,
-    ambilightIntensity: 0.65
+    ambilightIntensity: 0.65,
+    musicCardWidth: 380,
+    musicPadding: 40,
+    musicClockTopOffset: 50,
+    musicBlurRadius: 65
   };
 
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
@@ -50,7 +54,7 @@
         }
         if (changes.cleanPlayerEnabled) {
           currentSettings.cleanPlayerEnabled = changes.cleanPlayerEnabled.newValue;
-          if (cinema) {
+          if (cinema || musicCinema) {
             document.documentElement.classList.toggle('clean-player-active', !!currentSettings.cleanPlayerEnabled);
             document.body.classList.toggle('clean-player-active', !!currentSettings.cleanPlayerEnabled);
           }
@@ -72,6 +76,33 @@
           currentSettings.ambilightIntensity = changes.ambilightIntensity.newValue;
           if (cinema && cinema.ambilightEl) {
             cinema.ambilightEl.style.opacity = currentSettings.ambilightIntensity;
+          }
+        }
+        if (changes.musicCardWidth) {
+          currentSettings.musicCardWidth = changes.musicCardWidth.newValue;
+          if (musicCinema && musicCinema.overlayEl) {
+            const card = musicCinema.overlayEl.querySelector('.music-card');
+            if (card) card.style.width = `${currentSettings.musicCardWidth}px`;
+          }
+        }
+        if (changes.musicPadding) {
+          currentSettings.musicPadding = changes.musicPadding.newValue;
+          if (musicCinema && musicCinema.stageEl) {
+            musicCinema.stageEl.style.padding = `${currentSettings.musicPadding}px 24px`;
+          }
+        }
+        if (changes.musicClockTopOffset) {
+          currentSettings.musicClockTopOffset = changes.musicClockTopOffset.newValue;
+          if (musicCinema && musicCinema.overlayEl) {
+            const clock = musicCinema.overlayEl.querySelector('.music-clock-header');
+            if (clock) clock.style.marginTop = `${currentSettings.musicClockTopOffset}px`;
+          }
+        }
+        if (changes.musicBlurRadius) {
+          currentSettings.musicBlurRadius = changes.musicBlurRadius.newValue;
+          if (musicCinema && musicCinema.overlayEl) {
+            const bg = musicCinema.overlayEl.querySelector('.music-bg-blur');
+            if (bg) bg.style.filter = `blur(${currentSettings.musicBlurRadius}px) brightness(0.68) saturate(180%)`;
           }
         }
 
@@ -178,18 +209,36 @@
     if (btn) return;
     btn = document.createElement('div');
     btn.id = BTN_ID;
-    btn.title = '影院模式（按 ESC 退出）';
-    btn.setAttribute('role', 'button');
-    btn.setAttribute('aria-label', '进入影院模式');
+    btn.className = 'cinema-float-bar';
     btn.innerHTML =
+      '<button class="cinema-float-btn" id="cinema-btn-cinema" title="影院模式 (按 ESC 退出)">' +
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
       '<rect x="2.5" y="4" width="19" height="16" rx="3"/>' +
       '<path d="M10 9v6l5-3z" fill="currentColor" stroke="none"/>' +
-      '</svg>';
-    btn.addEventListener('click', () => {
+      '</svg>' +
+      '<span>影院</span>' +
+      '</button>' +
+      '<button class="cinema-float-btn" id="cinema-btn-music" title="音乐模式 (iOS 锁屏美学)">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M9 18V5l12-2v13"/>' +
+      '<circle cx="6" cy="18" r="3"/>' +
+      '<circle cx="18" cy="16" r="3"/>' +
+      '</svg>' +
+      '<span>音乐</span>' +
+      '</button>';
+
+    btn.querySelector('#cinema-btn-cinema').addEventListener('click', (e) => {
+      e.stopPropagation();
       const v = findBestVideo();
       if (v) enterCinema(v);
     });
+
+    btn.querySelector('#cinema-btn-music').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const v = findBestVideo();
+      if (v) enterMusicMode(v);
+    });
+
     ROOT().appendChild(btn);
   }
 
@@ -360,6 +409,19 @@
     });
     uploadBtn.appendChild(fileInput);
     controlBar.appendChild(uploadBtn);
+
+    // 新增：切换至音乐模式按钮
+    const musicModeBtn = document.createElement('button');
+    musicModeBtn.className = 'cinema-ctrl-btn';
+    musicModeBtn.textContent = '🎵 音乐模式';
+    musicModeBtn.title = '切换至 iOS 锁屏美学音乐模式';
+    musicModeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const v = video;
+      exitCinema();
+      enterMusicMode(v);
+    });
+    controlBar.appendChild(musicModeBtn);
 
     overlay.appendChild(stage);
     overlay.appendChild(controlBar);
@@ -629,10 +691,310 @@
     updateButton();
   }
 
+  /* ---------- 🎵 音乐模式 (iOS 锁屏美学) ---------- */
+
+  let musicCinema = null;
+
+  function enterMusicMode(video) {
+    if (!video) return;
+    if (cinema) exitCinema();
+    if (musicCinema) exitMusicMode();
+
+    recordWatchHistory(video);
+
+    document.documentElement.classList.add('music-mode-active');
+    document.body.classList.add('music-mode-active');
+
+    if (currentSettings.cleanPlayerEnabled !== false) {
+      document.documentElement.classList.add('clean-player-active');
+      document.body.classList.add('clean-player-active');
+    }
+
+    const player = findPlayerContainer(video);
+    const saved = {
+      parent: player.parentNode,
+      next: player.nextSibling,
+      playerStyle: player.getAttribute('style'),
+      videoStyle: video.getAttribute('style')
+    };
+
+    const overlayEl = document.createElement('div');
+    overlayEl.id = 'music-mode-overlay';
+
+    // 动态模糊主色调背景
+    const bgBlurEl = document.createElement('div');
+    bgBlurEl.className = 'music-bg-blur';
+    bgBlurEl.style.filter = `blur(${currentSettings.musicBlurRadius}px) brightness(0.68) saturate(180%)`;
+
+    // 采样 DOM 动态主色提取器
+    const sampleCanvas = document.createElement('canvas');
+    sampleCanvas.width = 16;
+    sampleCanvas.height = 16;
+    const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
+
+    let updateBgColorTimer = setInterval(() => {
+      if (!video || !video.isConnected) return;
+      try {
+        if (video.readyState >= 2) {
+          sampleCtx.drawImage(video, 0, 0, 16, 16);
+          const data = sampleCtx.getImageData(0, 0, 16, 16).data;
+          let r = 0, g = 0, b = 0, count = 0;
+          for (let i = 0; i < data.length; i += 16) {
+            r += data[i];
+            g += data[i + 1];
+            b += data[i + 2];
+            count++;
+          }
+          r = Math.round(r / count);
+          g = Math.round(g / count);
+          b = Math.round(b / count);
+          bgBlurEl.style.background = `radial-gradient(circle at 50% 30%, rgba(${r},${g},${b},0.85), rgba(${Math.max(0, r-50)},${Math.max(0, g-50)},${Math.max(0, b-50)},0.95) 75%, #050505 100%)`;
+        }
+      } catch (e) {
+        bgBlurEl.style.background = `radial-gradient(circle at 50% 30%, rgba(59, 130, 246, 0.45), rgba(15, 23, 42, 0.95) 75%, #050505 100%)`;
+      }
+    }, 250);
+
+    // 锁屏全局框架
+    const stageEl = document.createElement('div');
+    stageEl.className = 'music-lockscreen-stage';
+    stageEl.style.padding = `${currentSettings.musicPadding}px 24px`;
+
+    // 1. 顶部时间与日期 (iOS 锁屏美学)
+    const clockHeader = document.createElement('div');
+    clockHeader.className = 'music-clock-header';
+    clockHeader.style.marginTop = `${currentSettings.musicClockTopOffset}px`;
+
+    const dateText = document.createElement('div');
+    dateText.className = 'music-date-text';
+
+    const timeText = document.createElement('div');
+    timeText.className = 'music-time-text';
+
+    const updateClock = () => {
+      const now = new Date();
+      const options = { month: 'long', day: 'numeric', weekday: 'long' };
+      dateText.textContent = now.toLocaleDateString('zh-CN', options);
+      const pad = (n) => String(n).padStart(2, '0');
+      timeText.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    };
+    updateClock();
+    let clockTimer = setInterval(updateClock, 1000);
+
+    clockHeader.appendChild(dateText);
+    clockHeader.appendChild(timeText);
+
+    // 2. 中央 iOS 音乐卡片
+    const musicCard = document.createElement('div');
+    musicCard.className = 'music-card';
+    musicCard.style.width = `${currentSettings.musicCardWidth}px`;
+
+    // 封面容器（承载 player）
+    const artworkBox = document.createElement('div');
+    artworkBox.className = 'music-artwork-box';
+    player.style.width = '100%';
+    player.style.height = '100%';
+    player.style.objectFit = 'cover';
+    artworkBox.appendChild(player);
+
+    // 曲目与来源信息
+    const metaBox = document.createElement('div');
+    metaBox.className = 'music-meta-box';
+
+    const trackTitle = document.createElement('div');
+    trackTitle.className = 'music-track-title';
+    const rawTitle = document.title || '未知视频/曲目';
+    trackTitle.textContent = rawTitle.replace(/\s*[-_|_—].*$/, '').trim() || rawTitle;
+
+    const trackSub = document.createElement('div');
+    trackSub.className = 'music-track-sub';
+    trackSub.textContent = window.location.hostname.replace('www.', '');
+
+    metaBox.appendChild(trackTitle);
+    metaBox.appendChild(trackSub);
+
+    // 进度控制滑块
+    const progressBox = document.createElement('div');
+    progressBox.className = 'music-progress-box';
+
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.className = 'music-progress-slider';
+    slider.min = '0';
+    slider.max = '100';
+    slider.value = '0';
+
+    const timeLabels = document.createElement('div');
+    timeLabels.className = 'music-time-labels';
+
+    const curTimeSpan = document.createElement('span');
+    curTimeSpan.textContent = '00:00';
+
+    const durTimeSpan = document.createElement('span');
+    durTimeSpan.textContent = '-00:00';
+
+    timeLabels.appendChild(curTimeSpan);
+    timeLabels.appendChild(durTimeSpan);
+    progressBox.appendChild(slider);
+    progressBox.appendChild(timeLabels);
+
+    const formatSec = (sec) => {
+      if (isNaN(sec) || sec < 0) return '00:00';
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    };
+
+    let isDraggingSlider = false;
+    slider.addEventListener('mousedown', () => { isDraggingSlider = true; });
+    slider.addEventListener('mouseup', () => {
+      isDraggingSlider = false;
+      if (video && !isNaN(video.duration)) {
+        video.currentTime = (parseFloat(slider.value) / 100) * video.duration;
+      }
+    });
+    slider.addEventListener('input', () => {
+      if (video && !isNaN(video.duration)) {
+        const cur = (parseFloat(slider.value) / 100) * video.duration;
+        curTimeSpan.textContent = formatSec(cur);
+        durTimeSpan.textContent = `-${formatSec(video.duration - cur)}`;
+      }
+    });
+
+    let syncProgressTimer = setInterval(() => {
+      if (video && !isNaN(video.duration) && video.duration > 0) {
+        if (!isDraggingSlider) {
+          slider.value = (video.currentTime / video.duration) * 100;
+          curTimeSpan.textContent = formatSec(video.currentTime);
+          durTimeSpan.textContent = `-${formatSec(video.duration - video.currentTime)}`;
+        }
+      }
+    }, 500);
+
+    // 专属音乐操控按钮栏
+    const ctrlRow = document.createElement('div');
+    ctrlRow.className = 'music-ctrl-row';
+
+    const rewindBtn = document.createElement('button');
+    rewindBtn.className = 'music-ctrl-btn';
+    rewindBtn.title = '回退 15 秒';
+    rewindBtn.innerHTML = '⏪ 15s';
+    rewindBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (video && !isNaN(video.duration)) video.currentTime = Math.max(0, video.currentTime - 15);
+    });
+
+    const playToggleBtn = document.createElement('button');
+    playToggleBtn.className = 'music-ctrl-btn primary';
+    playToggleBtn.title = '播放 / 暂停';
+    playToggleBtn.innerHTML = video.paused ? '▶ 播放' : '⏸ 暂停';
+    playToggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (video.paused) {
+        video.play().catch(() => {});
+        playToggleBtn.innerHTML = '⏸ 暂停';
+      } else {
+        video.pause();
+        playToggleBtn.innerHTML = '▶ 播放';
+      }
+    });
+
+    const forwardBtn = document.createElement('button');
+    forwardBtn.className = 'music-ctrl-btn';
+    forwardBtn.title = '快进 15 秒';
+    forwardBtn.innerHTML = '15s ⏩';
+    forwardBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (video && !isNaN(video.duration)) video.currentTime = Math.min(video.duration, video.currentTime + 15);
+    });
+
+    const switchCinemaBtn = document.createElement('button');
+    switchCinemaBtn.className = 'music-ctrl-btn mode-switch';
+    switchCinemaBtn.title = '切换至全屏影院模式';
+    switchCinemaBtn.innerHTML = '🎬 切至影院';
+    switchCinemaBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const v = video;
+      exitMusicMode();
+      enterCinema(v);
+    });
+
+    ctrlRow.appendChild(rewindBtn);
+    ctrlRow.appendChild(playToggleBtn);
+    ctrlRow.appendChild(forwardBtn);
+    ctrlRow.appendChild(switchCinemaBtn);
+
+    musicCard.appendChild(artworkBox);
+    musicCard.appendChild(metaBox);
+    musicCard.appendChild(progressBox);
+    musicCard.appendChild(ctrlRow);
+
+    stageEl.appendChild(clockHeader);
+    stageEl.appendChild(musicCard);
+
+    overlayEl.appendChild(bgBlurEl);
+    overlayEl.appendChild(stageEl);
+
+    ROOT().appendChild(overlayEl);
+
+    musicCinema = {
+      video,
+      player,
+      saved,
+      overlayEl,
+      stageEl,
+      clockTimer,
+      updateBgColorTimer,
+      syncProgressTimer
+    };
+
+    setButtonVisible(false);
+  }
+
+  function exitMusicMode() {
+    if (!musicCinema) return;
+    const { video, player, saved, overlayEl, clockTimer, updateBgColorTimer, syncProgressTimer } = musicCinema;
+
+    document.documentElement.classList.remove('music-mode-active');
+    document.body.classList.remove('music-mode-active');
+    document.documentElement.classList.remove('clean-player-active');
+    document.body.classList.remove('clean-player-active');
+
+    if (clockTimer) clearInterval(clockTimer);
+    if (updateBgColorTimer) clearInterval(updateBgColorTimer);
+    if (syncProgressTimer) clearInterval(syncProgressTimer);
+
+    if (player.parentNode) {
+      player.parentNode.removeChild(player);
+    }
+    if (saved.playerStyle != null) {
+      player.setAttribute('style', saved.playerStyle);
+    } else {
+      player.removeAttribute('style');
+    }
+    if (saved.videoStyle != null) {
+      video.setAttribute('style', saved.videoStyle);
+    } else {
+      video.removeAttribute('style');
+    }
+    if (saved.parent) {
+      if (saved.next && saved.next.parentNode === saved.parent) {
+        saved.parent.insertBefore(player, saved.next);
+      } else {
+        saved.parent.appendChild(player);
+      }
+    }
+
+    if (overlayEl) overlayEl.remove();
+
+    musicCinema = null;
+    updateButton();
+  }
+
   /* ---------- 状态刷新 ---------- */
 
   function updateButton() {
-    if (cinema) {
+    if (cinema || musicCinema) {
       setButtonVisible(false);
       return;
     }
@@ -641,7 +1003,7 @@
   }
 
   setInterval(() => {
-    const activeVideo = cinema ? cinema.video : findBestVideo();
+    const activeVideo = cinema ? cinema.video : (musicCinema ? musicCinema.video : findBestVideo());
     if (activeVideo && isActiveVideo(activeVideo)) {
       recordWatchHistory(activeVideo);
     }
@@ -668,6 +1030,12 @@
       }
       return;
     }
+    if (musicCinema) {
+      if (!musicCinema.video.isConnected || !musicCinema.player.isConnected) {
+        exitMusicMode();
+      }
+      return;
+    }
     updateButton();
   }, 500);
 
@@ -681,11 +1049,12 @@
   document.addEventListener('pause', () => updateButton(), true);
 
   document.addEventListener('keydown', (e) => {
-    if (!cinema) return;
+    if (!cinema && !musicCinema) return;
     if (e.key === 'Escape') {
       e.preventDefault();
       e.stopImmediatePropagation();
-      exitCinema();
+      if (cinema) exitCinema();
+      if (musicCinema) exitMusicMode();
       return;
     }
     // 忽略在输入框中的按键
@@ -693,7 +1062,8 @@
     if (tag === 'input' || tag === 'textarea' || tag === 'select' || (document.activeElement && document.activeElement.isContentEditable)) return;
 
     const key = e.key.toLowerCase();
-    const v = cinema.video;
+    const activeSession = cinema || musicCinema;
+    const v = activeSession.video;
     if (!v || isNaN(v.duration)) return;
 
     const jKey = (currentSettings.jKey || 'j').toLowerCase();

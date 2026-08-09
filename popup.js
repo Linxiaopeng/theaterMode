@@ -41,6 +41,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const ambilightWaveEnabledInput = document.getElementById('ambilightWaveEnabled');
   const ambilightIntensityInput = document.getElementById('ambilightIntensity');
 
+  const musicCardWidthInput = document.getElementById('musicCardWidth');
+  const musicPaddingInput = document.getElementById('musicPadding');
+  const musicClockTopOffsetInput = document.getElementById('musicClockTopOffset');
+  const musicBlurRadiusInput = document.getElementById('musicBlurRadius');
+
   const statusDiv = document.getElementById('status');
 
   // 加载存储的偏好配置
@@ -59,7 +64,11 @@ document.addEventListener('DOMContentLoaded', () => {
     subBottomOffset: 30,
     ambilightEnabled: true,
     ambilightWaveEnabled: true,
-    ambilightIntensity: 0.65
+    ambilightIntensity: 0.65,
+    musicCardWidth: 380,
+    musicPadding: 40,
+    musicClockTopOffset: 50,
+    musicBlurRadius: 65
   }, (items) => {
     parseToUI(items.jDuration, jValueInput, jUnitSelect);
     jKeyInput.value = items.jKey || 'j';
@@ -78,6 +87,11 @@ document.addEventListener('DOMContentLoaded', () => {
     ambilightEnabledInput.checked = items.ambilightEnabled;
     ambilightWaveEnabledInput.checked = items.ambilightWaveEnabled;
     ambilightIntensityInput.value = items.ambilightIntensity;
+
+    musicCardWidthInput.value = items.musicCardWidth;
+    musicPaddingInput.value = items.musicPadding;
+    musicClockTopOffsetInput.value = items.musicClockTopOffset;
+    musicBlurRadiusInput.value = items.musicBlurRadius;
   });
 
   // 保存偏好配置
@@ -100,6 +114,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const ambilightWaveEnabled = ambilightWaveEnabledInput.checked;
     const ambilightIntensity = Math.max(0.1, Math.min(1.0, parseFloat(ambilightIntensityInput.value) || 0.65));
 
+    const musicCardWidth = Math.max(260, Math.min(520, parseInt(musicCardWidthInput.value, 10) || 380));
+    const musicPadding = Math.max(16, Math.min(80, parseInt(musicPaddingInput.value, 10) || 40));
+    const musicClockTopOffset = Math.max(20, Math.min(120, parseInt(musicClockTopOffsetInput.value, 10) || 50));
+    const musicBlurRadius = Math.max(20, Math.min(100, parseInt(musicBlurRadiusInput.value, 10) || 65));
+
     if (isNaN(jSec) || isNaN(lSec) || jSec <= 0 || lSec <= 0) {
       statusDiv.textContent = '⚠️ 请输入有效的时间数值！';
       statusDiv.style.color = '#ef4444';
@@ -121,7 +140,11 @@ document.addEventListener('DOMContentLoaded', () => {
       subBottomOffset,
       ambilightEnabled,
       ambilightWaveEnabled,
-      ambilightIntensity
+      ambilightIntensity,
+      musicCardWidth,
+      musicPadding,
+      musicClockTopOffset,
+      musicBlurRadius
     }, () => {
       statusDiv.textContent = '✓ 保存成功，配置即时生效';
       statusDiv.style.color = '#34d399';
