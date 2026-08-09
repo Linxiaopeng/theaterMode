@@ -89,11 +89,9 @@
         }
         if (changes.musicCardWidth) {
           currentSettings.musicCardWidth = parseInt(changes.musicCardWidth.newValue, 10) || 380;
-          if (musicCinema && musicCinema.overlayEl) {
-            const artCard = musicCinema.overlayEl.querySelector('.music-artwork-card');
-            const ctrlCard = musicCinema.overlayEl.querySelector('.music-controls-card');
-            if (artCard) artCard.style.width = `${currentSettings.musicCardWidth}px`;
-            if (ctrlCard) ctrlCard.style.width = `${currentSettings.musicCardWidth}px`;
+          if (musicCinema) {
+            if (musicCinema.artworkCard) musicCinema.artworkCard.style.width = `${currentSettings.musicCardWidth}px`;
+            if (musicCinema.controlsCard) musicCinema.controlsCard.style.width = `${currentSettings.musicCardWidth}px`;
           }
         }
         if (changes.musicPadding) {
@@ -104,16 +102,14 @@
         }
         if (changes.musicClockTopOffset) {
           currentSettings.musicClockTopOffset = parseInt(changes.musicClockTopOffset.newValue, 10) || 50;
-          if (musicCinema && musicCinema.overlayEl) {
-            const clock = musicCinema.overlayEl.querySelector('.music-clock-header');
-            if (clock) clock.style.marginTop = `${currentSettings.musicClockTopOffset}px`;
+          if (musicCinema && musicCinema.clockHeader) {
+            musicCinema.clockHeader.style.marginTop = `${currentSettings.musicClockTopOffset}px`;
           }
         }
         if (changes.musicBlurRadius) {
           currentSettings.musicBlurRadius = parseInt(changes.musicBlurRadius.newValue, 10) || 65;
-          if (musicCinema && musicCinema.overlayEl) {
-            const bg = musicCinema.overlayEl.querySelector('.music-bg-blur');
-            if (bg) bg.style.filter = `blur(${currentSettings.musicBlurRadius}px) brightness(0.68) saturate(180%)`;
+          if (musicCinema && musicCinema.bgBlurEl) {
+            musicCinema.bgBlurEl.style.filter = `blur(${currentSettings.musicBlurRadius}px) brightness(0.68) saturate(180%)`;
           }
         }
         if (changes.musicStaticCoverEnabled) {
@@ -1137,6 +1133,9 @@
       overlayEl,
       stageEl,
       artworkCard,
+      controlsCard,
+      clockHeader,
+      bgBlurEl,
       clockTimer,
       updateBgColorTimer,
       syncProgressTimer,
