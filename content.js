@@ -296,14 +296,6 @@
   function findPlayerContainer(video) {
     if (!video) return null;
 
-    // 1. 优先捕获核心纯视频画面播放器容器，彻底剥离 YouTube、Bilibili、腾讯视频、爱奇艺等平台的侧边推荐栏、顶部导航与简介栏
-    const coreContainer = video.closest(
-      '#movie_player, .bpx-player-video-area, .bilibili-player-video-area, #player-container-inner, .txp_video_container, .iqp-player-video, .xgplayer, .artplayer-app, .dplayer, .prism-player'
-    );
-    if (coreContainer) {
-      return coreContainer;
-    }
-
     const vw = video.getBoundingClientRect().width;
     let el = video;
     for (let i = 0; i < 6; i++) {
