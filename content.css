@@ -511,7 +511,8 @@ body.music-mode-active {
 
 /* 2. 独立封面卡片 (自适应视频真实比例 1:1, 16:9, 4:3, 9:16，无黑边) */
 .music-artwork-card {
-  max-height: 48vh;
+  max-height: min(65vh, calc(100vh - 200px));
+  max-width: calc(100vw - 32px);
   border-radius: 28px;
   overflow: hidden;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
@@ -528,6 +529,7 @@ body.music-mode-active {
 
 /* 3. 独立 iOS 控件小面板 (在封面正下方) */
 .music-controls-card {
+  max-width: calc(100vw - 32px);
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
