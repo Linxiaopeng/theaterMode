@@ -92,7 +92,7 @@
       padding: 0;
     }
 
-    /* 宿主基础框：透明、无边框、无滚动条 */
+    /* 宿主基础框：透明、无边框、强制不显示滚动条 */
     html, body {
       width: 280px;
       margin: 0;
@@ -101,20 +101,30 @@
       font-family: "YouTube Noto", Roboto, Arial, -apple-system, BlinkMacSystemFont, sans-serif;
       color: var(--text-main);
       user-select: none;
-      overflow: hidden;
+      overflow: hidden !important;
+      scrollbar-width: none !important;
+    }
+
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar,
+    #app-wrapper::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
     }
 
     /* 独立全封包大圆角主卡片容器 */
     #app-wrapper {
       width: 280px;
       margin: 0;
-      padding: 10px 11px;
+      padding: 8px 9px;
       background: var(--bg-color);
       border-radius: 16px; /* 真正的 16px 大圆角！ */
       border: 1px solid var(--card-border);
       box-shadow: 0 4px 16px var(--window-shadow);
       box-sizing: border-box;
-      overflow: hidden;
+      overflow: hidden !important;
+      scrollbar-width: none !important;
       transition: background-color 0.2s ease, border-color 0.2s ease;
     }
 

@@ -210,6 +210,9 @@
 
     recordWatchHistory(video);
 
+    document.documentElement.classList.add('cinema-mode-active');
+    document.body.classList.add('cinema-mode-active');
+
     const player = findPlayerContainer(video);
     const saved = {
       parent: player.parentNode,
@@ -330,9 +333,11 @@
       bottomOffset: currentSettings.subBottomOffset
     });
 
-    // 网页背景氛围光（Ambilight Canvas 渲染版，完美支持 YouTube/Bilibili 等所有 MSE 视频）
+    // 网页背景氛围光（Ambilight 氛围光双向渲染，实时 Canvas 与 MSE/CORS 降级兼顾）
     let ambilightEl = null;
     let ambilightInterval = null;
+    let removeAmbilightEvents = null;
+
     if (currentSettings.ambilightEnabled) {
       ambilightEl = document.createElement('div');
       ambilightEl.className = 'cinema-ambilight-glow';
@@ -347,17 +352,67 @@
       ambilightEl.appendChild(canvas);
       stage.appendChild(ambilightEl);
 
-      ambilightInterval = setInterval(() => {
-        if (!video || video.paused || video.ended || !video.isConnected) return;
+      let usesFallbackVideo = false;
+      let glowVideo = null;
+
+      const drawAmbilight = () => {
+        if (!video || !video.isConnected) return;
+        if (usesFallbackVideo) {
+          if (glowVideo) {
+            if (glowVideo.paused !== video.paused) {
+              video.paused ? glowVideo.pause() : glowVideo.play().catch(() => {});
+            }
+            if (Math.abs(glowVideo.currentTime - video.currentTime) > 0.3) {
+              glowVideo.currentTime = video.currentTime;
+            }
+          }
+          return;
+        }
+
         try {
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          if (video.readyState >= 2) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          }
         } catch (e) {
-          // 忽略跨域绘制受限等异常
+          if (!usesFallbackVideo) {
+            usesFallbackVideo = true;
+            canvas.remove();
+            glowVideo = video.cloneNode(true);
+            glowVideo.muted = true;
+            glowVideo.removeAttribute('id');
+            glowVideo.style.cssText = 'width:100%; height:100%; object-fit:cover; display:block; border-radius:24px;';
+            ambilightEl.appendChild(glowVideo);
+            if (!video.paused) glowVideo.play().catch(() => {});
+          }
+        }
+      };
+
+      // 立即触发首次绘制，解决暂停状态进入影院模式灯光不亮问题
+      drawAmbilight();
+
+      const onUpdate = () => drawAmbilight();
+      video.addEventListener('play', onUpdate);
+      video.addEventListener('pause', onUpdate);
+      video.addEventListener('seeked', onUpdate);
+      video.addEventListener('timeupdate', onUpdate);
+      video.addEventListener('canplay', onUpdate);
+
+      removeAmbilightEvents = () => {
+        video.removeEventListener('play', onUpdate);
+        video.removeEventListener('pause', onUpdate);
+        video.removeEventListener('seeked', onUpdate);
+        video.removeEventListener('timeupdate', onUpdate);
+        video.removeEventListener('canplay', onUpdate);
+      };
+
+      ambilightInterval = setInterval(() => {
+        if (video && (!video.paused || usesFallbackVideo) && !video.ended) {
+          drawAmbilight();
         }
       }, 100);
     }
 
-    cinema = { video, player, saved, subtitleRenderer, ambilightEl, ambilightInterval };
+    cinema = { video, player, saved, subtitleRenderer, ambilightEl, ambilightInterval, removeAmbilightEvents };
     setButtonVisible(false);
 
     requestAnimationFrame(() => {
@@ -367,8 +422,15 @@
 
   function exitCinema() {
     if (!cinema) return;
-    const { video, player, saved, subtitleRenderer, ambilightEl, ambilightInterval } = cinema;
+    const { video, player, saved, subtitleRenderer, ambilightEl, ambilightInterval, removeAmbilightEvents } = cinema;
     const stageRef = stage;
+
+    document.documentElement.classList.remove('cinema-mode-active');
+    document.body.classList.remove('cinema-mode-active');
+
+    if (removeAmbilightEvents) {
+      removeAmbilightEvents();
+    }
 
     if (subtitleRenderer) {
       subtitleRenderer.destroy();
