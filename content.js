@@ -17,6 +17,7 @@
     lDuration: 60,
     lKey: 'l',
     overlayOpacity: 0.88,
+    cleanPlayerEnabled: true,
     subFontSize: 18,
     subFontColor: '#ffffff',
     subBgColor: '#000000',
@@ -42,6 +43,13 @@
           currentSettings.overlayOpacity = changes.overlayOpacity.newValue;
           if (overlay) {
             overlay.style.backgroundColor = `rgba(0, 0, 0, ${currentSettings.overlayOpacity})`;
+          }
+        }
+        if (changes.cleanPlayerEnabled) {
+          currentSettings.cleanPlayerEnabled = changes.cleanPlayerEnabled.newValue;
+          if (cinema) {
+            document.documentElement.classList.toggle('clean-player-active', !!currentSettings.cleanPlayerEnabled);
+            document.body.classList.toggle('clean-player-active', !!currentSettings.cleanPlayerEnabled);
           }
         }
         if (changes.subFontSize) currentSettings.subFontSize = changes.subFontSize.newValue;
@@ -189,12 +197,51 @@
 
   /* ---------- 影院模式 ---------- */
 
+  const EXTRA_BAR_SELECTORS = [
+    '.bpx-player-sending-bar',
+    '.bpx-player-sending-area',
+    '.bilibili-player-video-sendbar',
+    '.bilibili-player-area-danmaku-send',
+    '.bpx-player-dm-root',
+    '#arc_toolbar_report',
+    '.video-toolbar-v1',
+    '.video-toolbar-container',
+    '.bpx-player-shadow-progress',
+    '.txp_bottom',
+    '.txp_tool',
+    '.txp_danmu_send',
+    '.iqp-bottom',
+    '.iqp-tool',
+    '.iqp-danmu-send',
+    '.iqp-send-bar',
+    '.youku-layer-sendbar',
+    '.k-send-bar',
+    '.play-fn-container',
+    '.danmu-send-bar',
+    '.player-bottom-bar',
+    '.video-bottom-bar',
+    '.player-extra-bar',
+    '.video-toolbar',
+    '.comment-send-box',
+    '.send-btn-wrap',
+    '#actions',
+    '#actions-inner',
+    '#meta'
+  ];
+
   function findPlayerContainer(video) {
     const vw = video.getBoundingClientRect().width;
     let el = video;
     for (let i = 0; i < 5; i++) {
       const p = el.parentElement;
       if (!p || p === document.body || p === document.documentElement) break;
+      // 优先精准捕获核心视频画面区域，剥离包含发弹幕工具条/网页工具栏的外包容器
+      if (p.classList.contains('bpx-player-video-area') || 
+          p.classList.contains('bilibili-player-video-area') ||
+          p.classList.contains('html5-video-container') ||
+          p.classList.contains('txp_video_container')) {
+        return p;
+      }
       const pw = p.getBoundingClientRect().width;
       if (pw <= 0 || (vw > 0 && pw > vw * 1.5)) break;
       el = p;
@@ -219,6 +266,11 @@
 
     document.documentElement.classList.add('cinema-mode-active');
     document.body.classList.add('cinema-mode-active');
+
+    if (currentSettings.cleanPlayerEnabled) {
+      document.documentElement.classList.add('clean-player-active');
+      document.body.classList.add('clean-player-active');
+    }
 
     const player = findPlayerContainer(video);
     const saved = {
@@ -419,7 +471,18 @@
       }, 100);
     }
 
-    cinema = { video, player, saved, subtitleRenderer, ambilightEl, ambilightInterval, removeAmbilightEvents };
+    let hiddenElements = [];
+    if (currentSettings.cleanPlayerEnabled && stage) {
+      EXTRA_BAR_SELECTORS.forEach(sel => {
+        const nodes = stage.querySelectorAll(sel);
+        nodes.forEach(el => {
+          hiddenElements.push({ el, display: el.style.display });
+          el.style.setProperty('display', 'none', 'important');
+        });
+      });
+    }
+
+    cinema = { video, player, saved, subtitleRenderer, ambilightEl, ambilightInterval, removeAmbilightEvents, hiddenElements };
     setButtonVisible(false);
 
     requestAnimationFrame(() => {
@@ -429,11 +492,25 @@
 
   function exitCinema() {
     if (!cinema) return;
-    const { video, player, saved, subtitleRenderer, ambilightEl, ambilightInterval, removeAmbilightEvents } = cinema;
+    const { video, player, saved, subtitleRenderer, ambilightEl, ambilightInterval, removeAmbilightEvents, hiddenElements } = cinema;
     const stageRef = stage;
 
     document.documentElement.classList.remove('cinema-mode-active');
     document.body.classList.remove('cinema-mode-active');
+    document.documentElement.classList.remove('clean-player-active');
+    document.body.classList.remove('clean-player-active');
+
+    if (hiddenElements) {
+      hiddenElements.forEach(({ el, display }) => {
+        if (el && el.isConnected) {
+          if (display) {
+            el.style.display = display;
+          } else {
+            el.style.removeProperty('display');
+          }
+        }
+      });
+    }
 
     if (removeAmbilightEvents) {
       removeAmbilightEvents();

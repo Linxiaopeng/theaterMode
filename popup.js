@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const lUnitSelect = document.getElementById('lUnit');
   const lKeyInput = document.getElementById('lKey');
   const opacityInput = document.getElementById('opacity');
+  const cleanPlayerEnabledInput = document.getElementById('cleanPlayerEnabled');
 
   const subFontSizeInput = document.getElementById('subFontSize');
   const subFontColorInput = document.getElementById('subFontColor');
@@ -49,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
     lDuration: 60,
     lKey: 'l',
     overlayOpacity: 0.88,
+    cleanPlayerEnabled: true,
     subFontSize: 18,
     subFontColor: '#ffffff',
     subBgColor: '#000000',
@@ -64,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
     parseToUI(items.lDuration, lValueInput, lUnitSelect);
     lKeyInput.value = items.lKey || 'l';
     opacityInput.value = items.overlayOpacity;
+    cleanPlayerEnabledInput.checked = items.cleanPlayerEnabled !== undefined ? items.cleanPlayerEnabled : true;
 
     subFontSizeInput.value = items.subFontSize;
     subFontColorInput.value = items.subFontColor;
@@ -84,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const lSec = parseToSeconds(lValueInput.value, lUnitSelect.value);
     const lKey = (lKeyInput.value || 'l').trim().toLowerCase().charAt(0) || 'l';
     const opacity = Math.max(0, Math.min(1, parseFloat(opacityInput.value) || 0.88));
+    const cleanPlayerEnabled = cleanPlayerEnabledInput.checked;
 
     const subFontSize = Math.max(12, Math.min(48, parseFloat(subFontSizeInput.value) || 18));
     const subFontColor = subFontColorInput.value || '#ffffff';
@@ -108,6 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
       lDuration: lSec,
       lKey,
       overlayOpacity: opacity,
+      cleanPlayerEnabled,
       subFontSize,
       subFontColor,
       subBgColor,
