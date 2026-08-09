@@ -1,3 +1,17 @@
+/* 影院模式开启时彻底隐藏页面滚动条 */
+html.cinema-mode-active,
+body.cinema-mode-active {
+  overflow: hidden !important;
+  scrollbar-width: none !important;
+}
+
+html.cinema-mode-active::-webkit-scrollbar,
+body.cinema-mode-active::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
 #cinema-mode-toggle-btn {
   position: fixed;
   right: 20px;
@@ -49,8 +63,15 @@
   align-items: center;
   justify-content: center;
   pointer-events: auto;
-  overflow-y: auto;
+  overflow: hidden !important;
+  scrollbar-width: none !important;
   padding: 40px 0;
+}
+
+#cinema-mode-overlay::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 .cinema-stage {
@@ -63,33 +84,6 @@
 
 .cinema-stage video {
   border-radius: 6px;
-}
-
-.cinema-exit-btn {
-  position: absolute;
-  top: -48px;
-  right: 0;
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s ease;
-}
-
-.cinema-exit-btn:hover {
-  background: rgba(255, 255, 255, 0.22);
-}
-
-.cinema-exit-btn svg {
-  width: 18px;
-  height: 18px;
-  display: block;
 }
 
 .cinema-control-bar {
@@ -110,6 +104,18 @@
   -webkit-backdrop-filter: blur(8px);
   user-select: none;
   -webkit-user-select: none;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.15s ease;
+}
+
+.cinema-control-bar.visible,
+.cinema-stage.user-active ~ .cinema-control-bar,
+.cinema-control-bar:hover {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
 }
 
 .cinema-ctrl-btn {
@@ -164,3 +170,187 @@
   opacity: 0.85;
   margin-top: 4px;
 }
+
+/* Ambilight 背景氛围光效果 */
+.cinema-ambilight-glow {
+  position: absolute;
+  inset: -65px;
+  z-index: -1;
+  border-radius: 24px;
+  filter: blur(50px) saturate(200%) brightness(1.1);
+  opacity: 0.65;
+  pointer-events: none;
+  transition: opacity 0.3s ease, border-radius 0.5s ease;
+}
+
+.cinema-ambilight-glow canvas,
+.cinema-ambilight-glow video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 24px;
+  transition: border-radius 0.5s ease;
+}
+
+/* 边缘随机缓慢波动 (Edge Wave & Fluctuation) */
+.cinema-ambilight-glow.has-edge-wave {
+  animation: ambilight-edge-wave-outer 15s cubic-bezier(0.4, 0, 0.6, 1) infinite alternate;
+  will-change: transform, border-radius;
+}
+
+.cinema-ambilight-glow.has-edge-wave canvas,
+.cinema-ambilight-glow.has-edge-wave video {
+  animation: ambilight-edge-wave-inner 11s cubic-bezier(0.4, 0, 0.6, 1) infinite alternate-reverse;
+  will-change: transform, border-radius;
+}
+
+@keyframes ambilight-edge-wave-outer {
+  0% {
+    border-radius: 28px 65px 35px 55px / 55px 35px 65px 28px;
+    transform: scale(1.04) translate(0px, 0px) rotate(0deg);
+  }
+  25% {
+    border-radius: 60px 30px 70px 35px / 32px 60px 35px 68px;
+    transform: scale(1.12) translate(-10px, 6px) rotate(1.5deg);
+  }
+  50% {
+    border-radius: 35px 68px 30px 60px / 65px 32px 60px 35px;
+    transform: scale(1.05) translate(8px, -8px) rotate(-1.2deg);
+  }
+  75% {
+    border-radius: 68px 32px 60px 38px / 30px 68px 38px 60px;
+    transform: scale(1.14) translate(-6px, -10px) rotate(1.8deg);
+  }
+  100% {
+    border-radius: 40px 60px 28px 65px / 60px 28px 65px 40px;
+    transform: scale(1.07) translate(10px, 5px) rotate(-1.5deg);
+  }
+}
+
+@keyframes ambilight-edge-wave-inner {
+  0% {
+    border-radius: 24px;
+    transform: scale(1) translate(0, 0);
+  }
+  30% {
+    border-radius: 48px 24px 55px 32px / 32px 55px 24px 48px;
+    transform: scale(1.05) translate(6px, -5px);
+  }
+  60% {
+    border-radius: 28px 52px 30px 48px / 48px 30px 52px 28px;
+    transform: scale(0.98) translate(-6px, 6px);
+  }
+  100% {
+    border-radius: 52px 30px 45px 26px / 26px 45px 30px 52px;
+    transform: scale(1.04) translate(4px, 4px);
+  }
+}
+
+/* 影院模式极致精简：自动隐藏 Bilibili、YouTube、腾讯视频、爱奇艺、优酷等自带底部发弹幕栏及网页附加工具条 */
+html.cinema-mode-active .bpx-player-sending-bar,
+html.cinema-mode-active .bpx-player-sending-area,
+html.cinema-mode-active .bpx-player-sending-area-box,
+html.cinema-mode-active .bilibili-player-video-sendbar,
+html.cinema-mode-active .bilibili-player-area-danmaku-send,
+html.cinema-mode-active .bpx-player-video-inputbar,
+html.cinema-mode-active .bpx-player-sending-area-left,
+html.cinema-mode-active .bpx-player-sending-area-right,
+html.cinema-mode-active #arc_toolbar_report,
+html.cinema-mode-active .video-toolbar-v1,
+html.cinema-mode-active .video-toolbar-container,
+html.cinema-mode-active .bpx-player-shadow-progress,
+html.cinema-mode-active .txp_bottom,
+html.cinema-mode-active .txp_tool,
+html.cinema-mode-active .txp_danmu_send,
+html.cinema-mode-active .iqp-bottom,
+html.cinema-mode-active .iqp-tool,
+html.cinema-mode-active .iqp-danmu-send,
+html.cinema-mode-active .iqp-send-bar,
+html.cinema-mode-active .youku-layer-sendbar,
+html.cinema-mode-active .k-send-bar,
+html.cinema-mode-active .play-fn-container,
+html.cinema-mode-active .danmu-send-bar,
+html.cinema-mode-active .player-bottom-bar,
+html.cinema-mode-active .video-bottom-bar,
+html.cinema-mode-active .player-extra-bar,
+html.cinema-mode-active .video-toolbar,
+html.cinema-mode-active .comment-send-box,
+html.cinema-mode-active .send-btn-wrap,
+html.cinema-mode-active #actions,
+html.cinema-mode-active #actions-inner,
+html.cinema-mode-active #meta {
+  display: none !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* 隐蔽底部发弹幕栏后，强制主体视频区域 100% 填充播放器阶段 */
+html.cinema-mode-active .bpx-player-video-area,
+html.cinema-mode-active .bpx-player-primary-area,
+html.cinema-mode-active .bilibili-player-video-area {
+  height: 100% !important;
+  max-height: 100% !important;
+  flex: 1 1 100% !important;
+}
+
+/* 影院模式下：无操作静止 2.5s 或离开封面时，自动柔和隐藏播放器进度条、标题与 UP 主头像等 UI */
+.cinema-stage.user-idle .bpx-player-control-wrap,
+.cinema-stage.user-idle .bpx-player-top-wrap,
+.cinema-stage.user-idle .bpx-player-control-bottom,
+.cinema-stage.user-idle .bilibili-player-video-control,
+.cinema-stage.user-idle .bilibili-player-video-top,
+.cinema-stage.user-idle .ytp-chrome-bottom,
+.cinema-stage.user-idle .ytp-chrome-top,
+.cinema-stage.user-idle .ytp-gradient-bottom,
+.cinema-stage.user-idle .ytp-gradient-top,
+.cinema-stage.user-idle .txp_control_bar,
+.cinema-stage.user-idle .txp_top_bar,
+.cinema-stage.user-idle .iqp-control-wrap,
+.cinema-stage.user-idle .iqp-top-wrap,
+.cinema-stage.user-idle .youku-layer-control,
+.cinema-stage.user-idle .youku-layer-title,
+.cinema-stage.user-idle .xgplayer-controls,
+.cinema-stage.user-idle .art-controls,
+.cinema-stage.user-idle .dplayer-controller,
+.cinema-stage.user-idle .vjs-control-bar,
+.cinema-stage.user-idle .plyr__controls {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition: opacity 0.35s ease, visibility 0.35s ease !important;
+}
+
+.cinema-stage.user-active .bpx-player-control-wrap,
+.cinema-stage.user-active .bpx-player-top-wrap,
+.cinema-stage.user-active .bpx-player-control-bottom,
+.cinema-stage.user-active .bilibili-player-video-control,
+.cinema-stage.user-active .bilibili-player-video-top,
+.cinema-stage.user-active .ytp-chrome-bottom,
+.cinema-stage.user-active .ytp-chrome-top,
+.cinema-stage.user-active .ytp-gradient-bottom,
+.cinema-stage.user-active .ytp-gradient-top,
+.cinema-stage.user-active .txp_control_bar,
+.cinema-stage.user-active .txp_top_bar,
+.cinema-stage.user-active .iqp-control-wrap,
+.cinema-stage.user-active .iqp-top-wrap,
+.cinema-stage.user-active .youku-layer-control,
+.cinema-stage.user-active .youku-layer-title,
+.cinema-stage.user-active .xgplayer-controls,
+.cinema-stage.user-active .art-controls,
+.cinema-stage.user-active .dplayer-controller,
+.cinema-stage.user-active .vjs-control-bar,
+.cinema-stage.user-active .plyr__controls {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  transition: opacity 0.2s ease, visibility 0.2s ease !important;
+}
+

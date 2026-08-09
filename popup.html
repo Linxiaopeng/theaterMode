@@ -92,7 +92,7 @@
       padding: 0;
     }
 
-    /* 宿主基础框：透明、无边框、无滚动条 */
+    /* 宿主基础框：透明、无边框、强制不显示滚动条 */
     html, body {
       width: 280px;
       margin: 0;
@@ -101,20 +101,30 @@
       font-family: "YouTube Noto", Roboto, Arial, -apple-system, BlinkMacSystemFont, sans-serif;
       color: var(--text-main);
       user-select: none;
-      overflow: hidden;
+      overflow: hidden !important;
+      scrollbar-width: none !important;
+    }
+
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar,
+    #app-wrapper::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
     }
 
     /* 独立全封包大圆角主卡片容器 */
     #app-wrapper {
       width: 280px;
       margin: 0;
-      padding: 10px 11px;
+      padding: 8px 9px;
       background: var(--bg-color);
       border-radius: 16px; /* 真正的 16px 大圆角！ */
       border: 1px solid var(--card-border);
       box-shadow: 0 4px 16px var(--window-shadow);
       box-sizing: border-box;
-      overflow: hidden;
+      overflow: hidden !important;
+      scrollbar-width: none !important;
       transition: background-color 0.2s ease, border-color 0.2s ease;
     }
 
@@ -509,6 +519,13 @@
           <label>遮罩层透明度 (0.0 - 1.0)</label>
           <input type="number" id="opacity" min="0" max="1" step="0.05" value="0.88">
         </div>
+
+        <div class="form-group">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:6px;">
+            <input type="checkbox" id="cleanPlayerEnabled" checked style="width:16px; height:16px; accent-color:#3b82f6;">
+            <span>影院模式极致精简 (自动隐藏发弹幕栏与自带工具条)</span>
+          </label>
+        </div>
       </div>
 
       <div class="card">
@@ -551,6 +568,26 @@
         <div class="form-group">
           <label>底部偏移量 (px)</label>
           <input type="number" id="subBottomOffset" min="10" max="200" step="5" value="30">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">网页背景灯光 (Ambilight 氛围光)</div>
+        <div class="form-group">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="ambilightEnabled" checked style="width:16px; height:16px; accent-color:#3b82f6;">
+            <span>开启动态背景氛围光（流光溢彩）</span>
+          </label>
+        </div>
+        <div class="form-group">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="ambilightWaveEnabled" checked style="width:16px; height:16px; accent-color:#3b82f6;">
+            <span>开启边缘随机缓慢波动 (灵动流光)</span>
+          </label>
+        </div>
+        <div class="form-group">
+          <label>氛围光强度 (透明度 0.1 - 1.0)</label>
+          <input type="number" id="ambilightIntensity" min="0.1" max="1.0" step="0.05" value="0.65">
         </div>
       </div>
 

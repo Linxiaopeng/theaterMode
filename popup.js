@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const lUnitSelect = document.getElementById('lUnit');
   const lKeyInput = document.getElementById('lKey');
   const opacityInput = document.getElementById('opacity');
+  const cleanPlayerEnabledInput = document.getElementById('cleanPlayerEnabled');
 
   const subFontSizeInput = document.getElementById('subFontSize');
   const subFontColorInput = document.getElementById('subFontColor');
@@ -35,6 +36,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const subBgOpacityInput = document.getElementById('subBgOpacity');
   const subFontWeightSelect = document.getElementById('subFontWeight');
   const subBottomOffsetInput = document.getElementById('subBottomOffset');
+
+  const ambilightEnabledInput = document.getElementById('ambilightEnabled');
+  const ambilightWaveEnabledInput = document.getElementById('ambilightWaveEnabled');
+  const ambilightIntensityInput = document.getElementById('ambilightIntensity');
 
   const statusDiv = document.getElementById('status');
 
@@ -45,18 +50,23 @@ document.addEventListener('DOMContentLoaded', () => {
     lDuration: 60,
     lKey: 'l',
     overlayOpacity: 0.88,
+    cleanPlayerEnabled: true,
     subFontSize: 18,
     subFontColor: '#ffffff',
     subBgColor: '#000000',
     subBgOpacity: 0.6,
     subFontWeight: '500',
-    subBottomOffset: 30
+    subBottomOffset: 30,
+    ambilightEnabled: true,
+    ambilightWaveEnabled: true,
+    ambilightIntensity: 0.65
   }, (items) => {
     parseToUI(items.jDuration, jValueInput, jUnitSelect);
     jKeyInput.value = items.jKey || 'j';
     parseToUI(items.lDuration, lValueInput, lUnitSelect);
     lKeyInput.value = items.lKey || 'l';
     opacityInput.value = items.overlayOpacity;
+    cleanPlayerEnabledInput.checked = items.cleanPlayerEnabled !== undefined ? items.cleanPlayerEnabled : true;
 
     subFontSizeInput.value = items.subFontSize;
     subFontColorInput.value = items.subFontColor;
@@ -64,6 +74,10 @@ document.addEventListener('DOMContentLoaded', () => {
     subBgOpacityInput.value = items.subBgOpacity;
     subFontWeightSelect.value = items.subFontWeight;
     subBottomOffsetInput.value = items.subBottomOffset;
+
+    ambilightEnabledInput.checked = items.ambilightEnabled;
+    ambilightWaveEnabledInput.checked = items.ambilightWaveEnabled;
+    ambilightIntensityInput.value = items.ambilightIntensity;
   });
 
   // 保存偏好配置
@@ -73,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const lSec = parseToSeconds(lValueInput.value, lUnitSelect.value);
     const lKey = (lKeyInput.value || 'l').trim().toLowerCase().charAt(0) || 'l';
     const opacity = Math.max(0, Math.min(1, parseFloat(opacityInput.value) || 0.88));
+    const cleanPlayerEnabled = cleanPlayerEnabledInput.checked;
 
     const subFontSize = Math.max(12, Math.min(48, parseFloat(subFontSizeInput.value) || 18));
     const subFontColor = subFontColorInput.value || '#ffffff';
@@ -80,6 +95,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const subBgOpacity = Math.max(0, Math.min(1, parseFloat(subBgOpacityInput.value) || 0.6));
     const subFontWeight = subFontWeightSelect.value || '500';
     const subBottomOffset = Math.max(10, Math.min(200, parseFloat(subBottomOffsetInput.value) || 30));
+
+    const ambilightEnabled = ambilightEnabledInput.checked;
+    const ambilightWaveEnabled = ambilightWaveEnabledInput.checked;
+    const ambilightIntensity = Math.max(0.1, Math.min(1.0, parseFloat(ambilightIntensityInput.value) || 0.65));
 
     if (isNaN(jSec) || isNaN(lSec) || jSec <= 0 || lSec <= 0) {
       statusDiv.textContent = '⚠️ 请输入有效的时间数值！';
@@ -93,12 +112,16 @@ document.addEventListener('DOMContentLoaded', () => {
       lDuration: lSec,
       lKey,
       overlayOpacity: opacity,
+      cleanPlayerEnabled,
       subFontSize,
       subFontColor,
       subBgColor,
       subBgOpacity,
       subFontWeight,
-      subBottomOffset
+      subBottomOffset,
+      ambilightEnabled,
+      ambilightWaveEnabled,
+      ambilightIntensity
     }, () => {
       statusDiv.textContent = '✓ 保存成功，配置即时生效';
       statusDiv.style.color = '#34d399';

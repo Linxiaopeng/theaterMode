@@ -17,17 +17,24 @@
     lDuration: 60,
     lKey: 'l',
     overlayOpacity: 0.88,
+    cleanPlayerEnabled: true,
     subFontSize: 18,
     subFontColor: '#ffffff',
     subBgColor: '#000000',
     subBgOpacity: 0.6,
     subFontWeight: '500',
-    subBottomOffset: 30
+    subBottomOffset: 30,
+    ambilightEnabled: true,
+    ambilightWaveEnabled: true,
+    ambilightIntensity: 0.65
   };
 
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
     chrome.storage.sync.get(currentSettings, (items) => {
-      currentSettings = items;
+      currentSettings = Object.assign({}, currentSettings, items);
+      if (items.cleanPlayerEnabled === undefined) currentSettings.cleanPlayerEnabled = true;
+      if (items.ambilightWaveEnabled === undefined) currentSettings.ambilightWaveEnabled = true;
+      if (items.ambilightEnabled === undefined) currentSettings.ambilightEnabled = true;
     });
     chrome.storage.onChanged.addListener((changes, namespace) => {
       if (namespace === 'sync') {
@@ -41,12 +48,32 @@
             overlay.style.backgroundColor = `rgba(0, 0, 0, ${currentSettings.overlayOpacity})`;
           }
         }
+        if (changes.cleanPlayerEnabled) {
+          currentSettings.cleanPlayerEnabled = changes.cleanPlayerEnabled.newValue;
+          if (cinema) {
+            document.documentElement.classList.toggle('clean-player-active', !!currentSettings.cleanPlayerEnabled);
+            document.body.classList.toggle('clean-player-active', !!currentSettings.cleanPlayerEnabled);
+          }
+        }
         if (changes.subFontSize) currentSettings.subFontSize = changes.subFontSize.newValue;
         if (changes.subFontColor) currentSettings.subFontColor = changes.subFontColor.newValue;
         if (changes.subBgColor) currentSettings.subBgColor = changes.subBgColor.newValue;
         if (changes.subBgOpacity) currentSettings.subBgOpacity = changes.subBgOpacity.newValue;
         if (changes.subFontWeight) currentSettings.subFontWeight = changes.subFontWeight.newValue;
         if (changes.subBottomOffset) currentSettings.subBottomOffset = changes.subBottomOffset.newValue;
+        if (changes.ambilightEnabled) currentSettings.ambilightEnabled = changes.ambilightEnabled.newValue;
+        if (changes.ambilightWaveEnabled) {
+          currentSettings.ambilightWaveEnabled = changes.ambilightWaveEnabled.newValue;
+          if (cinema && cinema.ambilightEl) {
+            cinema.ambilightEl.classList.toggle('has-edge-wave', !!currentSettings.ambilightWaveEnabled);
+          }
+        }
+        if (changes.ambilightIntensity) {
+          currentSettings.ambilightIntensity = changes.ambilightIntensity.newValue;
+          if (cinema && cinema.ambilightEl) {
+            cinema.ambilightEl.style.opacity = currentSettings.ambilightIntensity;
+          }
+        }
 
         // 如果字幕渲染器已存在，实时更新其样式设置
         if (cinema && cinema.subtitleRenderer) {
@@ -173,10 +200,54 @@
 
   /* ---------- 影院模式 ---------- */
 
+  const EXTRA_BAR_SELECTORS = [
+    '.bpx-player-sending-bar',
+    '.bpx-player-sending-area',
+    '.bilibili-player-video-sendbar',
+    '.bilibili-player-area-danmaku-send',
+    '.bpx-player-video-inputbar',
+    '.bpx-player-sending-area-left',
+    '.bpx-player-sending-area-right',
+    '#arc_toolbar_report',
+    '.video-toolbar-v1',
+    '.video-toolbar-container',
+    '.bpx-player-shadow-progress',
+    '.txp_bottom',
+    '.txp_tool',
+    '.txp_danmu_send',
+    '.iqp-bottom',
+    '.iqp-tool',
+    '.iqp-danmu-send',
+    '.iqp-send-bar',
+    '.youku-layer-sendbar',
+    '.k-send-bar',
+    '.play-fn-container',
+    '.danmu-send-bar',
+    '.player-bottom-bar',
+    '.video-bottom-bar',
+    '.player-extra-bar',
+    '.video-toolbar',
+    '.comment-send-box',
+    '.send-btn-wrap',
+    '#actions',
+    '#actions-inner',
+    '#meta'
+  ];
+
   function findPlayerContainer(video) {
+    if (!video) return null;
+
+    // 1. 使用 closest 优先精确定位核心画面容器，剥离 Bilibili、YouTube、腾讯等平台的发弹幕工具条与侧栏
+    const coreContainer = video.closest(
+      '.bpx-player-video-area, .bilibili-player-video-area, .html5-video-container, .txp_video_container, .iqp-player-video, .xgplayer'
+    );
+    if (coreContainer) {
+      return coreContainer;
+    }
+
     const vw = video.getBoundingClientRect().width;
     let el = video;
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       const p = el.parentElement;
       if (!p || p === document.body || p === document.documentElement) break;
       const pw = p.getBoundingClientRect().width;
@@ -201,6 +272,14 @@
 
     recordWatchHistory(video);
 
+    document.documentElement.classList.add('cinema-mode-active');
+    document.body.classList.add('cinema-mode-active');
+
+    if (currentSettings.cleanPlayerEnabled) {
+      document.documentElement.classList.add('clean-player-active');
+      document.body.classList.add('clean-player-active');
+    }
+
     const player = findPlayerContainer(video);
     const saved = {
       parent: player.parentNode,
@@ -216,21 +295,6 @@
     stage = document.createElement('div');
     stage.className = 'cinema-stage';
 
-    const exitBtn = document.createElement('button');
-    exitBtn.className = 'cinema-exit-btn';
-    exitBtn.title = '退出影院模式（ESC）';
-    exitBtn.innerHTML =
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">' +
-      '<path d="M18 6 6 18M6 6l12 12"/>' +
-      '</svg>';
-    exitBtn.addEventListener('click', exitCinema);
-
-    const hint = document.createElement('div');
-    hint.className = 'cinema-hint';
-    hint.textContent = '按 ESC 退出影院模式';
-
-    stage.appendChild(exitBtn);
-    stage.appendChild(hint);
     stage.appendChild(player);
 
     // 创建快进/回退控制栏与字幕加载按钮
@@ -297,8 +361,8 @@
     uploadBtn.appendChild(fileInput);
     controlBar.appendChild(uploadBtn);
 
-    overlay.appendChild(controlBar);
     overlay.appendChild(stage);
+    overlay.appendChild(controlBar);
     ROOT().appendChild(overlay);
 
     stage.style.width = px(computeStageWidth(video));
@@ -321,7 +385,157 @@
       bottomOffset: currentSettings.subBottomOffset
     });
 
-    cinema = { video, player, saved, subtitleRenderer };
+    // 网页背景氛围光（Ambilight 氛围光双向渲染，实时 Canvas 与 MSE/CORS 降级兼顾）
+    let ambilightEl = null;
+    let ambilightInterval = null;
+    let removeAmbilightEvents = null;
+
+    if (currentSettings.ambilightEnabled) {
+      ambilightEl = document.createElement('div');
+      ambilightEl.className = 'cinema-ambilight-glow' + (currentSettings.ambilightWaveEnabled ? ' has-edge-wave' : '');
+      ambilightEl.style.opacity = currentSettings.ambilightIntensity;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 36;
+      canvas.style.cssText = 'width: 100%; height: 100%; object-fit: cover; display: block;';
+      const ctx = canvas.getContext('2d', { alpha: false });
+
+      ambilightEl.appendChild(canvas);
+      stage.appendChild(ambilightEl);
+
+      let usesFallbackVideo = false;
+      let glowVideo = null;
+
+      const drawAmbilight = () => {
+        if (!video || !video.isConnected) return;
+        if (usesFallbackVideo) {
+          if (glowVideo) {
+            if (glowVideo.paused !== video.paused) {
+              video.paused ? glowVideo.pause() : glowVideo.play().catch(() => {});
+            }
+            if (Math.abs(glowVideo.currentTime - video.currentTime) > 0.3) {
+              glowVideo.currentTime = video.currentTime;
+            }
+          }
+          return;
+        }
+
+        try {
+          if (video.readyState >= 2) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          }
+        } catch (e) {
+          if (!usesFallbackVideo) {
+            usesFallbackVideo = true;
+            canvas.remove();
+            glowVideo = video.cloneNode(true);
+            glowVideo.muted = true;
+            glowVideo.removeAttribute('id');
+            glowVideo.style.cssText = 'width:100%; height:100%; object-fit:cover; display:block; border-radius:24px;';
+            ambilightEl.appendChild(glowVideo);
+            if (!video.paused) glowVideo.play().catch(() => {});
+          }
+        }
+      };
+
+      // 立即触发首次绘制，解决暂停状态进入影院模式灯光不亮问题
+      drawAmbilight();
+
+      const onUpdate = () => drawAmbilight();
+      video.addEventListener('play', onUpdate);
+      video.addEventListener('pause', onUpdate);
+      video.addEventListener('seeked', onUpdate);
+      video.addEventListener('timeupdate', onUpdate);
+      video.addEventListener('canplay', onUpdate);
+
+      removeAmbilightEvents = () => {
+        video.removeEventListener('play', onUpdate);
+        video.removeEventListener('pause', onUpdate);
+        video.removeEventListener('seeked', onUpdate);
+        video.removeEventListener('timeupdate', onUpdate);
+        video.removeEventListener('canplay', onUpdate);
+      };
+
+      ambilightInterval = setInterval(() => {
+        if (video && (!video.paused || usesFallbackVideo) && !video.ended) {
+          drawAmbilight();
+        }
+      }, 100);
+    }
+
+    let hiddenElements = [];
+    if (currentSettings.cleanPlayerEnabled !== false) {
+      EXTRA_BAR_SELECTORS.forEach(sel => {
+        const nodes = document.querySelectorAll(sel);
+        nodes.forEach(el => {
+          hiddenElements.push({ el, display: el.style.display });
+          el.style.setProperty('display', 'none', 'important');
+        });
+      });
+    }
+
+    // 鼠标在播放器封面/舞台区域内移动时同步显示播放控制条/字幕工具，无操作 2.5 秒后自动柔和隐蔽
+    let mouseIdleTimer = null;
+    const stageRef = stage;
+
+    const showControls = () => {
+      if (stageRef) {
+        stageRef.classList.add('user-active');
+        stageRef.classList.remove('user-idle');
+      }
+      if (controlBar) {
+        controlBar.classList.add('visible');
+      }
+    };
+
+    const hideControls = () => {
+      if (stageRef) {
+        stageRef.classList.remove('user-active');
+        stageRef.classList.add('user-idle');
+      }
+      if (controlBar && !controlBar.matches(':hover')) {
+        controlBar.classList.remove('visible');
+      }
+    };
+
+    const handleMouseMove = () => {
+      showControls();
+      if (mouseIdleTimer) clearTimeout(mouseIdleTimer);
+      mouseIdleTimer = setTimeout(() => {
+        hideControls();
+      }, 2500);
+    };
+
+    const handleMouseLeave = () => {
+      if (mouseIdleTimer) clearTimeout(mouseIdleTimer);
+      hideControls();
+    };
+
+    stage.addEventListener('mousemove', handleMouseMove);
+    stage.addEventListener('mouseenter', handleMouseMove);
+    stage.addEventListener('mouseleave', handleMouseLeave);
+
+    controlBar.addEventListener('mousemove', handleMouseMove);
+    controlBar.addEventListener('mouseenter', handleMouseMove);
+    controlBar.addEventListener('mouseleave', handleMouseLeave);
+
+    handleMouseMove();
+
+    cinema = { 
+      video, 
+      player, 
+      saved, 
+      subtitleRenderer, 
+      ambilightEl, 
+      ambilightInterval, 
+      removeAmbilightEvents, 
+      hiddenElements,
+      stageRef,
+      handleMouseMove,
+      handleMouseLeave,
+      mouseIdleTimer
+    };
     setButtonVisible(false);
 
     requestAnimationFrame(() => {
@@ -331,11 +545,60 @@
 
   function exitCinema() {
     if (!cinema) return;
-    const { video, player, saved, subtitleRenderer } = cinema;
-    const stageRef = stage;
+    const { 
+      video, 
+      player, 
+      saved, 
+      subtitleRenderer, 
+      ambilightEl, 
+      ambilightInterval, 
+      removeAmbilightEvents, 
+      hiddenElements,
+      stageRef,
+      handleMouseMove,
+      handleMouseLeave,
+      mouseIdleTimer
+    } = cinema;
+
+    document.documentElement.classList.remove('cinema-mode-active');
+    document.body.classList.remove('cinema-mode-active');
+    document.documentElement.classList.remove('clean-player-active');
+    document.body.classList.remove('clean-player-active');
+
+    if (stageRef && handleMouseMove && handleMouseLeave) {
+      stageRef.removeEventListener('mousemove', handleMouseMove);
+      stageRef.removeEventListener('mouseenter', handleMouseMove);
+      stageRef.removeEventListener('mouseleave', handleMouseLeave);
+    }
+    if (mouseIdleTimer) {
+      clearTimeout(mouseIdleTimer);
+    }
+
+    if (hiddenElements) {
+      hiddenElements.forEach(({ el, display }) => {
+        if (el && el.isConnected) {
+          if (display) {
+            el.style.display = display;
+          } else {
+            el.style.removeProperty('display');
+          }
+        }
+      });
+    }
+
+    if (removeAmbilightEvents) {
+      removeAmbilightEvents();
+    }
 
     if (subtitleRenderer) {
       subtitleRenderer.destroy();
+    }
+
+    if (ambilightInterval) {
+      clearInterval(ambilightInterval);
+    }
+    if (ambilightEl) {
+      ambilightEl.remove();
     }
 
     if (stageRef && player.parentNode === stageRef) {
@@ -386,8 +649,22 @@
     if (cinema) {
       if (!cinema.video.isConnected || !cinema.player.isConnected) {
         exitCinema();
-      } else if (cinema.subtitleRenderer && cinema.video) {
-        cinema.subtitleRenderer.syncTime(cinema.video.currentTime);
+      } else {
+        if (cinema.subtitleRenderer && cinema.video) {
+          cinema.subtitleRenderer.syncTime(cinema.video.currentTime);
+        }
+        if (currentSettings.cleanPlayerEnabled !== false) {
+          EXTRA_BAR_SELECTORS.forEach(sel => {
+            document.querySelectorAll(sel).forEach(el => {
+              if (el.style.display !== 'none') {
+                if (cinema.hiddenElements && !cinema.hiddenElements.some(item => item.el === el)) {
+                  cinema.hiddenElements.push({ el, display: el.style.display });
+                }
+                el.style.setProperty('display', 'none', 'important');
+              }
+            });
+          });
+        }
       }
       return;
     }

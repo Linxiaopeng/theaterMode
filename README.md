@@ -1,6 +1,6 @@
 # 一键影院模式 (Theater Mode Chrome Extension)
 
-[![Version](https://img.shields.io/badge/version-1.4.0-blue.svg)](manifest.json)
+[![Version](https://img.shields.io/badge/version-1.5.0-blue.svg)](manifest.json)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 一个优雅、沉浸式的 Chrome 浏览器扩展。自动检测网页上的视频播放器，提供一键全屏影院模式、高精度快捷键操控、外挂字幕支持及丰富的外观设置。
@@ -16,6 +16,7 @@
   - `ESC` 快速退出影院模式。
   - 特别针对 Vimium 等按键拦截类插件进行了兼容性防御处理，无冲突。
 - 💬 **外挂字幕支持与定制**：内置字幕解析与渲染能力，可个性化调整字体大小、文字颜色、背景透明度、粗细及底部距离。
+- 💡 **网页背景灯光 (Ambilight 氛围光)**：实时提取视频色彩生成沉浸式背景灯光，新增边缘随机缓慢波动（灵动流光）呼吸起伏效果，支持开关与强度自定义。
 - 🎨 **背景透明度微调**：支持 0.0 ~ 1.0 范围内的遮罩深浅度设置。
 - 📜 **本地观看历史**：自动保存最近 90 条视频观看记录（包含网址链接、网页标题、观看日期时间），在设置弹窗中可一键跳转或管理。
 
