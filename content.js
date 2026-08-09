@@ -31,7 +31,10 @@
 
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
     chrome.storage.sync.get(currentSettings, (items) => {
-      currentSettings = items;
+      currentSettings = Object.assign({}, currentSettings, items);
+      if (items.cleanPlayerEnabled === undefined) currentSettings.cleanPlayerEnabled = true;
+      if (items.ambilightWaveEnabled === undefined) currentSettings.ambilightWaveEnabled = true;
+      if (items.ambilightEnabled === undefined) currentSettings.ambilightEnabled = true;
     });
     chrome.storage.onChanged.addListener((changes, namespace) => {
       if (namespace === 'sync') {
@@ -202,7 +205,9 @@
     '.bpx-player-sending-area',
     '.bilibili-player-video-sendbar',
     '.bilibili-player-area-danmaku-send',
-    '.bpx-player-dm-root',
+    '.bpx-player-video-inputbar',
+    '.bpx-player-sending-area-left',
+    '.bpx-player-sending-area-right',
     '#arc_toolbar_report',
     '.video-toolbar-v1',
     '.video-toolbar-container',
@@ -230,18 +235,21 @@
   ];
 
   function findPlayerContainer(video) {
+    if (!video) return null;
+
+    // 1. 使用 closest 优先精确定位核心画面容器，剥离 Bilibili、YouTube、腾讯等平台的发弹幕工具条与侧栏
+    const coreContainer = video.closest(
+      '.bpx-player-video-area, .bilibili-player-video-area, .html5-video-container, .txp_video_container, .iqp-player-video, .xgplayer'
+    );
+    if (coreContainer) {
+      return coreContainer;
+    }
+
     const vw = video.getBoundingClientRect().width;
     let el = video;
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       const p = el.parentElement;
       if (!p || p === document.body || p === document.documentElement) break;
-      // 优先精准捕获核心视频画面区域，剥离包含发弹幕工具条/网页工具栏的外包容器
-      if (p.classList.contains('bpx-player-video-area') || 
-          p.classList.contains('bilibili-player-video-area') ||
-          p.classList.contains('html5-video-container') ||
-          p.classList.contains('txp_video_container')) {
-        return p;
-      }
       const pw = p.getBoundingClientRect().width;
       if (pw <= 0 || (vw > 0 && pw > vw * 1.5)) break;
       el = p;
@@ -472,9 +480,9 @@
     }
 
     let hiddenElements = [];
-    if (currentSettings.cleanPlayerEnabled && stage) {
+    if (currentSettings.cleanPlayerEnabled !== false) {
       EXTRA_BAR_SELECTORS.forEach(sel => {
-        const nodes = stage.querySelectorAll(sel);
+        const nodes = document.querySelectorAll(sel);
         nodes.forEach(el => {
           hiddenElements.push({ el, display: el.style.display });
           el.style.setProperty('display', 'none', 'important');
@@ -575,8 +583,22 @@
     if (cinema) {
       if (!cinema.video.isConnected || !cinema.player.isConnected) {
         exitCinema();
-      } else if (cinema.subtitleRenderer && cinema.video) {
-        cinema.subtitleRenderer.syncTime(cinema.video.currentTime);
+      } else {
+        if (cinema.subtitleRenderer && cinema.video) {
+          cinema.subtitleRenderer.syncTime(cinema.video.currentTime);
+        }
+        if (currentSettings.cleanPlayerEnabled !== false) {
+          EXTRA_BAR_SELECTORS.forEach(sel => {
+            document.querySelectorAll(sel).forEach(el => {
+              if (el.style.display !== 'none') {
+                if (cinema.hiddenElements && !cinema.hiddenElements.some(item => item.el === el)) {
+                  cinema.hiddenElements.push({ el, display: el.style.display });
+                }
+                el.style.setProperty('display', 'none', 'important');
+              }
+            });
+          });
+        }
       }
       return;
     }

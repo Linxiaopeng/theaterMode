@@ -263,35 +263,38 @@ body.cinema-mode-active::-webkit-scrollbar {
 }
 
 /* 影院模式极致精简：自动隐藏 Bilibili、YouTube、腾讯视频、爱奇艺、优酷等自带底部发弹幕栏及网页附加工具条 */
-html.cinema-mode-active.clean-player-active .bpx-player-sending-bar,
-html.cinema-mode-active.clean-player-active .bpx-player-sending-area,
-html.cinema-mode-active.clean-player-active .bilibili-player-video-sendbar,
-html.cinema-mode-active.clean-player-active .bilibili-player-area-danmaku-send,
-html.cinema-mode-active.clean-player-active .bpx-player-dm-root,
-html.cinema-mode-active.clean-player-active #arc_toolbar_report,
-html.cinema-mode-active.clean-player-active .video-toolbar-v1,
-html.cinema-mode-active.clean-player-active .video-toolbar-container,
-html.cinema-mode-active.clean-player-active .bpx-player-shadow-progress,
-html.cinema-mode-active.clean-player-active .txp_bottom,
-html.cinema-mode-active.clean-player-active .txp_tool,
-html.cinema-mode-active.clean-player-active .txp_danmu_send,
-html.cinema-mode-active.clean-player-active .iqp-bottom,
-html.cinema-mode-active.clean-player-active .iqp-tool,
-html.cinema-mode-active.clean-player-active .iqp-danmu-send,
-html.cinema-mode-active.clean-player-active .iqp-send-bar,
-html.cinema-mode-active.clean-player-active .youku-layer-sendbar,
-html.cinema-mode-active.clean-player-active .k-send-bar,
-html.cinema-mode-active.clean-player-active .play-fn-container,
-html.cinema-mode-active.clean-player-active .danmu-send-bar,
-html.cinema-mode-active.clean-player-active .player-bottom-bar,
-html.cinema-mode-active.clean-player-active .video-bottom-bar,
-html.cinema-mode-active.clean-player-active .player-extra-bar,
-html.cinema-mode-active.clean-player-active .video-toolbar,
-html.cinema-mode-active.clean-player-active .comment-send-box,
-html.cinema-mode-active.clean-player-active .send-btn-wrap,
-html.cinema-mode-active.clean-player-active #actions,
-html.cinema-mode-active.clean-player-active #actions-inner,
-html.cinema-mode-active.clean-player-active #meta {
+html.cinema-mode-active .bpx-player-sending-bar,
+html.cinema-mode-active .bpx-player-sending-area,
+html.cinema-mode-active .bpx-player-sending-area-box,
+html.cinema-mode-active .bilibili-player-video-sendbar,
+html.cinema-mode-active .bilibili-player-area-danmaku-send,
+html.cinema-mode-active .bpx-player-video-inputbar,
+html.cinema-mode-active .bpx-player-sending-area-left,
+html.cinema-mode-active .bpx-player-sending-area-right,
+html.cinema-mode-active #arc_toolbar_report,
+html.cinema-mode-active .video-toolbar-v1,
+html.cinema-mode-active .video-toolbar-container,
+html.cinema-mode-active .bpx-player-shadow-progress,
+html.cinema-mode-active .txp_bottom,
+html.cinema-mode-active .txp_tool,
+html.cinema-mode-active .txp_danmu_send,
+html.cinema-mode-active .iqp-bottom,
+html.cinema-mode-active .iqp-tool,
+html.cinema-mode-active .iqp-danmu-send,
+html.cinema-mode-active .iqp-send-bar,
+html.cinema-mode-active .youku-layer-sendbar,
+html.cinema-mode-active .k-send-bar,
+html.cinema-mode-active .play-fn-container,
+html.cinema-mode-active .danmu-send-bar,
+html.cinema-mode-active .player-bottom-bar,
+html.cinema-mode-active .video-bottom-bar,
+html.cinema-mode-active .player-extra-bar,
+html.cinema-mode-active .video-toolbar,
+html.cinema-mode-active .comment-send-box,
+html.cinema-mode-active .send-btn-wrap,
+html.cinema-mode-active #actions,
+html.cinema-mode-active #actions-inner,
+html.cinema-mode-active #meta {
   display: none !important;
   height: 0 !important;
   min-height: 0 !important;
@@ -300,13 +303,14 @@ html.cinema-mode-active.clean-player-active #meta {
   margin: 0 !important;
   overflow: hidden !important;
   opacity: 0 !important;
+  visibility: hidden !important;
   pointer-events: none !important;
 }
 
 /* 隐蔽底部发弹幕栏后，强制主体视频区域 100% 填充播放器阶段 */
-html.cinema-mode-active.clean-player-active .bpx-player-video-area,
-html.cinema-mode-active.clean-player-active .bpx-player-primary-area,
-html.cinema-mode-active.clean-player-active .bilibili-player-video-area {
+html.cinema-mode-active .bpx-player-video-area,
+html.cinema-mode-active .bpx-player-primary-area,
+html.cinema-mode-active .bilibili-player-video-area {
   height: 100% !important;
   max-height: 100% !important;
   flex: 1 1 100% !important;
