@@ -296,9 +296,9 @@
   function findPlayerContainer(video) {
     if (!video) return null;
 
-    // 1. 使用 closest 优先精确定位核心画面容器，剥离 Bilibili、YouTube、腾讯等平台的发弹幕工具条与侧栏
+    // 1. 优先捕获核心纯视频画面播放器容器，彻底剥离 YouTube、Bilibili、腾讯视频、爱奇艺等平台的侧边推荐栏、顶部导航与简介栏
     const coreContainer = video.closest(
-      '.bpx-player-video-area, .bilibili-player-video-area, .html5-video-container, .txp_video_container, .iqp-player-video, .xgplayer'
+      '#movie_player, .bpx-player-video-area, .bilibili-player-video-area, #player-container-inner, .txp_video_container, .iqp-player-video, .xgplayer, .artplayer-app, .dplayer, .prism-player'
     );
     if (coreContainer) {
       return coreContainer;

@@ -1,3 +1,10 @@
+## [2.1.4] - 2026-08-09
+
+### 🐛 Fixed & 🛡️ Improved
+- **全平台多余页面元素深度隐匿 (推荐/简介/评论/导航栏)**：扩展了 `findPlayerContainer` 对纯画面 Core Container 的精确定位（新增 `#movie_player` / `#player-container-inner` / `.artplayer-app` 等核心层），并在 `content.css` 中为影院模式与音乐模式大幅扩充了通用隐匿选择器，彻底阻断 YouTube、Bilibili、腾讯视频、爱奇艺等平台的顶部 Navigation Header、右侧推荐侧栏、视频简介、UP主面板与评论区穿透到遮罩之上的情况。
+
+---
+
 ## [2.1.3] - 2026-08-09
 
 ### 🚀 Improved & 🐛 Fixed
