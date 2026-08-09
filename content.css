@@ -86,33 +86,6 @@ body.cinema-mode-active::-webkit-scrollbar {
   border-radius: 6px;
 }
 
-.cinema-exit-btn {
-  position: absolute;
-  top: -48px;
-  right: 0;
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s ease;
-}
-
-.cinema-exit-btn:hover {
-  background: rgba(255, 255, 255, 0.22);
-}
-
-.cinema-exit-btn svg {
-  width: 18px;
-  height: 18px;
-  display: block;
-}
-
 .cinema-control-bar {
   position: fixed;
   bottom: 24px;

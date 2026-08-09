@@ -295,21 +295,6 @@
     stage = document.createElement('div');
     stage.className = 'cinema-stage';
 
-    const exitBtn = document.createElement('button');
-    exitBtn.className = 'cinema-exit-btn';
-    exitBtn.title = '退出影院模式（ESC）';
-    exitBtn.innerHTML =
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">' +
-      '<path d="M18 6 6 18M6 6l12 12"/>' +
-      '</svg>';
-    exitBtn.addEventListener('click', exitCinema);
-
-    const hint = document.createElement('div');
-    hint.className = 'cinema-hint';
-    hint.textContent = '按 ESC 退出影院模式';
-
-    stage.appendChild(exitBtn);
-    stage.appendChild(hint);
     stage.appendChild(player);
 
     // 创建快进/回退控制栏与字幕加载按钮
