@@ -30,7 +30,8 @@
     musicCardWidth: 380,
     musicPadding: 40,
     musicClockTopOffset: 50,
-    musicBlurRadius: 65
+    musicBlurRadius: 65,
+    musicStaticCoverEnabled: false
   };
 
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
@@ -110,6 +111,9 @@
             const bg = musicCinema.overlayEl.querySelector('.music-bg-blur');
             if (bg) bg.style.filter = `blur(${currentSettings.musicBlurRadius}px) brightness(0.68) saturate(180%)`;
           }
+        }
+        if (changes.musicStaticCoverEnabled) {
+          currentSettings.musicStaticCoverEnabled = changes.musicStaticCoverEnabled.newValue;
         }
 
         // 如果字幕渲染器已存在，实时更新其样式设置
@@ -729,11 +733,13 @@
     }
 
     const player = findPlayerContainer(video);
+    const playerMoved = !currentSettings.musicStaticCoverEnabled;
     const saved = {
       parent: player.parentNode,
       next: player.nextSibling,
       playerStyle: player.getAttribute('style'),
-      videoStyle: video.getAttribute('style')
+      videoStyle: video.getAttribute('style'),
+      playerMoved
     };
 
     const overlayEl = document.createElement('div');
@@ -851,10 +857,36 @@
     video.addEventListener('loadedmetadata', updateArtworkAspectRatio);
     video.addEventListener('resize', updateArtworkAspectRatio);
 
-    player.style.width = '100%';
-    player.style.height = '100%';
-    player.style.objectFit = 'cover';
-    artworkCard.appendChild(player);
+    if (currentSettings.musicStaticCoverEnabled) {
+      let isStaticCaptured = false;
+      const staticCanvas = document.createElement('canvas');
+      staticCanvas.width = video.videoWidth || 1280;
+      staticCanvas.height = video.videoHeight || 720;
+      const staticCtx = staticCanvas.getContext('2d');
+      try {
+        if (video.readyState >= 2) {
+          staticCtx.drawImage(video, 0, 0, staticCanvas.width, staticCanvas.height);
+          isStaticCaptured = true;
+        }
+      } catch (e) {
+        isStaticCaptured = false;
+      }
+
+      if (isStaticCaptured) {
+        staticCanvas.style.cssText = 'width: 100%; height: 100%; object-fit: cover; display: block; border-radius: inherit;';
+        artworkCard.appendChild(staticCanvas);
+      } else {
+        const img = document.createElement('img');
+        img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; display: block; border-radius: inherit;';
+        img.src = video.poster || '';
+        artworkCard.appendChild(img);
+      }
+    } else {
+      player.style.width = '100%';
+      player.style.height = '100%';
+      player.style.objectFit = 'cover';
+      artworkCard.appendChild(player);
+    }
 
     // 3. 独立 iOS 播放控件小面板 (在封面正下方)
     const controlsCard = document.createElement('div');
@@ -1136,24 +1168,26 @@
     if (updateBgColorTimer) clearInterval(updateBgColorTimer);
     if (syncProgressTimer) clearInterval(syncProgressTimer);
 
-    if (player.parentNode) {
-      player.parentNode.removeChild(player);
-    }
-    if (saved.playerStyle != null) {
-      player.setAttribute('style', saved.playerStyle);
-    } else {
-      player.removeAttribute('style');
-    }
-    if (saved.videoStyle != null) {
-      video.setAttribute('style', saved.videoStyle);
-    } else {
-      video.removeAttribute('style');
-    }
-    if (saved.parent) {
-      if (saved.next && saved.next.parentNode === saved.parent) {
-        saved.parent.insertBefore(player, saved.next);
+    if (saved && saved.playerMoved) {
+      if (player.parentNode) {
+        player.parentNode.removeChild(player);
+      }
+      if (saved.playerStyle != null) {
+        player.setAttribute('style', saved.playerStyle);
       } else {
-        saved.parent.appendChild(player);
+        player.removeAttribute('style');
+      }
+      if (saved.videoStyle != null) {
+        video.setAttribute('style', saved.videoStyle);
+      } else {
+        video.removeAttribute('style');
+      }
+      if (saved.parent) {
+        if (saved.next && saved.next.parentNode === saved.parent) {
+          saved.parent.insertBefore(player, saved.next);
+        } else {
+          saved.parent.appendChild(player);
+        }
       }
     }
 
