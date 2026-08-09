@@ -591,6 +591,35 @@
         </div>
       </div>
 
+      <div class="card">
+        <div class="card-title">🎵 音乐模式 (iOS 锁屏外观配置)</div>
+        <div class="form-group">
+          <div class="row">
+            <div style="flex:1;">
+              <label>封面宽度 (px)</label>
+              <input type="number" id="musicCardWidth" min="260" max="520" step="10" value="380">
+            </div>
+            <div style="flex:1;">
+              <label>四周外边距 (px)</label>
+              <input type="number" id="musicPadding" min="16" max="80" step="4" value="40">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="row">
+            <div style="flex:1;">
+              <label>时钟顶部偏移 (px)</label>
+              <input type="number" id="musicClockTopOffset" min="20" max="120" step="5" value="50">
+            </div>
+            <div style="flex:1;">
+              <label>背景模糊强度 (px)</label>
+              <input type="number" id="musicBlurRadius" min="20" max="100" step="5" value="65">
+            </div>
+          </div>
+        </div>
+      </div>
+
       <button class="save-btn" id="save">保存偏好设置</button>
       <div class="tip-status" id="status">修改设置后即时生效</div>
     </div>
