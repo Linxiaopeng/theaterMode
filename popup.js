@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const subBottomOffsetInput = document.getElementById('subBottomOffset');
 
   const ambilightEnabledInput = document.getElementById('ambilightEnabled');
+  const ambilightWaveEnabledInput = document.getElementById('ambilightWaveEnabled');
   const ambilightIntensityInput = document.getElementById('ambilightIntensity');
 
   const statusDiv = document.getElementById('status');
@@ -55,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     subFontWeight: '500',
     subBottomOffset: 30,
     ambilightEnabled: true,
+    ambilightWaveEnabled: true,
     ambilightIntensity: 0.65
   }, (items) => {
     parseToUI(items.jDuration, jValueInput, jUnitSelect);
@@ -71,6 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     subBottomOffsetInput.value = items.subBottomOffset;
 
     ambilightEnabledInput.checked = items.ambilightEnabled;
+    ambilightWaveEnabledInput.checked = items.ambilightWaveEnabled;
     ambilightIntensityInput.value = items.ambilightIntensity;
   });
 
@@ -90,6 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const subBottomOffset = Math.max(10, Math.min(200, parseFloat(subBottomOffsetInput.value) || 30));
 
     const ambilightEnabled = ambilightEnabledInput.checked;
+    const ambilightWaveEnabled = ambilightWaveEnabledInput.checked;
     const ambilightIntensity = Math.max(0.1, Math.min(1.0, parseFloat(ambilightIntensityInput.value) || 0.65));
 
     if (isNaN(jSec) || isNaN(lSec) || jSec <= 0 || lSec <= 0) {
@@ -111,6 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
       subFontWeight,
       subBottomOffset,
       ambilightEnabled,
+      ambilightWaveEnabled,
       ambilightIntensity
     }, () => {
       statusDiv.textContent = '✓ 保存成功，配置即时生效';

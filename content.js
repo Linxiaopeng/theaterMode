@@ -24,6 +24,7 @@
     subFontWeight: '500',
     subBottomOffset: 30,
     ambilightEnabled: true,
+    ambilightWaveEnabled: true,
     ambilightIntensity: 0.65
   };
 
@@ -50,6 +51,12 @@
         if (changes.subFontWeight) currentSettings.subFontWeight = changes.subFontWeight.newValue;
         if (changes.subBottomOffset) currentSettings.subBottomOffset = changes.subBottomOffset.newValue;
         if (changes.ambilightEnabled) currentSettings.ambilightEnabled = changes.ambilightEnabled.newValue;
+        if (changes.ambilightWaveEnabled) {
+          currentSettings.ambilightWaveEnabled = changes.ambilightWaveEnabled.newValue;
+          if (cinema && cinema.ambilightEl) {
+            cinema.ambilightEl.classList.toggle('has-edge-wave', !!currentSettings.ambilightWaveEnabled);
+          }
+        }
         if (changes.ambilightIntensity) {
           currentSettings.ambilightIntensity = changes.ambilightIntensity.newValue;
           if (cinema && cinema.ambilightEl) {
@@ -340,7 +347,7 @@
 
     if (currentSettings.ambilightEnabled) {
       ambilightEl = document.createElement('div');
-      ambilightEl.className = 'cinema-ambilight-glow';
+      ambilightEl.className = 'cinema-ambilight-glow' + (currentSettings.ambilightWaveEnabled ? ' has-edge-wave' : '');
       ambilightEl.style.opacity = currentSettings.ambilightIntensity;
 
       const canvas = document.createElement('canvas');
