@@ -739,46 +739,73 @@
     const overlayEl = document.createElement('div');
     overlayEl.id = 'music-mode-overlay';
 
-    // 动态模糊主色调背景（带灵动流光波纹呼吸效果）
+    // 动态 3D 氛围光背景 (与影院模式相同：实时提取画面 Canvas 进行极高模糊与流光波动)
     const bgBlurEl = document.createElement('div');
-    bgBlurEl.className = 'music-bg-blur';
-    if (currentSettings.ambilightWaveEnabled !== false) {
-      bgBlurEl.classList.add('has-edge-wave');
-    }
+    bgBlurEl.className = 'music-bg-blur' + (currentSettings.ambilightWaveEnabled ? ' has-edge-wave' : '');
     bgBlurEl.style.filter = `blur(${currentSettings.musicBlurRadius}px) brightness(0.68) saturate(180%)`;
 
-    const bgBlurInner = document.createElement('div');
-    bgBlurInner.className = 'music-bg-blur-inner';
-    bgBlurEl.appendChild(bgBlurInner);
+    const bgCanvas = document.createElement('canvas');
+    bgCanvas.width = 64;
+    bgCanvas.height = 36;
+    bgCanvas.style.cssText = 'width: 100%; height: 100%; object-fit: cover; display: block;';
+    const bgCtx = bgCanvas.getContext('2d', { alpha: false });
+    bgBlurEl.appendChild(bgCanvas);
 
-    // 采样 DOM 动态主色提取器
-    const sampleCanvas = document.createElement('canvas');
-    sampleCanvas.width = 16;
-    sampleCanvas.height = 16;
-    const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
+    let usesMusicFallback = false;
+    let musicGlowVideo = null;
 
-    let updateBgColorTimer = setInterval(() => {
+    const drawMusicAmbilight = () => {
       if (!video || !video.isConnected) return;
+      if (usesMusicFallback) {
+        if (musicGlowVideo) {
+          if (musicGlowVideo.paused !== video.paused) {
+            video.paused ? musicGlowVideo.pause() : musicGlowVideo.play().catch(() => {});
+          }
+          if (Math.abs(musicGlowVideo.currentTime - video.currentTime) > 0.3) {
+            musicGlowVideo.currentTime = video.currentTime;
+          }
+        }
+        return;
+      }
+
       try {
         if (video.readyState >= 2) {
-          sampleCtx.drawImage(video, 0, 0, 16, 16);
-          const data = sampleCtx.getImageData(0, 0, 16, 16).data;
-          let r = 0, g = 0, b = 0, count = 0;
-          for (let i = 0; i < data.length; i += 16) {
-            r += data[i];
-            g += data[i + 1];
-            b += data[i + 2];
-            count++;
-          }
-          r = Math.round(r / count);
-          g = Math.round(g / count);
-          b = Math.round(b / count);
-          bgBlurEl.style.background = `radial-gradient(circle at 50% 30%, rgba(${r},${g},${b},0.85), rgba(${Math.max(0, r-50)},${Math.max(0, g-50)},${Math.max(0, b-50)},0.95) 75%, #050505 100%)`;
+          bgCtx.drawImage(video, 0, 0, bgCanvas.width, bgCanvas.height);
         }
       } catch (e) {
-        bgBlurEl.style.background = `radial-gradient(circle at 50% 30%, rgba(59, 130, 246, 0.45), rgba(15, 23, 42, 0.95) 75%, #050505 100%)`;
+        if (!usesMusicFallback) {
+          usesMusicFallback = true;
+          bgCanvas.remove();
+          musicGlowVideo = video.cloneNode(true);
+          musicGlowVideo.muted = true;
+          musicGlowVideo.removeAttribute('id');
+          musicGlowVideo.style.cssText = 'width:100%; height:100%; object-fit:cover; display:block;';
+          bgBlurEl.appendChild(musicGlowVideo);
+          if (!video.paused) musicGlowVideo.play().catch(() => {});
+        }
       }
-    }, 250);
+    };
+
+    drawMusicAmbilight();
+
+    const onMusicUpdate = () => drawMusicAmbilight();
+    video.addEventListener('play', onMusicUpdate);
+    video.addEventListener('pause', onMusicUpdate);
+    video.addEventListener('seeked', onMusicUpdate);
+    video.addEventListener('timeupdate', onMusicUpdate);
+
+    let removeMusicAmbilightEvents = () => {
+      video.removeEventListener('play', onMusicUpdate);
+      video.removeEventListener('pause', onMusicUpdate);
+      video.removeEventListener('seeked', onMusicUpdate);
+      video.removeEventListener('timeupdate', onMusicUpdate);
+    };
+
+    let updateBgColorTimer = setInterval(() => {
+      if (video && (!video.paused || usesMusicFallback) && !video.ended) {
+        drawMusicAmbilight();
+      }
+    }, 100);
 
     // 锁屏全局框架
     const stageEl = document.createElement('div');
@@ -1075,7 +1102,8 @@
       musicMouseIdleTimer,
       handleMusicMouseMove,
       handleMusicMouseLeave,
-      updateArtworkAspectRatio
+      updateArtworkAspectRatio,
+      removeMusicAmbilightEvents
     };
 
     setButtonVisible(false);
@@ -1083,12 +1111,14 @@
 
   function exitMusicMode() {
     if (!musicCinema) return;
-    const { video, player, saved, overlayEl, artworkCard, clockTimer, updateBgColorTimer, syncProgressTimer, musicMouseIdleTimer, handleMusicMouseMove, handleMusicMouseLeave, updateArtworkAspectRatio } = musicCinema;
+    const { video, player, saved, overlayEl, artworkCard, clockTimer, updateBgColorTimer, syncProgressTimer, musicMouseIdleTimer, handleMusicMouseMove, handleMusicMouseLeave, updateArtworkAspectRatio, removeMusicAmbilightEvents } = musicCinema;
 
     document.documentElement.classList.remove('music-mode-active');
     document.body.classList.remove('music-mode-active');
     document.documentElement.classList.remove('clean-player-active');
     document.body.classList.remove('clean-player-active');
+
+    if (removeMusicAmbilightEvents) removeMusicAmbilightEvents();
 
     if (video && updateArtworkAspectRatio) {
       video.removeEventListener('loadedmetadata', updateArtworkAspectRatio);

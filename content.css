@@ -441,9 +441,18 @@ body.music-mode-active {
   position: absolute;
   inset: -120px;
   z-index: -1;
-  background: radial-gradient(circle at 50% 30%, rgba(59, 130, 246, 0.4), rgba(15, 23, 42, 0.95) 75%, #050505 100%);
-  transition: background 0.8s ease;
+  background: #050505;
+  overflow: hidden;
+  transition: opacity 0.3s ease;
   pointer-events: none;
+}
+
+.music-bg-blur canvas,
+.music-bg-blur video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .music-bg-blur.has-edge-wave {
@@ -451,15 +460,8 @@ body.music-mode-active {
   will-change: transform, border-radius;
 }
 
-.music-bg-blur-inner {
-  position: absolute;
-  inset: 0;
-  background: inherit;
-  filter: inherit;
-  border-radius: inherit;
-}
-
-.music-bg-blur.has-edge-wave .music-bg-blur-inner {
+.music-bg-blur.has-edge-wave canvas,
+.music-bg-blur.has-edge-wave video {
   animation: ambilight-edge-wave-inner 11s cubic-bezier(0.4, 0, 0.6, 1) infinite alternate-reverse;
   will-change: transform, border-radius;
 }
@@ -512,7 +514,7 @@ body.music-mode-active {
   max-height: 48vh;
   border-radius: 28px;
   overflow: hidden;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
   border: 1px solid rgba(255, 255, 255, 0.14);
   transition: width 0.3s ease, aspect-ratio 0.3s ease;
   flex-shrink: 0;
@@ -528,7 +530,7 @@ body.music-mode-active {
 .music-controls-card {
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
   border-radius: 24px;
   padding: 16px 20px;
   backdrop-filter: blur(30px);
