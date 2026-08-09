@@ -489,17 +489,21 @@ body.music-mode-active {
   letter-spacing: 0.2px;
 }
 
-/* 2. 独立封面卡片 (与下控件隔离) */
+/* 2. 独立封面卡片 (自适应视频真实比例 1:1, 16:9, 4:3, 9:16，无黑边) */
 .music-artwork-card {
-  aspect-ratio: 16 / 9;
   max-height: 48vh;
   border-radius: 28px;
   overflow: hidden;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-  background: #000;
   border: 1px solid rgba(255, 255, 255, 0.14);
-  transition: width 0.3s ease;
+  transition: width 0.3s ease, aspect-ratio 0.3s ease;
   flex-shrink: 0;
+}
+
+.music-artwork-card video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
 }
 
 /* 3. 独立 iOS 控件小面板 (在封面正下方) */

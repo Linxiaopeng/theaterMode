@@ -308,13 +308,25 @@
     return el;
   }
 
+  function getVideoAspectRatio(video) {
+    if (!video) return 16 / 9;
+    if (video.videoWidth && video.videoHeight) {
+      return video.videoWidth / video.videoHeight;
+    }
+    if (video.clientWidth && video.clientHeight) {
+      return video.clientWidth / video.clientHeight;
+    }
+    const r = video.getBoundingClientRect();
+    if (r.width && r.height) {
+      return r.width / r.height;
+    }
+    return 16 / 9;
+  }
+
   function computeStageWidth(video) {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    const vr =
-      video.videoWidth && video.videoHeight
-        ? video.videoWidth / video.videoHeight
-        : (video.clientWidth && video.clientHeight ? video.clientWidth / video.clientHeight : 16 / 9);
+    const vr = getVideoAspectRatio(video);
     return Math.min(vw * 0.94, vh * 0.94 * vr);
   }
 
@@ -786,10 +798,20 @@
     clockHeader.appendChild(timeText);
     clockHeader.appendChild(dateText);
 
-    // 2. 独立专辑封面大卡片 (与下控件隔离)
+    // 2. 独立专辑封面大卡片 (视频真实宽高比动态自适应，消除黑边)
     const artworkCard = document.createElement('div');
     artworkCard.className = 'music-artwork-card';
     artworkCard.style.width = `${currentSettings.musicCardWidth}px`;
+
+    const updateArtworkAspectRatio = () => {
+      if (video) {
+        const ar = getVideoAspectRatio(video);
+        artworkCard.style.aspectRatio = `${ar}`;
+      }
+    };
+    updateArtworkAspectRatio();
+    video.addEventListener('loadedmetadata', updateArtworkAspectRatio);
+    video.addEventListener('resize', updateArtworkAspectRatio);
 
     player.style.width = '100%';
     player.style.height = '100%';
@@ -1041,7 +1063,8 @@
       syncProgressTimer,
       musicMouseIdleTimer,
       handleMusicMouseMove,
-      handleMusicMouseLeave
+      handleMusicMouseLeave,
+      updateArtworkAspectRatio
     };
 
     setButtonVisible(false);
@@ -1049,12 +1072,17 @@
 
   function exitMusicMode() {
     if (!musicCinema) return;
-    const { video, player, saved, overlayEl, artworkCard, clockTimer, updateBgColorTimer, syncProgressTimer, musicMouseIdleTimer, handleMusicMouseMove, handleMusicMouseLeave } = musicCinema;
+    const { video, player, saved, overlayEl, artworkCard, clockTimer, updateBgColorTimer, syncProgressTimer, musicMouseIdleTimer, handleMusicMouseMove, handleMusicMouseLeave, updateArtworkAspectRatio } = musicCinema;
 
     document.documentElement.classList.remove('music-mode-active');
     document.body.classList.remove('music-mode-active');
     document.documentElement.classList.remove('clean-player-active');
     document.body.classList.remove('clean-player-active');
+
+    if (video && updateArtworkAspectRatio) {
+      video.removeEventListener('loadedmetadata', updateArtworkAspectRatio);
+      video.removeEventListener('resize', updateArtworkAspectRatio);
+    }
 
     if (artworkCard && handleMusicMouseMove && handleMusicMouseLeave) {
       artworkCard.removeEventListener('mousemove', handleMusicMouseMove);
