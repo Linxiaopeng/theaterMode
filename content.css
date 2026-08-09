@@ -439,11 +439,29 @@ body.music-mode-active {
 
 .music-bg-blur {
   position: absolute;
-  inset: -100px;
+  inset: -120px;
   z-index: -1;
   background: radial-gradient(circle at 50% 30%, rgba(59, 130, 246, 0.4), rgba(15, 23, 42, 0.95) 75%, #050505 100%);
   transition: background 0.8s ease;
   pointer-events: none;
+}
+
+.music-bg-blur.has-edge-wave {
+  animation: ambilight-edge-wave-outer 15s cubic-bezier(0.4, 0, 0.6, 1) infinite alternate;
+  will-change: transform, border-radius;
+}
+
+.music-bg-blur-inner {
+  position: absolute;
+  inset: 0;
+  background: inherit;
+  filter: inherit;
+  border-radius: inherit;
+}
+
+.music-bg-blur.has-edge-wave .music-bg-blur-inner {
+  animation: ambilight-edge-wave-inner 11s cubic-bezier(0.4, 0, 0.6, 1) infinite alternate-reverse;
+  will-change: transform, border-radius;
 }
 
 .music-lockscreen-stage {
@@ -466,19 +484,19 @@ body.music-mode-active {
 /* 1. 顶部 iOS 横向数字时钟与日期 */
 .music-clock-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   color: rgba(255, 255, 255, 0.95);
   text-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
   pointer-events: none;
 }
 
 .music-time-text {
-  font-size: 38px;
+  font-size: 19px;
   font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.5px;
+  line-height: 1.2;
+  letter-spacing: 0px;
   font-family: Georgia, "Times New Roman", -apple-system, BlinkMacSystemFont, sans-serif;
 }
 

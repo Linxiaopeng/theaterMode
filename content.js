@@ -71,6 +71,10 @@
           if (cinema && cinema.ambilightEl) {
             cinema.ambilightEl.classList.toggle('has-edge-wave', !!currentSettings.ambilightWaveEnabled);
           }
+          if (musicCinema && musicCinema.overlayEl) {
+            const bg = musicCinema.overlayEl.querySelector('.music-bg-blur');
+            if (bg) bg.classList.toggle('has-edge-wave', !!currentSettings.ambilightWaveEnabled);
+          }
         }
         if (changes.ambilightIntensity) {
           currentSettings.ambilightIntensity = changes.ambilightIntensity.newValue;
@@ -735,10 +739,17 @@
     const overlayEl = document.createElement('div');
     overlayEl.id = 'music-mode-overlay';
 
-    // 动态模糊主色调背景
+    // 动态模糊主色调背景（带灵动流光波纹呼吸效果）
     const bgBlurEl = document.createElement('div');
     bgBlurEl.className = 'music-bg-blur';
+    if (currentSettings.ambilightWaveEnabled !== false) {
+      bgBlurEl.classList.add('has-edge-wave');
+    }
     bgBlurEl.style.filter = `blur(${currentSettings.musicBlurRadius}px) brightness(0.68) saturate(180%)`;
+
+    const bgBlurInner = document.createElement('div');
+    bgBlurInner.className = 'music-bg-blur-inner';
+    bgBlurEl.appendChild(bgBlurInner);
 
     // 采样 DOM 动态主色提取器
     const sampleCanvas = document.createElement('canvas');
