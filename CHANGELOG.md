@@ -1,3 +1,13 @@
+## [2.1.6] - 2026-08-09
+
+### 🐛 Fixed & 🚀 Improved
+- **修复 Popup 设置保存面板崩溃异常**：修正 `popup.js` 中闭合标记混淆导致脚本整体语法错误（`SyntaxError`）的缺陷，恢复设置加载、弹窗保存及 Tab 切换响应。
+- **配置即时更新通信广播**：在 Popup 保存或修改设置时新增跨标签页 `SETTINGS_UPDATED` 实时消息通知，无需刷新页面即可直观动态生效。
+- **优化 YouTube 与 Bilibili 播放器核心容器捕获**：升级 `findPlayerContainer` 筛选逻辑，优先匹配 `#movie_player` 与 `.bpx-player-container`，保障控制条完整包含且干净隐匿周围无关网页元素。
+- **动态自适应视频尺寸变动**：影院模式增加比例与尺寸自适应监听，在 `loadedmetadata` 及窗口 resize 时自动调整播放舞台与尺寸。
+
+---
+
 ## [2.1.5] - 2026-08-09
 
 ### 🔄 Restored & 🐛 Fixed

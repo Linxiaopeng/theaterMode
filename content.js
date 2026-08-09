@@ -45,90 +45,74 @@
       if (items.ambilightWaveEnabled === undefined) currentSettings.ambilightWaveEnabled = true;
       if (items.ambilightEnabled === undefined) currentSettings.ambilightEnabled = true;
     });
-    chrome.storage.onChanged.addListener((changes, namespace) => {
-      if (namespace === 'sync') {
-        if (changes.jDuration) currentSettings.jDuration = changes.jDuration.newValue;
-        if (changes.jKey) currentSettings.jKey = changes.jKey.newValue;
-        if (changes.lDuration) currentSettings.lDuration = changes.lDuration.newValue;
-        if (changes.lKey) currentSettings.lKey = changes.lKey.newValue;
-        if (changes.overlayOpacity) {
-          currentSettings.overlayOpacity = changes.overlayOpacity.newValue;
-          if (overlay) {
-            overlay.style.backgroundColor = `rgba(0, 0, 0, ${currentSettings.overlayOpacity})`;
-          }
-        }
-        if (changes.cleanPlayerEnabled) {
-          currentSettings.cleanPlayerEnabled = changes.cleanPlayerEnabled.newValue;
-          if (cinema || musicCinema) {
-            document.documentElement.classList.toggle('clean-player-active', !!currentSettings.cleanPlayerEnabled);
-            document.body.classList.toggle('clean-player-active', !!currentSettings.cleanPlayerEnabled);
-          }
-        }
-        if (changes.subFontSize) currentSettings.subFontSize = changes.subFontSize.newValue;
-        if (changes.subFontColor) currentSettings.subFontColor = changes.subFontColor.newValue;
-        if (changes.subBgColor) currentSettings.subBgColor = changes.subBgColor.newValue;
-        if (changes.subBgOpacity) currentSettings.subBgOpacity = changes.subBgOpacity.newValue;
-        if (changes.subFontWeight) currentSettings.subFontWeight = changes.subFontWeight.newValue;
-        if (changes.subBottomOffset) currentSettings.subBottomOffset = changes.subBottomOffset.newValue;
-        if (changes.ambilightEnabled) currentSettings.ambilightEnabled = changes.ambilightEnabled.newValue;
-        if (changes.ambilightWaveEnabled) {
-          currentSettings.ambilightWaveEnabled = changes.ambilightWaveEnabled.newValue;
-          if (cinema && cinema.ambilightEl) {
-            cinema.ambilightEl.classList.toggle('has-edge-wave', !!currentSettings.ambilightWaveEnabled);
-          }
-          if (musicCinema && musicCinema.overlayEl) {
-            const bg = musicCinema.overlayEl.querySelector('.music-bg-blur');
-            if (bg) bg.classList.toggle('has-edge-wave', !!currentSettings.ambilightWaveEnabled);
-          }
-        }
-        if (changes.ambilightIntensity) {
-          currentSettings.ambilightIntensity = changes.ambilightIntensity.newValue;
-          if (cinema && cinema.ambilightEl) {
-            cinema.ambilightEl.style.opacity = currentSettings.ambilightIntensity;
-          }
-        }
-        if (changes.musicCardWidth) {
-          currentSettings.musicCardWidth = parseInt(changes.musicCardWidth.newValue, 10) || 380;
-          if (musicCinema) {
-            if (musicCinema.artworkCard) musicCinema.artworkCard.style.width = `${currentSettings.musicCardWidth}px`;
-            if (musicCinema.controlsCard) musicCinema.controlsCard.style.width = `${currentSettings.musicCardWidth}px`;
-          }
-        }
-        if (changes.musicPadding) {
-          currentSettings.musicPadding = parseInt(changes.musicPadding.newValue, 10) || 40;
-          if (musicCinema && musicCinema.stageEl) {
-            musicCinema.stageEl.style.padding = `${currentSettings.musicPadding}px`;
-          }
-        }
-        if (changes.musicClockTopOffset) {
-          currentSettings.musicClockTopOffset = parseInt(changes.musicClockTopOffset.newValue, 10) || 50;
-          if (musicCinema && musicCinema.clockHeader) {
-            musicCinema.clockHeader.style.marginTop = `${currentSettings.musicClockTopOffset}px`;
-          }
-        }
-        if (changes.musicBlurRadius) {
-          currentSettings.musicBlurRadius = parseInt(changes.musicBlurRadius.newValue, 10) || 65;
-          if (musicCinema && musicCinema.bgBlurEl) {
-            musicCinema.bgBlurEl.style.filter = `blur(${currentSettings.musicBlurRadius}px) brightness(0.68) saturate(180%)`;
-          }
-        }
-        if (changes.musicStaticCoverEnabled) {
-          currentSettings.musicStaticCoverEnabled = changes.musicStaticCoverEnabled.newValue;
-        }
+    function applySettingsUpdate(newSettings) {
+      if (!newSettings) return;
+      currentSettings = Object.assign({}, currentSettings, newSettings);
 
-        // 如果字幕渲染器已存在，实时更新其样式设置
-        if (cinema && cinema.subtitleRenderer) {
-          cinema.subtitleRenderer.updateSettings({
-            fontSize: currentSettings.subFontSize,
-            fontColor: currentSettings.subFontColor,
-            bgColor: currentSettings.subBgColor,
-            bgOpacity: currentSettings.subBgOpacity,
-            fontWeight: currentSettings.subFontWeight,
-            bottomOffset: currentSettings.subBottomOffset
-          });
+      if (newSettings.overlayOpacity !== undefined && overlay) {
+        overlay.style.backgroundColor = `rgba(0, 0, 0, ${newSettings.overlayOpacity})`;
+      }
+      if (newSettings.cleanPlayerEnabled !== undefined && (cinema || musicCinema)) {
+        document.documentElement.classList.toggle('clean-player-active', !!newSettings.cleanPlayerEnabled);
+        document.body.classList.toggle('clean-player-active', !!newSettings.cleanPlayerEnabled);
+      }
+      if (newSettings.ambilightEnabled !== undefined && cinema && cinema.ambilightEl) {
+        cinema.ambilightEl.style.display = newSettings.ambilightEnabled ? 'block' : 'none';
+      }
+      if (newSettings.ambilightWaveEnabled !== undefined) {
+        if (cinema && cinema.ambilightEl) {
+          cinema.ambilightEl.classList.toggle('has-edge-wave', !!newSettings.ambilightWaveEnabled);
+        }
+        if (musicCinema && musicCinema.overlayEl) {
+          const bg = musicCinema.overlayEl.querySelector('.music-bg-blur');
+          if (bg) bg.classList.toggle('has-edge-wave', !!newSettings.ambilightWaveEnabled);
         }
       }
+      if (newSettings.ambilightIntensity !== undefined && cinema && cinema.ambilightEl) {
+        cinema.ambilightEl.style.opacity = newSettings.ambilightIntensity;
+      }
+      if (newSettings.musicCardWidth !== undefined && musicCinema) {
+        if (musicCinema.artworkCard) musicCinema.artworkCard.style.width = `${newSettings.musicCardWidth}px`;
+        if (musicCinema.controlsCard) musicCinema.controlsCard.style.width = `${newSettings.musicCardWidth}px`;
+      }
+      if (newSettings.musicPadding !== undefined && musicCinema && musicCinema.stageEl) {
+        musicCinema.stageEl.style.padding = `${newSettings.musicPadding}px`;
+      }
+      if (newSettings.musicClockTopOffset !== undefined && musicCinema && musicCinema.clockHeader) {
+        musicCinema.clockHeader.style.marginTop = `${newSettings.musicClockTopOffset}px`;
+      }
+      if (newSettings.musicBlurRadius !== undefined && musicCinema && musicCinema.bgBlurEl) {
+        musicCinema.bgBlurEl.style.filter = `blur(${newSettings.musicBlurRadius}px) brightness(0.68) saturate(180%)`;
+      }
+      if (cinema && cinema.subtitleRenderer) {
+        cinema.subtitleRenderer.updateSettings({
+          fontSize: currentSettings.subFontSize,
+          fontColor: currentSettings.subFontColor,
+          bgColor: currentSettings.subBgColor,
+          bgOpacity: currentSettings.subBgOpacity,
+          fontWeight: currentSettings.subFontWeight,
+          bottomOffset: currentSettings.subBottomOffset
+        });
+      }
+    }
+
+    chrome.storage.onChanged.addListener((changes, namespace) => {
+      if (namespace === 'sync') {
+        const updated = {};
+        for (const k in changes) {
+          updated[k] = changes[k].newValue;
+        }
+        applySettingsUpdate(updated);
+      }
     });
+
+    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+      chrome.runtime.onMessage.addListener((msg) => {
+        if (msg && msg.type === 'SETTINGS_UPDATED' && msg.settings) {
+          applySettingsUpdate(msg.settings);
+        }
+      });
+    }
   }
 
   /* ---------- 历史记录管理 (最多90条，播放满1分钟方可入库) ---------- */
@@ -296,6 +280,14 @@
   function findPlayerContainer(video) {
     if (!video) return null;
 
+    // 优先匹配 YouTube 核心播放器容器
+    const ytPlayer = video.closest('#movie_player');
+    if (ytPlayer) return ytPlayer;
+
+    // 优先匹配 Bilibili 核心播放器容器
+    const biliPlayer = video.closest('.bpx-player-container') || video.closest('#bilibili-player');
+    if (biliPlayer) return biliPlayer;
+
     const vw = video.getBoundingClientRect().width;
     let el = video;
     for (let i = 0; i < 6; i++) {
@@ -310,14 +302,14 @@
 
   function getVideoAspectRatio(video) {
     if (!video) return 16 / 9;
-    if (video.videoWidth && video.videoHeight) {
+    if (video.videoWidth && video.videoHeight && video.videoHeight > 0) {
       return video.videoWidth / video.videoHeight;
     }
-    if (video.clientWidth && video.clientHeight) {
+    if (video.clientWidth && video.clientHeight && video.clientHeight > 0) {
       return video.clientWidth / video.clientHeight;
     }
     const r = video.getBoundingClientRect();
-    if (r.width && r.height) {
+    if (r.width && r.height && r.height > 0) {
       return r.width / r.height;
     }
     return 16 / 9;
@@ -327,7 +319,8 @@
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const vr = getVideoAspectRatio(video);
-    return Math.min(vw * 0.94, vh * 0.94 * vr);
+    const maxH = Math.max(200, vh - 100);
+    return Math.min(vw * 0.94, maxH * 0.94 * vr);
   }
 
   function enterCinema(video) {
@@ -441,15 +434,39 @@
     overlay.appendChild(controlBar);
     ROOT().appendChild(overlay);
 
-    stage.style.width = px(computeStageWidth(video));
-    player.style.width = '100%';
-    player.style.height = 'auto';
-    player.style.margin = '0';
+    const updateStageDimensions = () => {
+      if (!stage || !player || !video) return;
+      const w = computeStageWidth(video);
+      const ratio = getVideoAspectRatio(video);
+      const h = w / ratio;
+      stage.style.setProperty('width', px(w), 'important');
+      stage.style.setProperty('height', px(h), 'important');
+      stage.style.setProperty('aspect-ratio', `${ratio}`, 'important');
+
+      player.style.setProperty('width', '100%', 'important');
+      player.style.setProperty('height', '100%', 'important');
+
+      const innerContainers = player.querySelectorAll('.html5-video-container, .bpx-player-video-area, .bpx-player-primary-area');
+      innerContainers.forEach(c => {
+        c.style.setProperty('width', '100%', 'important');
+        c.style.setProperty('height', '100%', 'important');
+      });
+    };
+
+    updateStageDimensions();
+    video.addEventListener('loadedmetadata', updateStageDimensions);
+    video.addEventListener('resize', updateStageDimensions);
+
     video.style.width = '100%';
     video.style.height = '100%';
     video.style.maxWidth = '100%';
     video.style.maxHeight = '100%';
     video.style.objectFit = 'contain';
+
+    setTimeout(() => {
+      updateStageDimensions();
+      window.dispatchEvent(new Event('resize'));
+    }, 50);
 
     // 初始化字幕渲染器模块
     const subtitleRenderer = new SubtitleRenderer(stage, {
@@ -461,7 +478,7 @@
       bottomOffset: currentSettings.subBottomOffset
     });
 
-    // 网页背景氛围光（Ambilight 氛围光双向渲染，实时 Canvas 与 MSE/CORS 降级兼顾）
+    // 网页背景氛围光（Ambilight）
     let ambilightEl = null;
     let ambilightInterval = null;
     let removeAmbilightEvents = null;
@@ -480,42 +497,15 @@
       ambilightEl.appendChild(canvas);
       stage.appendChild(ambilightEl);
 
-      let usesFallbackVideo = false;
-      let glowVideo = null;
-
       const drawAmbilight = () => {
         if (!video || !video.isConnected) return;
-        if (usesFallbackVideo) {
-          if (glowVideo) {
-            if (glowVideo.paused !== video.paused) {
-              video.paused ? glowVideo.pause() : glowVideo.play().catch(() => {});
-            }
-            if (Math.abs(glowVideo.currentTime - video.currentTime) > 0.3) {
-              glowVideo.currentTime = video.currentTime;
-            }
-          }
-          return;
-        }
-
         try {
           if (video.readyState >= 2) {
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
           }
-        } catch (e) {
-          if (!usesFallbackVideo) {
-            usesFallbackVideo = true;
-            canvas.remove();
-            glowVideo = video.cloneNode(true);
-            glowVideo.muted = true;
-            glowVideo.removeAttribute('id');
-            glowVideo.style.cssText = 'width:100%; height:100%; object-fit:cover; display:block; border-radius:24px;';
-            ambilightEl.appendChild(glowVideo);
-            if (!video.paused) glowVideo.play().catch(() => {});
-          }
-        }
+        } catch (e) {}
       };
 
-      // 立即触发首次绘制，解决暂停状态进入影院模式灯光不亮问题
       drawAmbilight();
 
       const onUpdate = () => drawAmbilight();
@@ -534,7 +524,7 @@
       };
 
       ambilightInterval = setInterval(() => {
-        if (video && (!video.paused || usesFallbackVideo) && !video.ended) {
+        if (video && !video.paused && !video.ended) {
           drawAmbilight();
         }
       }, 100);
@@ -551,7 +541,7 @@
       });
     }
 
-    // 鼠标在播放器封面/舞台区域内移动时同步显示播放控制条/字幕工具，无操作 2.5 秒后自动柔和隐蔽
+    // 鼠标在播放器区域内移动时同步显示播放控制条，无操作 2.5 秒后自动柔和隐蔽
     let mouseIdleTimer = null;
     const stageRef = stage;
 
@@ -588,6 +578,9 @@
       hideControls();
     };
 
+    overlay.addEventListener('mousemove', handleMouseMove);
+    overlay.addEventListener('mouseenter', handleMouseMove);
+
     stage.addEventListener('mousemove', handleMouseMove);
     stage.addEventListener('mouseenter', handleMouseMove);
     stage.addEventListener('mouseleave', handleMouseLeave);
@@ -610,7 +603,8 @@
       stageRef,
       handleMouseMove,
       handleMouseLeave,
-      mouseIdleTimer
+      mouseIdleTimer,
+      updateStageDimensions
     };
     setButtonVisible(false);
 
@@ -633,8 +627,14 @@
       stageRef,
       handleMouseMove,
       handleMouseLeave,
-      mouseIdleTimer
+      mouseIdleTimer,
+      updateStageDimensions
     } = cinema;
+
+    if (video && updateStageDimensions) {
+      video.removeEventListener('loadedmetadata', updateStageDimensions);
+      video.removeEventListener('resize', updateStageDimensions);
+    }
 
     document.documentElement.classList.remove('cinema-mode-active');
     document.body.classList.remove('cinema-mode-active');
@@ -703,6 +703,9 @@
     stage = null;
     cinema = null;
     updateButton();
+    setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+    }, 50);
   }
 
   /* ---------- 🎵 音乐模式 (iOS 锁屏美学) ---------- */
@@ -1287,8 +1290,8 @@
   }, true);
 
   window.addEventListener('resize', () => {
-    if (cinema && stage) {
-      stage.style.width = px(computeStageWidth(cinema.video));
+    if (cinema && cinema.updateStageDimensions) {
+      cinema.updateStageDimensions();
     }
   });
 

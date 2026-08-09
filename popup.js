@@ -49,6 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const statusDiv = document.getElementById('status');
 
+  let isLoaded = false;
+
   // 加载存储的偏好配置
   chrome.storage.sync.get({
     jDuration: 60,  // 默认60秒（1分钟）
@@ -95,85 +97,100 @@ document.addEventListener('DOMContentLoaded', () => {
     musicClockTopOffsetInput.value = items.musicClockTopOffset;
     musicBlurRadiusInput.value = items.musicBlurRadius;
     musicStaticCoverEnabledInput.checked = !!items.musicStaticCoverEnabled;
+
+    isLoaded = true;
   });
 
-    function saveAllSettings(showNotification = false) {
-      const jSec = parseToSeconds(jValueInput.value, jUnitSelect.value);
-      const jKey = (jKeyInput.value || 'j').trim().toLowerCase().charAt(0) || 'j';
-      const lSec = parseToSeconds(lValueInput.value, lUnitSelect.value);
-      const lKey = (lKeyInput.value || 'l').trim().toLowerCase().charAt(0) || 'l';
-      const opacity = Math.max(0, Math.min(1, parseFloat(opacityInput.value) || 0.88));
-      const cleanPlayerEnabled = cleanPlayerEnabledInput.checked;
+  function saveAllSettings(showNotification = false) {
+    if (!isLoaded && !showNotification) return;
 
-      const subFontSize = Math.max(12, Math.min(48, parseFloat(subFontSizeInput.value) || 18));
-      const subFontColor = subFontColorInput.value || '#ffffff';
-      const subBgColor = subBgColorInput.value || '#000000';
-      const subBgOpacity = Math.max(0, Math.min(1, parseFloat(subBgOpacityInput.value) || 0.6));
-      const subFontWeight = subFontWeightSelect.value || '500';
-      const subBottomOffset = Math.max(10, Math.min(200, parseFloat(subBottomOffsetInput.value) || 30));
+    const jSec = parseToSeconds(jValueInput.value, jUnitSelect.value);
+    const jKey = (jKeyInput.value || 'j').trim().toLowerCase().charAt(0) || 'j';
+    const lSec = parseToSeconds(lValueInput.value, lUnitSelect.value);
+    const lKey = (lKeyInput.value || 'l').trim().toLowerCase().charAt(0) || 'l';
+    const opacity = Math.max(0, Math.min(1, parseFloat(opacityInput.value) || 0.88));
+    const cleanPlayerEnabled = cleanPlayerEnabledInput.checked;
 
-      const ambilightEnabled = ambilightEnabledInput.checked;
-      const ambilightWaveEnabled = ambilightWaveEnabledInput.checked;
-      const ambilightIntensity = Math.max(0.1, Math.min(1.0, parseFloat(ambilightIntensityInput.value) || 0.65));
+    const subFontSize = Math.max(12, Math.min(48, parseFloat(subFontSizeInput.value) || 18));
+    const subFontColor = subFontColorInput.value || '#ffffff';
+    const subBgColor = subBgColorInput.value || '#000000';
+    const subBgOpacity = Math.max(0, Math.min(1, parseFloat(subBgOpacityInput.value) || 0.6));
+    const subFontWeight = subFontWeightSelect.value || '500';
+    const subBottomOffset = Math.max(10, Math.min(200, parseFloat(subBottomOffsetInput.value) || 30));
 
-      const musicCardWidth = Math.max(260, Math.min(520, parseInt(musicCardWidthInput.value, 10) || 380));
-      const musicPadding = Math.max(16, Math.min(80, parseInt(musicPaddingInput.value, 10) || 40));
-      const musicClockTopOffset = Math.max(20, Math.min(120, parseInt(musicClockTopOffsetInput.value, 10) || 50));
-      const musicBlurRadius = Math.max(20, Math.min(100, parseInt(musicBlurRadiusInput.value, 10) || 65));
-      const musicStaticCoverEnabled = musicStaticCoverEnabledInput.checked;
+    const ambilightEnabled = ambilightEnabledInput.checked;
+    const ambilightWaveEnabled = ambilightWaveEnabledInput.checked;
+    const ambilightIntensity = Math.max(0.1, Math.min(1.0, parseFloat(ambilightIntensityInput.value) || 0.65));
 
-      if (isNaN(jSec) || isNaN(lSec) || jSec <= 0 || lSec <= 0) {
-        if (showNotification) {
-          statusDiv.textContent = '⚠️ 请输入有效的时间数值！';
-          statusDiv.style.color = '#ef4444';
-        }
-        return;
+    const musicCardWidth = Math.max(260, Math.min(520, parseInt(musicCardWidthInput.value, 10) || 380));
+    const musicPadding = Math.max(16, Math.min(80, parseInt(musicPaddingInput.value, 10) || 40));
+    const musicClockTopOffset = Math.max(20, Math.min(120, parseInt(musicClockTopOffsetInput.value, 10) || 50));
+    const musicBlurRadius = Math.max(20, Math.min(100, parseInt(musicBlurRadiusInput.value, 10) || 65));
+    const musicStaticCoverEnabled = musicStaticCoverEnabledInput.checked;
+
+    if (isNaN(jSec) || isNaN(lSec) || jSec <= 0 || lSec <= 0) {
+      if (showNotification) {
+        statusDiv.textContent = '⚠️ 请输入有效的时间数值！';
+        statusDiv.style.color = '#ef4444';
       }
-
-      chrome.storage.sync.set({
-        jDuration: jSec,
-        jKey,
-        lDuration: lSec,
-        lKey,
-        overlayOpacity: opacity,
-        cleanPlayerEnabled,
-        subFontSize,
-        subFontColor,
-        subBgColor,
-        subBgOpacity,
-        subFontWeight,
-        subBottomOffset,
-        ambilightEnabled,
-        ambilightWaveEnabled,
-        ambilightIntensity,
-        musicCardWidth,
-        musicPadding,
-        musicClockTopOffset,
-        musicBlurRadius,
-        musicStaticCoverEnabled
-      }, () => {
-        if (showNotification) {
-          statusDiv.textContent = '✓ 保存成功，配置即时生效';
-          statusDiv.style.color = '#34d399';
-          setTimeout(() => {
-            statusDiv.textContent = '修改设置后即时生效';
-            statusDiv.style.color = '#71717a';
-          }, 2000);
-        }
-      });
+      return;
     }
 
-    // 实时监听输入与选择框变动，实现无缝动态响应
-    [musicCardWidthInput, musicPaddingInput, musicClockTopOffsetInput, musicBlurRadiusInput, opacityInput, ambilightIntensityInput, subFontSizeInput, subBottomOffsetInput, subBgOpacityInput, jValueInput, lValueInput].forEach(el => {
-      if (el) el.addEventListener('input', () => saveAllSettings(false));
-    });
-    [musicStaticCoverEnabledInput, cleanPlayerEnabledInput, ambilightEnabledInput, ambilightWaveEnabledInput, subFontColorInput, subBgColorInput, subFontWeightSelect, jUnitSelect, lUnitSelect, jKeyInput, lKeyInput].forEach(el => {
-      if (el) el.addEventListener('change', () => saveAllSettings(false));
-    });
+    const settings = {
+      jDuration: jSec,
+      jKey,
+      lDuration: lSec,
+      lKey,
+      overlayOpacity: opacity,
+      cleanPlayerEnabled,
+      subFontSize,
+      subFontColor,
+      subBgColor,
+      subBgOpacity,
+      subFontWeight,
+      subBottomOffset,
+      ambilightEnabled,
+      ambilightWaveEnabled,
+      ambilightIntensity,
+      musicCardWidth,
+      musicPadding,
+      musicClockTopOffset,
+      musicBlurRadius,
+      musicStaticCoverEnabled
+    };
 
-    // 手动点击保存按钮
-    document.getElementById('save').addEventListener('click', () => saveAllSettings(true));
+    chrome.storage.sync.set(settings, () => {
+      if (showNotification) {
+        statusDiv.textContent = '✓ 保存成功，配置即时生效';
+        statusDiv.style.color = '#34d399';
+        setTimeout(() => {
+          statusDiv.textContent = '修改设置后即时生效';
+          statusDiv.style.color = '#71717a';
+        }, 2000);
+      }
+
+      // 同步广播通知网页标签页立刻刷新设置
+      if (typeof chrome !== 'undefined' && chrome.tabs) {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          if (tabs && tabs[0] && tabs[0].id) {
+            chrome.tabs.sendMessage(tabs[0].id, { type: 'SETTINGS_UPDATED', settings }).catch(() => {});
+          }
+        });
+      }
+    });
+  }
+
+  // 实时监听输入与选择框变动，实现无缝动态响应
+  [musicCardWidthInput, musicPaddingInput, musicClockTopOffsetInput, musicBlurRadiusInput, opacityInput, ambilightIntensityInput, subFontSizeInput, subBottomOffsetInput, subBgOpacityInput, jValueInput, lValueInput].forEach(el => {
+    if (el) el.addEventListener('input', () => saveAllSettings(false));
   });
+  [musicStaticCoverEnabledInput, cleanPlayerEnabledInput, ambilightEnabledInput, ambilightWaveEnabledInput, subFontColorInput, subBgColorInput, subFontWeightSelect, jUnitSelect, lUnitSelect, jKeyInput, lKeyInput].forEach(el => {
+    if (el) el.addEventListener('change', () => saveAllSettings(false));
+  });
+
+  // 手动点击保存按钮
+  document.getElementById('save').addEventListener('click', () => saveAllSettings(true));
+
 
   // 历史记录加载与管理
   const historyList = document.getElementById('historyList');
