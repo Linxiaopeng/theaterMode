@@ -110,11 +110,12 @@ body.cinema-mode-active::-webkit-scrollbar {
   transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.15s ease;
 }
 
+.cinema-control-bar.visible,
 .cinema-stage.user-active ~ .cinema-control-bar,
 .cinema-control-bar:hover {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
 }
 
 .cinema-ctrl-btn {

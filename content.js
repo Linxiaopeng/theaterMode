@@ -361,8 +361,8 @@
     uploadBtn.appendChild(fileInput);
     controlBar.appendChild(uploadBtn);
 
-    overlay.appendChild(controlBar);
     overlay.appendChild(stage);
+    overlay.appendChild(controlBar);
     ROOT().appendChild(overlay);
 
     stage.style.width = px(computeStageWidth(video));
@@ -475,7 +475,7 @@
       });
     }
 
-    // 鼠标在播放器封面/舞台区域内移动时显示控制条/标题，无操作 2.5 秒后自动柔和隐蔽
+    // 鼠标在播放器封面/舞台区域内移动时同步显示播放控制条/字幕工具，无操作 2.5 秒后自动柔和隐蔽
     let mouseIdleTimer = null;
     const stageRef = stage;
 
@@ -484,12 +484,18 @@
         stageRef.classList.add('user-active');
         stageRef.classList.remove('user-idle');
       }
+      if (controlBar) {
+        controlBar.classList.add('visible');
+      }
     };
 
     const hideControls = () => {
       if (stageRef) {
         stageRef.classList.remove('user-active');
         stageRef.classList.add('user-idle');
+      }
+      if (controlBar && !controlBar.matches(':hover')) {
+        controlBar.classList.remove('visible');
       }
     };
 
@@ -509,6 +515,10 @@
     stage.addEventListener('mousemove', handleMouseMove);
     stage.addEventListener('mouseenter', handleMouseMove);
     stage.addEventListener('mouseleave', handleMouseLeave);
+
+    controlBar.addEventListener('mousemove', handleMouseMove);
+    controlBar.addEventListener('mouseenter', handleMouseMove);
+    controlBar.addEventListener('mouseleave', handleMouseLeave);
 
     handleMouseMove();
 
