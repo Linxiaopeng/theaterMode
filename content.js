@@ -81,8 +81,10 @@
         if (changes.musicCardWidth) {
           currentSettings.musicCardWidth = changes.musicCardWidth.newValue;
           if (musicCinema && musicCinema.overlayEl) {
-            const card = musicCinema.overlayEl.querySelector('.music-card');
-            if (card) card.style.width = `${currentSettings.musicCardWidth}px`;
+            const artCard = musicCinema.overlayEl.querySelector('.music-artwork-card');
+            const ctrlCard = musicCinema.overlayEl.querySelector('.music-controls-card');
+            if (artCard) artCard.style.width = `${currentSettings.musicCardWidth}px`;
+            if (ctrlCard) ctrlCard.style.width = `${currentSettings.musicCardWidth}px`;
           }
         }
         if (changes.musicPadding) {
@@ -760,46 +762,51 @@
     stageEl.className = 'music-lockscreen-stage';
     stageEl.style.padding = `${currentSettings.musicPadding}px 24px`;
 
-    // 1. 顶部时间与日期 (iOS 锁屏美学)
+    // 1. 顶部时间与日期 (iOS 锁屏横向排版 12:12  8月9日 星期日)
     const clockHeader = document.createElement('div');
     clockHeader.className = 'music-clock-header';
     clockHeader.style.marginTop = `${currentSettings.musicClockTopOffset}px`;
 
-    const dateText = document.createElement('div');
-    dateText.className = 'music-date-text';
-
-    const timeText = document.createElement('div');
+    const timeText = document.createElement('span');
     timeText.className = 'music-time-text';
+
+    const dateText = document.createElement('span');
+    dateText.className = 'music-date-text';
 
     const updateClock = () => {
       const now = new Date();
-      const options = { month: 'long', day: 'numeric', weekday: 'long' };
-      dateText.textContent = now.toLocaleDateString('zh-CN', options);
       const pad = (n) => String(n).padStart(2, '0');
       timeText.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+      const options = { month: 'short', day: 'numeric', weekday: 'short' };
+      dateText.textContent = now.toLocaleDateString('zh-CN', options);
     };
     updateClock();
     let clockTimer = setInterval(updateClock, 1000);
 
-    clockHeader.appendChild(dateText);
     clockHeader.appendChild(timeText);
+    clockHeader.appendChild(dateText);
 
-    // 2. 中央 iOS 音乐卡片
-    const musicCard = document.createElement('div');
-    musicCard.className = 'music-card';
-    musicCard.style.width = `${currentSettings.musicCardWidth}px`;
+    // 2. 独立专辑封面大卡片 (与下控件隔离)
+    const artworkCard = document.createElement('div');
+    artworkCard.className = 'music-artwork-card';
+    artworkCard.style.width = `${currentSettings.musicCardWidth}px`;
 
-    // 封面容器（承载 player）
-    const artworkBox = document.createElement('div');
-    artworkBox.className = 'music-artwork-box';
     player.style.width = '100%';
     player.style.height = '100%';
     player.style.objectFit = 'cover';
-    artworkBox.appendChild(player);
+    artworkCard.appendChild(player);
 
-    // 曲目与来源信息
+    // 3. 独立 iOS 播放控件小面板 (在封面正下方)
+    const controlsCard = document.createElement('div');
+    controlsCard.className = 'music-controls-card';
+    controlsCard.style.width = `${currentSettings.musicCardWidth}px`;
+
+    // 头部: 标题与作者信息 + 模式切换小按钮
     const metaBox = document.createElement('div');
     metaBox.className = 'music-meta-box';
+
+    const textGroup = document.createElement('div');
+    textGroup.className = 'music-text-group';
 
     const trackTitle = document.createElement('div');
     trackTitle.className = 'music-track-title';
@@ -810,10 +817,24 @@
     trackSub.className = 'music-track-sub';
     trackSub.textContent = window.location.hostname.replace('www.', '');
 
-    metaBox.appendChild(trackTitle);
-    metaBox.appendChild(trackSub);
+    textGroup.appendChild(trackTitle);
+    textGroup.appendChild(trackSub);
 
-    // 进度控制滑块
+    const modeBtn = document.createElement('button');
+    modeBtn.className = 'music-icon-btn mode-switch-icon';
+    modeBtn.title = '切换至影院模式';
+    modeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="16" rx="3"/><path d="M10 9v6l5-3z" fill="currentColor" stroke="none"/></svg>';
+    modeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const v = video;
+      exitMusicMode();
+      enterCinema(v);
+    });
+
+    metaBox.appendChild(textGroup);
+    metaBox.appendChild(modeBtn);
+
+    // 进度条与数字时间
     const progressBox = document.createElement('div');
     progressBox.className = 'music-progress-box';
 
@@ -828,10 +849,10 @@
     timeLabels.className = 'music-time-labels';
 
     const curTimeSpan = document.createElement('span');
-    curTimeSpan.textContent = '00:00';
+    curTimeSpan.textContent = '0:00';
 
     const durTimeSpan = document.createElement('span');
-    durTimeSpan.textContent = '-00:00';
+    durTimeSpan.textContent = '-0:00';
 
     timeLabels.appendChild(curTimeSpan);
     timeLabels.appendChild(durTimeSpan);
@@ -839,10 +860,10 @@
     progressBox.appendChild(timeLabels);
 
     const formatSec = (sec) => {
-      if (isNaN(sec) || sec < 0) return '00:00';
+      if (isNaN(sec) || sec < 0) return '0:00';
       const m = Math.floor(sec / 60);
       const s = Math.floor(sec % 60);
-      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      return `${m}:${String(s).padStart(2, '0')}`;
     };
 
     let isDraggingSlider = false;
@@ -871,66 +892,101 @@
       }
     }, 500);
 
-    // 专属音乐操控按钮栏
+    // 纯极简 Icon 控制条 (纯 Icon 无文字，极简苹果风格)
     const ctrlRow = document.createElement('div');
     ctrlRow.className = 'music-ctrl-row';
 
+    const muteBtn = document.createElement('button');
+    muteBtn.className = 'music-icon-btn';
+    muteBtn.title = video.muted ? '取消静音' : '静音';
+    muteBtn.innerHTML = video.muted
+      ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
+    muteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      video.muted = !video.muted;
+      muteBtn.innerHTML = video.muted
+        ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
+    });
+
     const rewindBtn = document.createElement('button');
-    rewindBtn.className = 'music-ctrl-btn';
+    rewindBtn.className = 'music-icon-btn';
     rewindBtn.title = '回退 15 秒';
-    rewindBtn.innerHTML = '⏪ 15s';
+    rewindBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 5l-7 7 7 7V5zm9 0l-7 7 7 7V5z"/></svg>';
     rewindBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       if (video && !isNaN(video.duration)) video.currentTime = Math.max(0, video.currentTime - 15);
     });
 
     const playToggleBtn = document.createElement('button');
-    playToggleBtn.className = 'music-ctrl-btn primary';
-    playToggleBtn.title = '播放 / 暂停';
-    playToggleBtn.innerHTML = video.paused ? '▶ 播放' : '⏸ 暂停';
+    playToggleBtn.className = 'music-icon-btn play-main';
+    playToggleBtn.title = video.paused ? '播放' : '暂停';
+    playToggleBtn.innerHTML = video.paused
+      ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86a1 1 0 0 0-1.5.86z"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1.5"/><rect x="14" y="4" width="4" height="16" rx="1.5"/></svg>';
     playToggleBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       if (video.paused) {
         video.play().catch(() => {});
-        playToggleBtn.innerHTML = '⏸ 暂停';
+        playToggleBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1.5"/><rect x="14" y="4" width="4" height="16" rx="1.5"/></svg>';
       } else {
         video.pause();
-        playToggleBtn.innerHTML = '▶ 播放';
+        playToggleBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86a1 1 0 0 0-1.5.86z"/></svg>';
       }
     });
 
     const forwardBtn = document.createElement('button');
-    forwardBtn.className = 'music-ctrl-btn';
+    forwardBtn.className = 'music-icon-btn';
     forwardBtn.title = '快进 15 秒';
-    forwardBtn.innerHTML = '15s ⏩';
+    forwardBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 19l7-7-7-7v14zm-9 0l7-7-7-7v14z"/></svg>';
     forwardBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       if (video && !isNaN(video.duration)) video.currentTime = Math.min(video.duration, video.currentTime + 15);
     });
 
-    const switchCinemaBtn = document.createElement('button');
-    switchCinemaBtn.className = 'music-ctrl-btn mode-switch';
-    switchCinemaBtn.title = '切换至全屏影院模式';
-    switchCinemaBtn.innerHTML = '🎬 切至影院';
-    switchCinemaBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const v = video;
-      exitMusicMode();
-      enterCinema(v);
+    const subBtn = document.createElement('button');
+    subBtn.className = 'music-icon-btn';
+    subBtn.title = '加载本地字幕';
+    subBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM4 12h4v2H4v-2zm10 4H4v-2h10v2zm6 0h-4v-2h4v2zm0-4H10v-2h10v2z"/></svg>';
+    const subFileInput = document.createElement('input');
+    subFileInput.type = 'file';
+    subFileInput.accept = '.srt,.vtt,.ass';
+    subFileInput.style.display = 'none';
+    subFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          const content = evt.target.result;
+          SubtitleParser.parse(content, file.name);
+          alert(`字幕文件解析成功！`);
+        } catch (err) {
+          alert(`字幕解析失败：${err.message}`);
+        }
+      };
+      reader.readAsText(file, 'utf-8');
     });
+    subBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      subFileInput.click();
+    });
+    subBtn.appendChild(subFileInput);
 
+    ctrlRow.appendChild(muteBtn);
     ctrlRow.appendChild(rewindBtn);
     ctrlRow.appendChild(playToggleBtn);
     ctrlRow.appendChild(forwardBtn);
-    ctrlRow.appendChild(switchCinemaBtn);
+    ctrlRow.appendChild(subBtn);
 
-    musicCard.appendChild(artworkBox);
-    musicCard.appendChild(metaBox);
-    musicCard.appendChild(progressBox);
-    musicCard.appendChild(ctrlRow);
+    controlsCard.appendChild(metaBox);
+    controlsCard.appendChild(progressBox);
+    controlsCard.appendChild(ctrlRow);
 
     stageEl.appendChild(clockHeader);
-    stageEl.appendChild(musicCard);
+    stageEl.appendChild(artworkCard);
+    stageEl.appendChild(controlsCard);
 
     overlayEl.appendChild(bgBlurEl);
     overlayEl.appendChild(stageEl);
