@@ -1,3 +1,11 @@
+## [2.1.3] - 2026-08-09
+
+### 🚀 Improved & 🐛 Fixed
+- **Popup 表单输入实时无缝自动保存 (`input` & `change`)**：在 Popup 中为所有数字滑动条、文本框及勾选框添加了实时监听事件。用户在修改宽度、边距、偏移、模糊度等数值时，无需点击“保存”即可实现网页界面的即时放大/缩小/位移预览。
+- **Direct DOM Node Reference Clean Update**：在 `content.js` 中直接对 `musicCinema` 保存 `artworkCard`、`controlsCard`、`clockHeader` 和 `bgBlurEl` 的 DOM 句柄，消除跨节点 querySelector 的延迟与失效风险。
+
+---
+
 ## [2.1.2] - 2026-08-09
 
 ### 🐛 Fixed
