@@ -96,10 +96,26 @@ body.cinema-mode-active::-webkit-scrollbar {
   pointer-events: auto;
   box-shadow: 0 12px 60px rgba(0, 0, 0, 0.8);
   max-width: 96vw;
+  max-height: calc(100vh - 100px);
+  display: block !important;
+  border-radius: 8px;
+}
+
+.cinema-stage > *,
+.cinema-stage #movie_player,
+.cinema-stage .html5-video-player,
+.cinema-stage .html5-video-container,
+.music-artwork-card > * {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: none !important;
 }
 
 .cinema-stage video {
-  border-radius: 6px;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  border-radius: 6px !important;
 }
 
 .cinema-control-bar {
@@ -385,6 +401,29 @@ html.cinema-mode-active .bilibili-player-video-area {
 }
 
 /* 影院模式与音乐模式下：无操作静止 2.5s 或离开封面时，自动柔和隐藏播放器进度条、标题、UP 主头像与暂停遮罩等 UI */
+.cinema-target-player.user-idle .bpx-player-control-wrap,
+.cinema-target-player.user-idle .bpx-player-top-wrap,
+.cinema-target-player.user-idle .bpx-player-state-wrap,
+.cinema-target-player.user-idle .bpx-player-control-bottom,
+.cinema-target-player.user-idle .bilibili-player-video-control,
+.cinema-target-player.user-idle .bilibili-player-video-top,
+.cinema-target-player.user-idle .bilibili-player-video-state,
+.cinema-target-player.user-idle .ytp-chrome-bottom,
+.cinema-target-player.user-idle .ytp-chrome-top,
+.cinema-target-player.user-idle .ytp-gradient-bottom,
+.cinema-target-player.user-idle .ytp-gradient-top,
+.cinema-target-player.user-idle .txp_control_bar,
+.cinema-target-player.user-idle .txp_top_bar,
+.cinema-target-player.user-idle .iqp-control-wrap,
+.cinema-target-player.user-idle .iqp-top-wrap,
+.cinema-target-player.user-idle .youku-layer-control,
+.cinema-target-player.user-idle .youku-layer-title,
+.cinema-target-player.user-idle .xgplayer-controls,
+.cinema-target-player.user-idle .art-controls,
+.cinema-target-player.user-idle .dplayer-controller,
+.cinema-target-player.user-idle .vjs-control-bar,
+.cinema-target-player.user-idle .plyr__controls,
+
 .cinema-stage.user-idle .bpx-player-control-wrap,
 .cinema-stage.user-idle .bpx-player-top-wrap,
 .cinema-stage.user-idle .bpx-player-state-wrap,
@@ -435,6 +474,29 @@ html.cinema-mode-active .bilibili-player-video-area {
   pointer-events: none !important;
   transition: opacity 0.35s ease, visibility 0.35s ease !important;
 }
+
+.cinema-target-player.user-active .bpx-player-control-wrap,
+.cinema-target-player.user-active .bpx-player-top-wrap,
+.cinema-target-player.user-active .bpx-player-state-wrap,
+.cinema-target-player.user-active .bpx-player-control-bottom,
+.cinema-target-player.user-active .bilibili-player-video-control,
+.cinema-target-player.user-active .bilibili-player-video-top,
+.cinema-target-player.user-active .bilibili-player-video-state,
+.cinema-target-player.user-active .ytp-chrome-bottom,
+.cinema-target-player.user-active .ytp-chrome-top,
+.cinema-target-player.user-active .ytp-gradient-bottom,
+.cinema-target-player.user-active .ytp-gradient-top,
+.cinema-target-player.user-active .txp_control_bar,
+.cinema-target-player.user-active .txp_top_bar,
+.cinema-target-player.user-active .iqp-control-wrap,
+.cinema-target-player.user-active .iqp-top-wrap,
+.cinema-target-player.user-active .youku-layer-control,
+.cinema-target-player.user-active .youku-layer-title,
+.cinema-target-player.user-active .xgplayer-controls,
+.cinema-target-player.user-active .art-controls,
+.cinema-target-player.user-active .dplayer-controller,
+.cinema-target-player.user-active .vjs-control-bar,
+.cinema-target-player.user-active .plyr__controls,
 
 .cinema-stage.user-active .bpx-player-control-wrap,
 .cinema-stage.user-active .bpx-player-top-wrap,
