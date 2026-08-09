@@ -45,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const musicPaddingInput = document.getElementById('musicPadding');
   const musicClockTopOffsetInput = document.getElementById('musicClockTopOffset');
   const musicBlurRadiusInput = document.getElementById('musicBlurRadius');
+  const musicStaticCoverEnabledInput = document.getElementById('musicStaticCoverEnabled');
 
   const statusDiv = document.getElementById('status');
 
@@ -68,7 +69,8 @@ document.addEventListener('DOMContentLoaded', () => {
     musicCardWidth: 380,
     musicPadding: 40,
     musicClockTopOffset: 50,
-    musicBlurRadius: 65
+    musicBlurRadius: 65,
+    musicStaticCoverEnabled: false
   }, (items) => {
     parseToUI(items.jDuration, jValueInput, jUnitSelect);
     jKeyInput.value = items.jKey || 'j';
@@ -92,6 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
     musicPaddingInput.value = items.musicPadding;
     musicClockTopOffsetInput.value = items.musicClockTopOffset;
     musicBlurRadiusInput.value = items.musicBlurRadius;
+    musicStaticCoverEnabledInput.checked = !!items.musicStaticCoverEnabled;
   });
 
   // 保存偏好配置
@@ -118,6 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const musicPadding = Math.max(16, Math.min(80, parseInt(musicPaddingInput.value, 10) || 40));
     const musicClockTopOffset = Math.max(20, Math.min(120, parseInt(musicClockTopOffsetInput.value, 10) || 50));
     const musicBlurRadius = Math.max(20, Math.min(100, parseInt(musicBlurRadiusInput.value, 10) || 65));
+    const musicStaticCoverEnabled = musicStaticCoverEnabledInput.checked;
 
     if (isNaN(jSec) || isNaN(lSec) || jSec <= 0 || lSec <= 0) {
       statusDiv.textContent = '⚠️ 请输入有效的时间数值！';
@@ -144,7 +148,8 @@ document.addEventListener('DOMContentLoaded', () => {
       musicCardWidth,
       musicPadding,
       musicClockTopOffset,
-      musicBlurRadius
+      musicBlurRadius,
+      musicStaticCoverEnabled
     }, () => {
       statusDiv.textContent = '✓ 保存成功，配置即时生效';
       statusDiv.style.color = '#34d399';
