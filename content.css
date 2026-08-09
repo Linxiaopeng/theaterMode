@@ -104,6 +104,17 @@ body.cinema-mode-active::-webkit-scrollbar {
   -webkit-backdrop-filter: blur(8px);
   user-select: none;
   -webkit-user-select: none;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.15s ease;
+}
+
+.cinema-stage.user-active ~ .cinema-control-bar,
+.cinema-control-bar:hover {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .cinema-ctrl-btn {
@@ -287,5 +298,58 @@ html.cinema-mode-active .bilibili-player-video-area {
   height: 100% !important;
   max-height: 100% !important;
   flex: 1 1 100% !important;
+}
+
+/* 影院模式下：无操作静止 2.5s 或离开封面时，自动柔和隐藏播放器进度条、标题与 UP 主头像等 UI */
+.cinema-stage.user-idle .bpx-player-control-wrap,
+.cinema-stage.user-idle .bpx-player-top-wrap,
+.cinema-stage.user-idle .bpx-player-control-bottom,
+.cinema-stage.user-idle .bilibili-player-video-control,
+.cinema-stage.user-idle .bilibili-player-video-top,
+.cinema-stage.user-idle .ytp-chrome-bottom,
+.cinema-stage.user-idle .ytp-chrome-top,
+.cinema-stage.user-idle .ytp-gradient-bottom,
+.cinema-stage.user-idle .ytp-gradient-top,
+.cinema-stage.user-idle .txp_control_bar,
+.cinema-stage.user-idle .txp_top_bar,
+.cinema-stage.user-idle .iqp-control-wrap,
+.cinema-stage.user-idle .iqp-top-wrap,
+.cinema-stage.user-idle .youku-layer-control,
+.cinema-stage.user-idle .youku-layer-title,
+.cinema-stage.user-idle .xgplayer-controls,
+.cinema-stage.user-idle .art-controls,
+.cinema-stage.user-idle .dplayer-controller,
+.cinema-stage.user-idle .vjs-control-bar,
+.cinema-stage.user-idle .plyr__controls {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition: opacity 0.35s ease, visibility 0.35s ease !important;
+}
+
+.cinema-stage.user-active .bpx-player-control-wrap,
+.cinema-stage.user-active .bpx-player-top-wrap,
+.cinema-stage.user-active .bpx-player-control-bottom,
+.cinema-stage.user-active .bilibili-player-video-control,
+.cinema-stage.user-active .bilibili-player-video-top,
+.cinema-stage.user-active .ytp-chrome-bottom,
+.cinema-stage.user-active .ytp-chrome-top,
+.cinema-stage.user-active .ytp-gradient-bottom,
+.cinema-stage.user-active .ytp-gradient-top,
+.cinema-stage.user-active .txp_control_bar,
+.cinema-stage.user-active .txp_top_bar,
+.cinema-stage.user-active .iqp-control-wrap,
+.cinema-stage.user-active .iqp-top-wrap,
+.cinema-stage.user-active .youku-layer-control,
+.cinema-stage.user-active .youku-layer-title,
+.cinema-stage.user-active .xgplayer-controls,
+.cinema-stage.user-active .art-controls,
+.cinema-stage.user-active .dplayer-controller,
+.cinema-stage.user-active .vjs-control-bar,
+.cinema-stage.user-active .plyr__controls {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  transition: opacity 0.2s ease, visibility 0.2s ease !important;
 }
 

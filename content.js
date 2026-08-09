@@ -475,7 +475,57 @@
       });
     }
 
-    cinema = { video, player, saved, subtitleRenderer, ambilightEl, ambilightInterval, removeAmbilightEvents, hiddenElements };
+    // 鼠标在播放器封面/舞台区域内移动时显示控制条/标题，无操作 2.5 秒后自动柔和隐蔽
+    let mouseIdleTimer = null;
+    const stageRef = stage;
+
+    const showControls = () => {
+      if (stageRef) {
+        stageRef.classList.add('user-active');
+        stageRef.classList.remove('user-idle');
+      }
+    };
+
+    const hideControls = () => {
+      if (stageRef) {
+        stageRef.classList.remove('user-active');
+        stageRef.classList.add('user-idle');
+      }
+    };
+
+    const handleMouseMove = () => {
+      showControls();
+      if (mouseIdleTimer) clearTimeout(mouseIdleTimer);
+      mouseIdleTimer = setTimeout(() => {
+        hideControls();
+      }, 2500);
+    };
+
+    const handleMouseLeave = () => {
+      if (mouseIdleTimer) clearTimeout(mouseIdleTimer);
+      hideControls();
+    };
+
+    stage.addEventListener('mousemove', handleMouseMove);
+    stage.addEventListener('mouseenter', handleMouseMove);
+    stage.addEventListener('mouseleave', handleMouseLeave);
+
+    handleMouseMove();
+
+    cinema = { 
+      video, 
+      player, 
+      saved, 
+      subtitleRenderer, 
+      ambilightEl, 
+      ambilightInterval, 
+      removeAmbilightEvents, 
+      hiddenElements,
+      stageRef,
+      handleMouseMove,
+      handleMouseLeave,
+      mouseIdleTimer
+    };
     setButtonVisible(false);
 
     requestAnimationFrame(() => {
@@ -485,13 +535,34 @@
 
   function exitCinema() {
     if (!cinema) return;
-    const { video, player, saved, subtitleRenderer, ambilightEl, ambilightInterval, removeAmbilightEvents, hiddenElements } = cinema;
-    const stageRef = stage;
+    const { 
+      video, 
+      player, 
+      saved, 
+      subtitleRenderer, 
+      ambilightEl, 
+      ambilightInterval, 
+      removeAmbilightEvents, 
+      hiddenElements,
+      stageRef,
+      handleMouseMove,
+      handleMouseLeave,
+      mouseIdleTimer
+    } = cinema;
 
     document.documentElement.classList.remove('cinema-mode-active');
     document.body.classList.remove('cinema-mode-active');
     document.documentElement.classList.remove('clean-player-active');
     document.body.classList.remove('clean-player-active');
+
+    if (stageRef && handleMouseMove && handleMouseLeave) {
+      stageRef.removeEventListener('mousemove', handleMouseMove);
+      stageRef.removeEventListener('mouseenter', handleMouseMove);
+      stageRef.removeEventListener('mouseleave', handleMouseLeave);
+    }
+    if (mouseIdleTimer) {
+      clearTimeout(mouseIdleTimer);
+    }
 
     if (hiddenElements) {
       hiddenElements.forEach(({ el, display }) => {
