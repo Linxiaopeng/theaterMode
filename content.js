@@ -794,24 +794,29 @@
 
     drawMusicAmbilight();
 
-    const onMusicUpdate = () => drawMusicAmbilight();
-    video.addEventListener('play', onMusicUpdate);
-    video.addEventListener('pause', onMusicUpdate);
-    video.addEventListener('seeked', onMusicUpdate);
-    video.addEventListener('timeupdate', onMusicUpdate);
+    let removeMusicAmbilightEvents = null;
+    let updateBgColorTimer = null;
 
-    let removeMusicAmbilightEvents = () => {
-      video.removeEventListener('play', onMusicUpdate);
-      video.removeEventListener('pause', onMusicUpdate);
-      video.removeEventListener('seeked', onMusicUpdate);
-      video.removeEventListener('timeupdate', onMusicUpdate);
-    };
+    if (!currentSettings.musicStaticCoverEnabled) {
+      const onMusicUpdate = () => drawMusicAmbilight();
+      video.addEventListener('play', onMusicUpdate);
+      video.addEventListener('pause', onMusicUpdate);
+      video.addEventListener('seeked', onMusicUpdate);
+      video.addEventListener('timeupdate', onMusicUpdate);
 
-    let updateBgColorTimer = setInterval(() => {
-      if (video && (!video.paused || usesMusicFallback) && !video.ended) {
-        drawMusicAmbilight();
-      }
-    }, 100);
+      removeMusicAmbilightEvents = () => {
+        video.removeEventListener('play', onMusicUpdate);
+        video.removeEventListener('pause', onMusicUpdate);
+        video.removeEventListener('seeked', onMusicUpdate);
+        video.removeEventListener('timeupdate', onMusicUpdate);
+      };
+
+      updateBgColorTimer = setInterval(() => {
+        if (video && (!video.paused || usesMusicFallback) && !video.ended) {
+          drawMusicAmbilight();
+        }
+      }, 100);
+    }
 
     // 锁屏全局框架
     const stageEl = document.createElement('div');
