@@ -37,6 +37,10 @@
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
     chrome.storage.sync.get(currentSettings, (items) => {
       currentSettings = Object.assign({}, currentSettings, items);
+      currentSettings.musicCardWidth = parseInt(currentSettings.musicCardWidth, 10) || 380;
+      currentSettings.musicPadding = parseInt(currentSettings.musicPadding, 10) || 40;
+      currentSettings.musicClockTopOffset = parseInt(currentSettings.musicClockTopOffset, 10) || 50;
+      currentSettings.musicBlurRadius = parseInt(currentSettings.musicBlurRadius, 10) || 65;
       if (items.cleanPlayerEnabled === undefined) currentSettings.cleanPlayerEnabled = true;
       if (items.ambilightWaveEnabled === undefined) currentSettings.ambilightWaveEnabled = true;
       if (items.ambilightEnabled === undefined) currentSettings.ambilightEnabled = true;
@@ -84,7 +88,7 @@
           }
         }
         if (changes.musicCardWidth) {
-          currentSettings.musicCardWidth = changes.musicCardWidth.newValue;
+          currentSettings.musicCardWidth = parseInt(changes.musicCardWidth.newValue, 10) || 380;
           if (musicCinema && musicCinema.overlayEl) {
             const artCard = musicCinema.overlayEl.querySelector('.music-artwork-card');
             const ctrlCard = musicCinema.overlayEl.querySelector('.music-controls-card');
@@ -93,20 +97,20 @@
           }
         }
         if (changes.musicPadding) {
-          currentSettings.musicPadding = changes.musicPadding.newValue;
+          currentSettings.musicPadding = parseInt(changes.musicPadding.newValue, 10) || 40;
           if (musicCinema && musicCinema.stageEl) {
-            musicCinema.stageEl.style.padding = `${currentSettings.musicPadding}px 24px`;
+            musicCinema.stageEl.style.padding = `${currentSettings.musicPadding}px`;
           }
         }
         if (changes.musicClockTopOffset) {
-          currentSettings.musicClockTopOffset = changes.musicClockTopOffset.newValue;
+          currentSettings.musicClockTopOffset = parseInt(changes.musicClockTopOffset.newValue, 10) || 50;
           if (musicCinema && musicCinema.overlayEl) {
             const clock = musicCinema.overlayEl.querySelector('.music-clock-header');
             if (clock) clock.style.marginTop = `${currentSettings.musicClockTopOffset}px`;
           }
         }
         if (changes.musicBlurRadius) {
-          currentSettings.musicBlurRadius = changes.musicBlurRadius.newValue;
+          currentSettings.musicBlurRadius = parseInt(changes.musicBlurRadius.newValue, 10) || 65;
           if (musicCinema && musicCinema.overlayEl) {
             const bg = musicCinema.overlayEl.querySelector('.music-bg-blur');
             if (bg) bg.style.filter = `blur(${currentSettings.musicBlurRadius}px) brightness(0.68) saturate(180%)`;
@@ -821,7 +825,7 @@
     // 锁屏全局框架
     const stageEl = document.createElement('div');
     stageEl.className = 'music-lockscreen-stage';
-    stageEl.style.padding = `${currentSettings.musicPadding}px 24px`;
+    stageEl.style.padding = `${currentSettings.musicPadding}px`;
 
     // 1. 顶部时间与日期 (iOS 锁屏横向排版 12:12  8月9日 星期日)
     const clockHeader = document.createElement('div');
