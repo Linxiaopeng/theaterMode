@@ -859,6 +859,11 @@
     progressBox.appendChild(slider);
     progressBox.appendChild(timeLabels);
 
+    const updateSliderBg = () => {
+      const val = parseFloat(slider.value) || 0;
+      slider.style.background = `linear-gradient(to right, #ffffff ${val}%, rgba(255, 255, 255, 0.25) ${val}%)`;
+    };
+
     const formatSec = (sec) => {
       if (isNaN(sec) || sec < 0) return '0:00';
       const m = Math.floor(sec / 60);
@@ -873,6 +878,7 @@
       if (video && !isNaN(video.duration)) {
         video.currentTime = (parseFloat(slider.value) / 100) * video.duration;
       }
+      updateSliderBg();
     });
     slider.addEventListener('input', () => {
       if (video && !isNaN(video.duration)) {
@@ -880,6 +886,7 @@
         curTimeSpan.textContent = formatSec(cur);
         durTimeSpan.textContent = `-${formatSec(video.duration - cur)}`;
       }
+      updateSliderBg();
     });
 
     let syncProgressTimer = setInterval(() => {
@@ -888,6 +895,7 @@
           slider.value = (video.currentTime / video.duration) * 100;
           curTimeSpan.textContent = formatSec(video.currentTime);
           durTimeSpan.textContent = `-${formatSec(video.duration - video.currentTime)}`;
+          updateSliderBg();
         }
       }
     }, 500);
