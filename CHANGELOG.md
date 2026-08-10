@@ -1,3 +1,13 @@
+## [2.2.0] - 2026-08-10
+
+### 🎨 Features & 🛠️ Architecture
+- **引入 BlurHash 算法极佳色彩晕染背景**：在影院模式与音乐模式中全面接入 [woltapp/blurhash](https://github.com/woltapp/blurhash) 低频色彩提取算法，提供极致柔和、无噪点的动态氛围光渐变背景。
+- **独立解耦背景控制器 (`BlurBackgroundController`)**：新增 `lib/blurhash.js` 纯 JS 算法库与 `lib/blur-background.js` 模块，将背景绘制与切换逻辑与 UI 完全解耦。
+- **三级渐进退化与 CORS 熔断机制**：具备 BlurHash 离屏采样 ➔ Direct Canvas 绘制 ➔ Cloned Video 容器的自动三级降级保护，保障在各类跨域限制或复杂 DOM 场景下背景氛围灯光永不失效。
+- **全平台系统原生字体整合**：整理系统字体栈，全局优先使用 SF Pro (macOS/iOS)、PingFang SC 苹方、Microsoft YaHei 微软雅黑等系统自带字体，并配置完善的 Fallback 回退机制。
+
+---
+
 ## [2.1.6] - 2026-08-09
 
 ### 🐛 Fixed & 🚀 Improved
