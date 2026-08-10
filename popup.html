@@ -5,6 +5,10 @@
   <title>影院模式设置</title>
   <style>
     :root {
+      /* 优先使用系统自带字体与健全回退机制 */
+      --font-family-sans: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+      --font-family-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Monaco, "Cascadia Code", Consolas, "Liberation Mono", "Courier New", monospace;
+
       /* 默认暗色模式 Design Tokens */
       --bg-color: #0f0f0f;
       --text-main: #f1f1f1;
@@ -98,7 +102,7 @@
       margin: 0;
       padding: 0;
       background: transparent;
-      font-family: "YouTube Noto", Roboto, Arial, -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: var(--font-family-sans);
       color: var(--text-main);
       user-select: none;
       overflow: hidden !important;
@@ -268,7 +272,7 @@
 
     /* 快捷键 KBD 键帽圆角 */
     .kbd-input {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-family: var(--font-family-mono);
       text-align: center;
       text-transform: lowercase;
       font-weight: 700;

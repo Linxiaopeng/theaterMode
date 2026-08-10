@@ -1,3 +1,16 @@
+:root {
+  --cinema-font-sans: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  --cinema-font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Monaco, "Cascadia Code", Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* 统一特定根级插件容器字体层级 */
+#cinema-mode-toggle-btn,
+#cinema-mode-overlay,
+.cinema-control-bar,
+#music-mode-overlay {
+  font-family: var(--cinema-font-sans);
+}
+
 /* 影院模式开启时彻底隐藏页面滚动条 */
 html.cinema-mode-active,
 body.cinema-mode-active {
@@ -47,7 +60,9 @@ body.cinema-mode-active::-webkit-scrollbar {
   color: #f1f1f1;
   padding: 6px 12px;
   border-radius: 20px;
-  font: 12px/1 system-ui, -apple-system, sans-serif;
+  font-family: var(--cinema-font-sans);
+  font-size: 12px;
+  line-height: 1;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.18s ease;
@@ -154,7 +169,9 @@ body.cinema-mode-active::-webkit-scrollbar {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #fff;
-  font: 13px/1 system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: var(--cinema-font-sans);
+  font-size: 13px;
+  line-height: 1;
   padding: 8px 12px;
   border-radius: 16px;
   cursor: pointer;
@@ -176,7 +193,9 @@ body.cinema-mode-active::-webkit-scrollbar {
   background: rgba(59, 130, 246, 0.2);
   border: 1px solid rgba(59, 130, 246, 0.4);
   color: #60a5fa;
-  font: 13px/1 system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: var(--cinema-font-sans);
+  font-size: 13px;
+  line-height: 1;
   padding: 8px 12px;
   border-radius: 16px;
   cursor: pointer;
@@ -628,7 +647,7 @@ body.music-mode-active {
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: 0px;
-  font-family: Georgia, "Times New Roman", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--cinema-font-sans);
 }
 
 .music-date-text {

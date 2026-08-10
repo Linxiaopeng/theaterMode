@@ -84,7 +84,7 @@ class SubtitleRenderer {
       color: ${fontColor};
       font-size: ${fontSize}px;
       font-weight: ${fontWeight};
-      font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
       line-height: 1.4;
       word-break: break-word;
       white-space: pre-wrap;
