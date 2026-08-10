@@ -94,6 +94,9 @@
       if (newSettings.musicBlurRadius !== undefined && musicCinema && musicCinema.bgBlurEl) {
         musicCinema.bgBlurEl.style.filter = `blur(${newSettings.musicBlurRadius}px) brightness(0.68) saturate(180%)`;
       }
+      if (newSettings.musicStaticCoverEnabled !== undefined && musicCinema && musicCinema.musicBlurController) {
+        musicCinema.musicBlurController.updateOptions({ isStatic: !!newSettings.musicStaticCoverEnabled });
+      }
       if (cinema && cinema.subtitleRenderer) {
         cinema.subtitleRenderer.updateSettings({
           fontSize: currentSettings.subFontSize,
@@ -722,6 +725,7 @@
     if (typeof BlurBackgroundController !== 'undefined') {
       musicBlurController = new BlurBackgroundController(video, {
         enableBlurHash: currentSettings.blurHashEnabled !== false,
+        isStatic: !!currentSettings.musicStaticCoverEnabled,
         throttleMs: 150
       });
       musicBlurController.mount(bgBlurEl);
