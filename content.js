@@ -61,6 +61,14 @@
       if (newSettings.ambilightEnabled !== undefined && cinema && cinema.ambilightEl) {
         cinema.ambilightEl.style.display = newSettings.ambilightEnabled ? 'block' : 'none';
       }
+      if (newSettings.blurHashEnabled !== undefined) {
+        if (cinema && cinema.ambilightController) {
+          cinema.ambilightController.updateOptions({ enableBlurHash: !!newSettings.blurHashEnabled });
+        }
+        if (musicCinema && musicCinema.musicBlurController) {
+          musicCinema.musicBlurController.updateOptions({ enableBlurHash: !!newSettings.blurHashEnabled });
+        }
+      }
       if (newSettings.ambilightWaveEnabled !== undefined) {
         if (cinema && cinema.ambilightEl) {
           cinema.ambilightEl.classList.toggle('has-edge-wave', !!newSettings.ambilightWaveEnabled);
