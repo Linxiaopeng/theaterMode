@@ -719,7 +719,7 @@
 
     let musicBlurController = null;
 
-    if (!currentSettings.musicStaticCoverEnabled && typeof BlurBackgroundController !== 'undefined') {
+    if (typeof BlurBackgroundController !== 'undefined') {
       musicBlurController = new BlurBackgroundController(video, {
         enableBlurHash: currentSettings.blurHashEnabled !== false,
         throttleMs: 150
