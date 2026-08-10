@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "一键影院模式",
-  "version": "2.1.6",
-  "description": "检测到页面有视频播放时显示悬浮按钮，一键进入影院模式，支持快进/回退、快捷键及自定义设置。",
+  "version": "2.2.0",
+  "description": "检测到页面有视频播放时显示悬浮按钮，一键进入影院模式，支持快进/回退、快捷键及 BlurHash 动态流光背景。",
   "permissions": ["storage"],
   "action": {
     "default_popup": "popup.html"
@@ -15,7 +15,13 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["subtitles/parser.js", "subtitles/renderer.js", "content.js"],
+      "js": [
+        "lib/blurhash.js",
+        "lib/blur-background.js",
+        "subtitles/parser.js",
+        "subtitles/renderer.js",
+        "content.js"
+      ],
       "css": ["content.css"],
       "run_at": "document_idle",
       "all_frames": true

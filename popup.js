@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const subBottomOffsetInput = document.getElementById('subBottomOffset');
 
   const ambilightEnabledInput = document.getElementById('ambilightEnabled');
+  const blurHashEnabledInput = document.getElementById('blurHashEnabled');
   const ambilightWaveEnabledInput = document.getElementById('ambilightWaveEnabled');
   const ambilightIntensityInput = document.getElementById('ambilightIntensity');
 
@@ -66,6 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
     subFontWeight: '500',
     subBottomOffset: 30,
     ambilightEnabled: true,
+    blurHashEnabled: true,
     ambilightWaveEnabled: true,
     ambilightIntensity: 0.65,
     musicCardWidth: 380,
@@ -89,6 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
     subBottomOffsetInput.value = items.subBottomOffset;
 
     ambilightEnabledInput.checked = items.ambilightEnabled;
+    blurHashEnabledInput.checked = items.blurHashEnabled !== undefined ? items.blurHashEnabled : true;
     ambilightWaveEnabledInput.checked = items.ambilightWaveEnabled;
     ambilightIntensityInput.value = items.ambilightIntensity;
 
@@ -119,6 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const subBottomOffset = Math.max(10, Math.min(200, parseFloat(subBottomOffsetInput.value) || 30));
 
     const ambilightEnabled = ambilightEnabledInput.checked;
+    const blurHashEnabled = blurHashEnabledInput.checked;
     const ambilightWaveEnabled = ambilightWaveEnabledInput.checked;
     const ambilightIntensity = Math.max(0.1, Math.min(1.0, parseFloat(ambilightIntensityInput.value) || 0.65));
 
@@ -150,6 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
       subFontWeight,
       subBottomOffset,
       ambilightEnabled,
+      blurHashEnabled,
       ambilightWaveEnabled,
       ambilightIntensity,
       musicCardWidth,
@@ -184,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
   [musicCardWidthInput, musicPaddingInput, musicClockTopOffsetInput, musicBlurRadiusInput, opacityInput, ambilightIntensityInput, subFontSizeInput, subBottomOffsetInput, subBgOpacityInput, jValueInput, lValueInput].forEach(el => {
     if (el) el.addEventListener('input', () => saveAllSettings(false));
   });
-  [musicStaticCoverEnabledInput, cleanPlayerEnabledInput, ambilightEnabledInput, ambilightWaveEnabledInput, subFontColorInput, subBgColorInput, subFontWeightSelect, jUnitSelect, lUnitSelect, jKeyInput, lKeyInput].forEach(el => {
+  [musicStaticCoverEnabledInput, cleanPlayerEnabledInput, ambilightEnabledInput, blurHashEnabledInput, ambilightWaveEnabledInput, subFontColorInput, subBgColorInput, subFontWeightSelect, jUnitSelect, lUnitSelect, jKeyInput, lKeyInput].forEach(el => {
     if (el) el.addEventListener('change', () => saveAllSettings(false));
   });
 

@@ -25,6 +25,7 @@
     subFontWeight: '500',
     subBottomOffset: 30,
     ambilightEnabled: true,
+    blurHashEnabled: true,
     ambilightWaveEnabled: true,
     ambilightIntensity: 0.65,
     musicCardWidth: 380,
@@ -42,6 +43,7 @@
       currentSettings.musicClockTopOffset = parseInt(currentSettings.musicClockTopOffset, 10) || 50;
       currentSettings.musicBlurRadius = parseInt(currentSettings.musicBlurRadius, 10) || 65;
       if (items.cleanPlayerEnabled === undefined) currentSettings.cleanPlayerEnabled = true;
+      if (items.blurHashEnabled === undefined) currentSettings.blurHashEnabled = true;
       if (items.ambilightWaveEnabled === undefined) currentSettings.ambilightWaveEnabled = true;
       if (items.ambilightEnabled === undefined) currentSettings.ambilightEnabled = true;
     });
@@ -478,56 +480,24 @@
       bottomOffset: currentSettings.subBottomOffset
     });
 
-    // 网页背景氛围光（Ambilight）
+    // 网页背景氛围光（Ambilight，优先尝试 BlurHash 算法极佳色彩晕染）
     let ambilightEl = null;
-    let ambilightInterval = null;
-    let removeAmbilightEvents = null;
+    let ambilightController = null;
 
     if (currentSettings.ambilightEnabled) {
       ambilightEl = document.createElement('div');
       ambilightEl.className = 'cinema-ambilight-glow' + (currentSettings.ambilightWaveEnabled ? ' has-edge-wave' : '');
       ambilightEl.style.opacity = currentSettings.ambilightIntensity;
 
-      const canvas = document.createElement('canvas');
-      canvas.width = 64;
-      canvas.height = 36;
-      canvas.style.cssText = 'width: 100%; height: 100%; object-fit: cover; display: block;';
-      const ctx = canvas.getContext('2d', { alpha: false });
+      if (typeof BlurBackgroundController !== 'undefined') {
+        ambilightController = new BlurBackgroundController(video, {
+          enableBlurHash: currentSettings.blurHashEnabled !== false,
+          throttleMs: 150
+        });
+        ambilightController.mount(ambilightEl);
+      }
 
-      ambilightEl.appendChild(canvas);
       stage.appendChild(ambilightEl);
-
-      const drawAmbilight = () => {
-        if (!video || !video.isConnected) return;
-        try {
-          if (video.readyState >= 2) {
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          }
-        } catch (e) {}
-      };
-
-      drawAmbilight();
-
-      const onUpdate = () => drawAmbilight();
-      video.addEventListener('play', onUpdate);
-      video.addEventListener('pause', onUpdate);
-      video.addEventListener('seeked', onUpdate);
-      video.addEventListener('timeupdate', onUpdate);
-      video.addEventListener('canplay', onUpdate);
-
-      removeAmbilightEvents = () => {
-        video.removeEventListener('play', onUpdate);
-        video.removeEventListener('pause', onUpdate);
-        video.removeEventListener('seeked', onUpdate);
-        video.removeEventListener('timeupdate', onUpdate);
-        video.removeEventListener('canplay', onUpdate);
-      };
-
-      ambilightInterval = setInterval(() => {
-        if (video && !video.paused && !video.ended) {
-          drawAmbilight();
-        }
-      }, 100);
     }
 
     let hiddenElements = [];
@@ -597,8 +567,7 @@
       saved, 
       subtitleRenderer, 
       ambilightEl, 
-      ambilightInterval, 
-      removeAmbilightEvents, 
+      ambilightController,
       hiddenElements,
       stageRef,
       handleMouseMove,
@@ -621,8 +590,7 @@
       saved, 
       subtitleRenderer, 
       ambilightEl, 
-      ambilightInterval, 
-      removeAmbilightEvents, 
+      ambilightController,
       hiddenElements,
       stageRef,
       handleMouseMove,
@@ -662,16 +630,12 @@
       });
     }
 
-    if (removeAmbilightEvents) {
-      removeAmbilightEvents();
-    }
-
     if (subtitleRenderer) {
       subtitleRenderer.destroy();
     }
 
-    if (ambilightInterval) {
-      clearInterval(ambilightInterval);
+    if (ambilightController) {
+      ambilightController.destroy();
     }
     if (ambilightEl) {
       ambilightEl.remove();
@@ -740,77 +704,19 @@
     const overlayEl = document.createElement('div');
     overlayEl.id = 'music-mode-overlay';
 
-    // 动态 3D 氛围光背景 (与影院模式相同：实时提取画面 Canvas 进行极高模糊与流光波动)
+    // 动态 3D 氛围光背景 (优先尝试 BlurHash 算法极佳色彩晕染)
     const bgBlurEl = document.createElement('div');
     bgBlurEl.className = 'music-bg-blur' + (currentSettings.ambilightWaveEnabled ? ' has-edge-wave' : '');
     bgBlurEl.style.filter = `blur(${currentSettings.musicBlurRadius}px) brightness(0.68) saturate(180%)`;
 
-    const bgCanvas = document.createElement('canvas');
-    bgCanvas.width = 64;
-    bgCanvas.height = 36;
-    bgCanvas.style.cssText = 'width: 100%; height: 100%; object-fit: cover; display: block;';
-    const bgCtx = bgCanvas.getContext('2d', { alpha: false });
-    bgBlurEl.appendChild(bgCanvas);
+    let musicBlurController = null;
 
-    let usesMusicFallback = false;
-    let musicGlowVideo = null;
-
-    const drawMusicAmbilight = () => {
-      if (!video || !video.isConnected) return;
-      if (usesMusicFallback) {
-        if (musicGlowVideo) {
-          if (musicGlowVideo.paused !== video.paused) {
-            video.paused ? musicGlowVideo.pause() : musicGlowVideo.play().catch(() => {});
-          }
-          if (Math.abs(musicGlowVideo.currentTime - video.currentTime) > 0.3) {
-            musicGlowVideo.currentTime = video.currentTime;
-          }
-        }
-        return;
-      }
-
-      try {
-        if (video.readyState >= 2) {
-          bgCtx.drawImage(video, 0, 0, bgCanvas.width, bgCanvas.height);
-        }
-      } catch (e) {
-        if (!usesMusicFallback) {
-          usesMusicFallback = true;
-          bgCanvas.remove();
-          musicGlowVideo = video.cloneNode(true);
-          musicGlowVideo.muted = true;
-          musicGlowVideo.removeAttribute('id');
-          musicGlowVideo.style.cssText = 'width:100%; height:100%; object-fit:cover; display:block;';
-          bgBlurEl.appendChild(musicGlowVideo);
-          if (!video.paused) musicGlowVideo.play().catch(() => {});
-        }
-      }
-    };
-
-    drawMusicAmbilight();
-
-    let removeMusicAmbilightEvents = null;
-    let updateBgColorTimer = null;
-
-    if (!currentSettings.musicStaticCoverEnabled) {
-      const onMusicUpdate = () => drawMusicAmbilight();
-      video.addEventListener('play', onMusicUpdate);
-      video.addEventListener('pause', onMusicUpdate);
-      video.addEventListener('seeked', onMusicUpdate);
-      video.addEventListener('timeupdate', onMusicUpdate);
-
-      removeMusicAmbilightEvents = () => {
-        video.removeEventListener('play', onMusicUpdate);
-        video.removeEventListener('pause', onMusicUpdate);
-        video.removeEventListener('seeked', onMusicUpdate);
-        video.removeEventListener('timeupdate', onMusicUpdate);
-      };
-
-      updateBgColorTimer = setInterval(() => {
-        if (video && (!video.paused || usesMusicFallback) && !video.ended) {
-          drawMusicAmbilight();
-        }
-      }, 100);
+    if (!currentSettings.musicStaticCoverEnabled && typeof BlurBackgroundController !== 'undefined') {
+      musicBlurController = new BlurBackgroundController(video, {
+        enableBlurHash: currentSettings.blurHashEnabled !== false,
+        throttleMs: 150
+      });
+      musicBlurController.mount(bgBlurEl);
     }
 
     // 锁屏全局框架
@@ -1131,14 +1037,13 @@
       controlsCard,
       clockHeader,
       bgBlurEl,
+      musicBlurController,
       clockTimer,
-      updateBgColorTimer,
       syncProgressTimer,
       musicMouseIdleTimer,
       handleMusicMouseMove,
       handleMusicMouseLeave,
-      updateArtworkAspectRatio,
-      removeMusicAmbilightEvents
+      updateArtworkAspectRatio
     };
 
     setButtonVisible(false);
@@ -1146,14 +1051,16 @@
 
   function exitMusicMode() {
     if (!musicCinema) return;
-    const { video, player, saved, overlayEl, artworkCard, clockTimer, updateBgColorTimer, syncProgressTimer, musicMouseIdleTimer, handleMusicMouseMove, handleMusicMouseLeave, updateArtworkAspectRatio, removeMusicAmbilightEvents } = musicCinema;
+    const { video, player, saved, overlayEl, artworkCard, musicBlurController, clockTimer, syncProgressTimer, musicMouseIdleTimer, handleMusicMouseMove, handleMusicMouseLeave, updateArtworkAspectRatio } = musicCinema;
 
     document.documentElement.classList.remove('music-mode-active');
     document.body.classList.remove('music-mode-active');
     document.documentElement.classList.remove('clean-player-active');
     document.body.classList.remove('clean-player-active');
 
-    if (removeMusicAmbilightEvents) removeMusicAmbilightEvents();
+    if (musicBlurController) {
+      musicBlurController.destroy();
+    }
 
     if (video && updateArtworkAspectRatio) {
       video.removeEventListener('loadedmetadata', updateArtworkAspectRatio);
@@ -1168,7 +1075,6 @@
     if (musicMouseIdleTimer) clearTimeout(musicMouseIdleTimer);
 
     if (clockTimer) clearInterval(clockTimer);
-    if (updateBgColorTimer) clearInterval(updateBgColorTimer);
     if (syncProgressTimer) clearInterval(syncProgressTimer);
 
     if (saved && saved.playerMoved) {
