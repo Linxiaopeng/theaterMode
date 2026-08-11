@@ -1,4 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
+  /**
+   * 记录存储操作日志
+   * @param {string} operation 操作名称
+   * @param {string} status 状态：'success' | 'error'
+   * @param {Object} data 相关数据
+   */
+  function logStorageOperation(operation, status, data = {}) {
+    console.log(`[Popup Settings] ${operation}:`, {
+      status,
+      timestamp: new Date().toISOString(),
+      ...data
+    });
+  }
+
   // Tab 切换逻辑
   const tabSettingsBtn = document.getElementById('tabSettingsBtn');
   const tabHistoryBtn = document.getElementById('tabHistoryBtn');
@@ -53,56 +67,67 @@ document.addEventListener('DOMContentLoaded', () => {
   let isLoaded = false;
 
   // 加载存储的偏好配置
-  chrome.storage.sync.get({
-    jDuration: 60,  // 默认60秒（1分钟）
-    jKey: 'j',
-    lDuration: 60,
-    lKey: 'l',
-    overlayOpacity: 0.88,
-    cleanPlayerEnabled: true,
-    subFontSize: 18,
-    subFontColor: '#ffffff',
-    subBgColor: '#000000',
-    subBgOpacity: 0.6,
-    subFontWeight: '500',
-    subBottomOffset: 30,
-    ambilightEnabled: true,
-    blurHashEnabled: true,
-    ambilightWaveEnabled: true,
-    ambilightIntensity: 0.65,
-    musicCardWidth: 380,
-    musicPadding: 40,
-    musicClockTopOffset: 50,
-    musicBlurRadius: 65,
-    musicStaticCoverEnabled: false
-  }, (items) => {
-    parseToUI(items.jDuration, jValueInput, jUnitSelect);
-    jKeyInput.value = items.jKey || 'j';
-    parseToUI(items.lDuration, lValueInput, lUnitSelect);
-    lKeyInput.value = items.lKey || 'l';
-    opacityInput.value = items.overlayOpacity;
-    cleanPlayerEnabledInput.checked = items.cleanPlayerEnabled !== undefined ? items.cleanPlayerEnabled : true;
+  console.log('[Popup Settings] Loading stored settings...');
+  chrome.storage.sync.get(
+    {
+      jDuration: 60, // 默认60秒（1分钟）
+      jKey: 'j',
+      lDuration: 60,
+      lKey: 'l',
+      overlayOpacity: 0.88,
+      cleanPlayerEnabled: true,
+      subFontSize: 18,
+      subFontColor: '#ffffff',
+      subBgColor: '#000000',
+      subBgOpacity: 0.6,
+      subFontWeight: '500',
+      subBottomOffset: 30,
+      ambilightEnabled: true,
+      blurHashEnabled: true,
+      ambilightWaveEnabled: true,
+      ambilightIntensity: 0.65,
+      musicCardWidth: 380,
+      musicPadding: 40,
+      musicClockTopOffset: 50,
+      musicBlurRadius: 65,
+      musicStaticCoverEnabled: false
+    },
+    items => {
+      try {
+        console.log('[Popup Settings] Settings loaded successfully');
+        parseToUI(items.jDuration, jValueInput, jUnitSelect);
+        jKeyInput.value = items.jKey || 'j';
+        parseToUI(items.lDuration, lValueInput, lUnitSelect);
+        lKeyInput.value = items.lKey || 'l';
+        opacityInput.value = items.overlayOpacity;
+        cleanPlayerEnabledInput.checked =
+          items.cleanPlayerEnabled !== undefined ? items.cleanPlayerEnabled : true;
 
-    subFontSizeInput.value = items.subFontSize;
-    subFontColorInput.value = items.subFontColor;
-    subBgColorInput.value = items.subBgColor;
-    subBgOpacityInput.value = items.subBgOpacity;
-    subFontWeightSelect.value = items.subFontWeight;
-    subBottomOffsetInput.value = items.subBottomOffset;
+        subFontSizeInput.value = items.subFontSize;
+        subFontColorInput.value = items.subFontColor;
+        subBgColorInput.value = items.subBgColor;
+        subBgOpacityInput.value = items.subBgOpacity;
+        subFontWeightSelect.value = items.subFontWeight;
+        subBottomOffsetInput.value = items.subBottomOffset;
 
-    ambilightEnabledInput.checked = items.ambilightEnabled;
-    blurHashEnabledInput.checked = items.blurHashEnabled !== undefined ? items.blurHashEnabled : true;
-    ambilightWaveEnabledInput.checked = items.ambilightWaveEnabled;
-    ambilightIntensityInput.value = items.ambilightIntensity;
+        ambilightEnabledInput.checked = items.ambilightEnabled;
+        blurHashEnabledInput.checked =
+          items.blurHashEnabled !== undefined ? items.blurHashEnabled : true;
+        ambilightWaveEnabledInput.checked = items.ambilightWaveEnabled;
+        ambilightIntensityInput.value = items.ambilightIntensity;
 
-    musicCardWidthInput.value = items.musicCardWidth;
-    musicPaddingInput.value = items.musicPadding;
-    musicClockTopOffsetInput.value = items.musicClockTopOffset;
-    musicBlurRadiusInput.value = items.musicBlurRadius;
-    musicStaticCoverEnabledInput.checked = !!items.musicStaticCoverEnabled;
+        musicCardWidthInput.value = items.musicCardWidth;
+        musicPaddingInput.value = items.musicPadding;
+        musicClockTopOffsetInput.value = items.musicClockTopOffset;
+        musicBlurRadiusInput.value = items.musicBlurRadius;
+        musicStaticCoverEnabledInput.checked = !!items.musicStaticCoverEnabled;
 
-    isLoaded = true;
-  });
+        isLoaded = true;
+      } catch (error) {
+        console.error('[Popup Settings] Failed to load settings:', error);
+      }
+    }
+  );
 
   function saveAllSettings(showNotification = false) {
     if (!isLoaded && !showNotification) return;
@@ -119,20 +144,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const subBgColor = subBgColorInput.value || '#000000';
     const subBgOpacity = Math.max(0, Math.min(1, parseFloat(subBgOpacityInput.value) || 0.6));
     const subFontWeight = subFontWeightSelect.value || '500';
-    const subBottomOffset = Math.max(10, Math.min(200, parseFloat(subBottomOffsetInput.value) || 30));
+    const subBottomOffset = Math.max(
+      10,
+      Math.min(200, parseFloat(subBottomOffsetInput.value) || 30)
+    );
 
     const ambilightEnabled = ambilightEnabledInput.checked;
     const blurHashEnabled = blurHashEnabledInput.checked;
     const ambilightWaveEnabled = ambilightWaveEnabledInput.checked;
-    const ambilightIntensity = Math.max(0.1, Math.min(1.0, parseFloat(ambilightIntensityInput.value) || 0.65));
+    const ambilightIntensity = Math.max(
+      0.1,
+      Math.min(1.0, parseFloat(ambilightIntensityInput.value) || 0.65)
+    );
 
-    const musicCardWidth = Math.max(260, Math.min(520, parseInt(musicCardWidthInput.value, 10) || 380));
-    const musicPadding = Math.max(16, Math.min(80, parseInt(musicPaddingInput.value, 10) || 40));
-    const musicClockTopOffset = Math.max(20, Math.min(120, parseInt(musicClockTopOffsetInput.value, 10) || 50));
-    const musicBlurRadius = Math.max(20, Math.min(100, parseInt(musicBlurRadiusInput.value, 10) || 65));
+    const musicCardWidth = Math.max(
+      100,
+      Math.min(1200, parseInt(musicCardWidthInput.value, 10) || 380)
+    );
+    const musicPadding = Math.max(0, Math.min(150, parseInt(musicPaddingInput.value, 10) || 40));
+    const musicClockTopOffset = Math.max(
+      0,
+      Math.min(200, parseInt(musicClockTopOffsetInput.value, 10) || 50)
+    );
+    const musicBlurRadius = Math.max(
+      0,
+      Math.min(150, parseInt(musicBlurRadiusInput.value, 10) || 65)
+    );
     const musicStaticCoverEnabled = musicStaticCoverEnabledInput.checked;
 
     if (isNaN(jSec) || isNaN(lSec) || jSec <= 0 || lSec <= 0) {
+      logStorageOperation('saveSettings', 'error', { reason: 'Invalid time values' });
       if (showNotification) {
         statusDiv.textContent = '⚠️ 请输入有效的时间数值！';
         statusDiv.style.color = '#ef4444';
@@ -164,38 +205,82 @@ document.addEventListener('DOMContentLoaded', () => {
       musicStaticCoverEnabled
     };
 
-    chrome.storage.sync.set(settings, () => {
-      if (showNotification) {
-        statusDiv.textContent = '✓ 保存成功，配置即时生效';
-        statusDiv.style.color = '#34d399';
-        setTimeout(() => {
-          statusDiv.textContent = '修改设置后即时生效';
-          statusDiv.style.color = '#71717a';
-        }, 2000);
+    logStorageOperation('saveSettings', 'success', {
+      totalSettings: Object.keys(settings).length,
+      sampleSettings: {
+        jDuration: jSec,
+        jKey,
+        lDuration: lSec,
+        lKey
       }
+    });
 
-      // 同步广播通知网页标签页立刻刷新设置
-      if (typeof chrome !== 'undefined' && chrome.tabs) {
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-          if (tabs && tabs[0] && tabs[0].id) {
-            chrome.tabs.sendMessage(tabs[0].id, { type: 'SETTINGS_UPDATED', settings }).catch(() => {});
-          }
-        });
+    chrome.storage.sync.set(settings, () => {
+      try {
+        if (showNotification) {
+          statusDiv.textContent = '✓ 保存成功，配置即时生效';
+          statusDiv.style.color = '#34d399';
+          setTimeout(() => {
+            statusDiv.textContent = '修改设置后即时生效';
+            statusDiv.style.color = '#71717a';
+          }, 2000);
+        }
+
+        // 同步广播通知网页标签页立刻刷新设置
+        if (typeof chrome !== 'undefined' && chrome.tabs) {
+          chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+            if (tabs && tabs[0] && tabs[0].id) {
+              chrome.tabs
+                .sendMessage(tabs[0].id, { type: 'SETTINGS_UPDATED', settings })
+                .catch(() => {});
+            }
+          });
+        }
+      } catch (error) {
+        console.error('[Popup Settings] Failed to save settings:', error);
       }
     });
   }
 
   // 实时监听输入与选择框变动，实现无缝动态响应
-  [musicCardWidthInput, musicPaddingInput, musicClockTopOffsetInput, musicBlurRadiusInput, opacityInput, ambilightIntensityInput, subFontSizeInput, subBottomOffsetInput, subBgOpacityInput, jValueInput, lValueInput].forEach(el => {
+  [
+    musicCardWidthInput,
+    musicPaddingInput,
+    musicClockTopOffsetInput,
+    musicBlurRadiusInput,
+    opacityInput,
+    ambilightIntensityInput,
+    subFontSizeInput,
+    subBottomOffsetInput,
+    subBgOpacityInput,
+    jValueInput,
+    lValueInput
+  ].forEach(el => {
     if (el) el.addEventListener('input', () => saveAllSettings(false));
   });
-  [musicStaticCoverEnabledInput, cleanPlayerEnabledInput, ambilightEnabledInput, blurHashEnabledInput, ambilightWaveEnabledInput, subFontColorInput, subBgColorInput, subFontWeightSelect, jUnitSelect, lUnitSelect, jKeyInput, lKeyInput].forEach(el => {
+  [
+    musicStaticCoverEnabledInput,
+    cleanPlayerEnabledInput,
+    ambilightEnabledInput,
+    blurHashEnabledInput,
+    ambilightWaveEnabledInput,
+    subFontColorInput,
+    subBgColorInput,
+    subFontWeightSelect,
+    jUnitSelect,
+    lUnitSelect,
+    jKeyInput,
+    lKeyInput,
+    musicCardWidthInput,
+    musicPaddingInput,
+    musicClockTopOffsetInput,
+    musicBlurRadiusInput
+  ].forEach(el => {
     if (el) el.addEventListener('change', () => saveAllSettings(false));
   });
 
   // 手动点击保存按钮
   document.getElementById('save').addEventListener('click', () => saveAllSettings(true));
-
 
   // 历史记录加载与管理
   const historyList = document.getElementById('historyList');
@@ -203,78 +288,96 @@ document.addEventListener('DOMContentLoaded', () => {
   const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
   function loadHistory() {
-    chrome.storage.local.get({ history: [] }, (res) => {
-      const list = Array.isArray(res.history) ? res.history : [];
-      historyCountSpan.textContent = list.length;
-
-      if (list.length === 0) {
-        historyList.innerHTML = `
-          <div class="history-empty">
-            <div class="history-empty-icon">🎬</div>
-            <div class="history-empty-text">尚无视频播放历史记录</div>
-          </div>
-        `;
-        return;
-      }
-
-      historyList.innerHTML = '';
-      list.forEach((item, index) => {
-        const itemEl = document.createElement('div');
-        itemEl.className = 'history-item';
-
-        const infoEl = document.createElement('div');
-        infoEl.className = 'history-info';
-
-        const titleLink = document.createElement('a');
-        titleLink.className = 'history-title';
-        titleLink.href = item.url;
-        titleLink.target = '_blank';
-        titleLink.title = `${item.title}\n${item.url}`;
-        titleLink.textContent = item.title || item.url;
-
-        const timeEl = document.createElement('div');
-        timeEl.className = 'history-time';
-        timeEl.textContent = item.time || '';
-
-        infoEl.appendChild(titleLink);
-        infoEl.appendChild(timeEl);
-
-        const delBtn = document.createElement('button');
-        delBtn.className = 'history-delete-btn';
-        delBtn.title = '删除此条记录';
-        delBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>';
-        delBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          deleteHistoryItem(index);
+    console.log('[Popup History] Loading watch history...');
+    chrome.storage.local.get({ history: [] }, res => {
+      try {
+        const list = Array.isArray(res.history) ? res.history : [];
+        console.log('[Popup History] History loaded successfully:', {
+          totalItems: list.length,
+          sampleItem: list[0]
         });
+        historyCountSpan.textContent = list.length;
 
-        itemEl.appendChild(infoEl);
-        itemEl.appendChild(delBtn);
-        historyList.appendChild(itemEl);
-      });
+        if (list.length === 0) {
+          historyList.innerHTML = `
+            <div class="history-empty">
+              <div class="history-empty-icon">🎬</div>
+              <div class="history-empty-text">尚无视频播放历史记录</div>
+            </div>
+          `;
+          return;
+        }
+
+        historyList.innerHTML = '';
+        list.forEach((item, index) => {
+          const itemEl = document.createElement('div');
+          itemEl.className = 'history-item';
+
+          const infoEl = document.createElement('div');
+          infoEl.className = 'history-info';
+
+          const titleLink = document.createElement('a');
+          titleLink.className = 'history-title';
+          titleLink.href = item.url;
+          titleLink.target = '_blank';
+          titleLink.title = `${item.title}\n${item.url}`;
+          titleLink.textContent = item.title || item.url;
+
+          const timeEl = document.createElement('div');
+          timeEl.className = 'history-time';
+          timeEl.textContent = item.time || '';
+
+          infoEl.appendChild(titleLink);
+          infoEl.appendChild(timeEl);
+
+          const delBtn = document.createElement('button');
+          delBtn.className = 'history-delete-btn';
+          delBtn.title = '删除此条记录';
+          delBtn.innerHTML =
+            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>';
+          delBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            deleteHistoryItem(index);
+          });
+
+          itemEl.appendChild(infoEl);
+          itemEl.appendChild(delBtn);
+          historyList.appendChild(itemEl);
+        });
+      } catch (error) {
+        console.error('[Popup History] Failed to load history:', error);
+      }
     });
   }
 
   function deleteHistoryItem(indexToDelete) {
-    chrome.storage.local.get({ history: [] }, (res) => {
-      let list = Array.isArray(res.history) ? res.history : [];
-      list.splice(indexToDelete, 1);
-      chrome.storage.local.set({ history: list }, () => {
-        loadHistory();
-      });
+    console.log('[Popup History] Deleting item at index:', indexToDelete);
+    chrome.storage.local.get({ history: [] }, res => {
+      try {
+        const list = Array.isArray(res.history) ? res.history : [];
+        list.splice(indexToDelete, 1);
+        console.log('[Popup History] Item deleted successfully:', { remainingItems: list.length });
+        chrome.storage.local.set({ history: list }, () => {
+          loadHistory();
+        });
+      } catch (error) {
+        console.error('[Popup History] Failed to delete history item:', error);
+      }
     });
   }
 
   clearHistoryBtn.addEventListener('click', () => {
     if (confirm('确定要清空全部观看历史记录吗？')) {
+      console.log('[Popup History] Clearing all history...');
       chrome.storage.local.set({ history: [] }, () => {
+        console.log('[Popup History] All history cleared successfully');
         loadHistory();
       });
     }
   });
 
   // 初始加载历史条目计数
-  chrome.storage.local.get({ history: [] }, (res) => {
+  chrome.storage.local.get({ history: [] }, res => {
     const list = Array.isArray(res.history) ? res.history : [];
     historyCountSpan.textContent = list.length;
   });

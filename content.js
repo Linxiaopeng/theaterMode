@@ -6,10 +6,96 @@
   const SCAN_INTERVAL = 500;
   const ROOT = () => document.body || document.documentElement;
 
+  /**
+   * 平台特定的工具栏选择器配置
+   * 按平台分类，便于管理和扩展
+   */
+  const PLATFORM_SELECTORS = {
+    bilibili: [
+      '.bpx-player-sending-bar',
+      '.bpx-player-sending-area',
+      '.bilibili-player-video-sendbar',
+      '.bilibili-player-area-danmaku-send',
+      '.bpx-player-video-inputbar',
+      '.bpx-player-sending-area-left',
+      '.bpx-player-sending-area-right'
+    ],
+    youku: ['.txp_bottom', '.txp_tool', '.txp_danmu_send', '.youku-layer-sendbar'],
+    iqiyi: ['.iqp-bottom', '.iqp-tool', '.iqp-danmu-send', '.iqp-send-bar'],
+    kuaishou: ['.k-send-bar', '.play-fn-container'],
+    default: [
+      '.danmu-send-bar',
+      '.player-bottom-bar',
+      '.video-bottom-bar',
+      '.player-extra-bar',
+      '.video-toolbar',
+      '.comment-send-box',
+      '.send-btn-wrap',
+      '#actions',
+      '#actions-inner',
+      '#meta'
+    ]
+  };
+
+  /**
+   * 获取指定平台的工具栏选择器
+   * @param {string} platform 平台名称
+   * @param {boolean} includeDefault 是否包含默认选择器
+   * @returns {string[]} 选择器数组
+   */
+  function getPlatformSelectors(platform, includeDefault = true) {
+    const selectors = [...(PLATFORM_SELECTORS[platform] || [])];
+    if (includeDefault) {
+      selectors.push(...PLATFORM_SELECTORS.default);
+    }
+    return selectors;
+  }
+
+  /**
+   * 获取所有平台的选择器（包括所有平台的特殊选择器 + 默认选择器）
+   * @returns {string[]} 所有选择器数组
+   */
+  function getAllSelectors() {
+    const selectors = new Set();
+    Object.values(PLATFORM_SELECTORS).forEach(platformSelectors => {
+      platformSelectors.forEach(selector => selectors.add(selector));
+    });
+    return Array.from(selectors);
+  }
+
+  /**
+   * 显示 Toast 通知（非阻塞，3秒后自动消失）
+   * @param {string} message 通知消息
+   * @param {string} type 通知类型：'success' | 'error' | 'info'
+   */
+  function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `cinema-toast cinema-toast-${type}`;
+
+    const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+
+    toast.innerHTML = `
+      <span class="cinema-toast-icon">${icon}</span>
+      <span class="cinema-toast-message">${message}</span>
+    `;
+
+    document.body.appendChild(toast);
+
+    // 3秒后自动移除
+    setTimeout(() => {
+      toast.classList.add('cinema-toast-fade-out');
+      toast.addEventListener('transitionend', () => {
+        if (toast.parentNode) toast.remove();
+      });
+    }, 3000);
+  }
+
   let btn = null;
   let overlay = null;
   let stage = null;
   let cinema = null;
+  let musicCinema = null;
+  let keydownListener = null;
 
   let currentSettings = {
     jDuration: 60,
@@ -35,17 +121,46 @@
     musicStaticCoverEnabled: false
   };
 
+  function updateMusicModeSettings() {
+    if (musicCinema && musicCinema.stageEl) {
+      musicCinema.stageEl.style.padding = `${currentSettings.musicPadding}px`;
+    }
+    if (musicCinema && musicCinema.bgBlurEl) {
+      musicCinema.bgBlurEl.style.filter = `blur(${currentSettings.musicBlurRadius}px) brightness(0.68) saturate(180%)`;
+    }
+    if (musicCinema && musicCinema.clockHeader) {
+      musicCinema.clockHeader.style.marginTop = `${currentSettings.musicClockTopOffset}px`;
+    }
+    if (musicCinema && musicCinema.artworkCard) {
+      musicCinema.artworkCard.style.width = `${currentSettings.musicCardWidth}px`;
+    }
+    if (musicCinema && musicCinema.controlsCard) {
+      musicCinema.controlsCard.style.width = `${currentSettings.musicCardWidth}px`;
+    }
+    if (musicCinema && musicCinema.musicBlurController) {
+      musicCinema.musicBlurController.updateOptions({
+        isStatic: !!currentSettings.musicStaticCoverEnabled
+      });
+    }
+  }
+
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
-    chrome.storage.sync.get(currentSettings, (items) => {
+    chrome.storage.sync.get(currentSettings, items => {
       currentSettings = Object.assign({}, currentSettings, items);
-      currentSettings.musicCardWidth = parseInt(currentSettings.musicCardWidth, 10) || 380;
-      currentSettings.musicPadding = parseInt(currentSettings.musicPadding, 10) || 40;
-      currentSettings.musicClockTopOffset = parseInt(currentSettings.musicClockTopOffset, 10) || 50;
-      currentSettings.musicBlurRadius = parseInt(currentSettings.musicBlurRadius, 10) || 65;
+      currentSettings.musicCardWidth = parseInt(items.musicCardWidth, 10) || 380;
+      currentSettings.musicPadding = parseInt(items.musicPadding, 10) || 40;
+      currentSettings.musicClockTopOffset = parseInt(items.musicClockTopOffset, 10) || 50;
+      currentSettings.musicBlurRadius = parseInt(items.musicBlurRadius, 10) || 65;
       if (items.cleanPlayerEnabled === undefined) currentSettings.cleanPlayerEnabled = true;
       if (items.blurHashEnabled === undefined) currentSettings.blurHashEnabled = true;
       if (items.ambilightWaveEnabled === undefined) currentSettings.ambilightWaveEnabled = true;
       if (items.ambilightEnabled === undefined) currentSettings.ambilightEnabled = true;
+      if (items.jDuration !== undefined)
+        currentSettings.jDuration = parseInt(items.jDuration, 10) || 60;
+      if (items.jKey !== undefined) currentSettings.jKey = items.jKey || 'j';
+      if (items.lDuration !== undefined)
+        currentSettings.lDuration = parseInt(items.lDuration, 10) || 60;
+      if (items.lKey !== undefined) currentSettings.lKey = items.lKey || 'l';
     });
     function applySettingsUpdate(newSettings) {
       if (!newSettings) return;
@@ -55,7 +170,10 @@
         overlay.style.backgroundColor = `rgba(0, 0, 0, ${newSettings.overlayOpacity})`;
       }
       if (newSettings.cleanPlayerEnabled !== undefined && (cinema || musicCinema)) {
-        document.documentElement.classList.toggle('clean-player-active', !!newSettings.cleanPlayerEnabled);
+        document.documentElement.classList.toggle(
+          'clean-player-active',
+          !!newSettings.cleanPlayerEnabled
+        );
         document.body.classList.toggle('clean-player-active', !!newSettings.cleanPlayerEnabled);
       }
       if (newSettings.ambilightEnabled !== undefined && cinema && cinema.ambilightEl) {
@@ -63,10 +181,14 @@
       }
       if (newSettings.blurHashEnabled !== undefined) {
         if (cinema && cinema.ambilightController) {
-          cinema.ambilightController.updateOptions({ enableBlurHash: !!newSettings.blurHashEnabled });
+          cinema.ambilightController.updateOptions({
+            enableBlurHash: !!newSettings.blurHashEnabled
+          });
         }
         if (musicCinema && musicCinema.musicBlurController) {
-          musicCinema.musicBlurController.updateOptions({ enableBlurHash: !!newSettings.blurHashEnabled });
+          musicCinema.musicBlurController.updateOptions({
+            enableBlurHash: !!newSettings.blurHashEnabled
+          });
         }
       }
       if (newSettings.ambilightWaveEnabled !== undefined) {
@@ -81,21 +203,14 @@
       if (newSettings.ambilightIntensity !== undefined && cinema && cinema.ambilightEl) {
         cinema.ambilightEl.style.opacity = newSettings.ambilightIntensity;
       }
-      if (newSettings.musicCardWidth !== undefined && musicCinema) {
-        if (musicCinema.artworkCard) musicCinema.artworkCard.style.width = `${newSettings.musicCardWidth}px`;
-        if (musicCinema.controlsCard) musicCinema.controlsCard.style.width = `${newSettings.musicCardWidth}px`;
-      }
-      if (newSettings.musicPadding !== undefined && musicCinema && musicCinema.stageEl) {
-        musicCinema.stageEl.style.padding = `${newSettings.musicPadding}px`;
-      }
-      if (newSettings.musicClockTopOffset !== undefined && musicCinema && musicCinema.clockHeader) {
-        musicCinema.clockHeader.style.marginTop = `${newSettings.musicClockTopOffset}px`;
-      }
-      if (newSettings.musicBlurRadius !== undefined && musicCinema && musicCinema.bgBlurEl) {
-        musicCinema.bgBlurEl.style.filter = `blur(${newSettings.musicBlurRadius}px) brightness(0.68) saturate(180%)`;
-      }
-      if (newSettings.musicStaticCoverEnabled !== undefined && musicCinema && musicCinema.musicBlurController) {
-        musicCinema.musicBlurController.updateOptions({ isStatic: !!newSettings.musicStaticCoverEnabled });
+      if (
+        newSettings.musicCardWidth !== undefined ||
+        newSettings.musicPadding !== undefined ||
+        newSettings.musicClockTopOffset !== undefined ||
+        newSettings.musicBlurRadius !== undefined ||
+        newSettings.musicStaticCoverEnabled !== undefined
+      ) {
+        updateMusicModeSettings();
       }
       if (cinema && cinema.subtitleRenderer) {
         cinema.subtitleRenderer.updateSettings({
@@ -107,6 +222,33 @@
           bottomOffset: currentSettings.subBottomOffset
         });
       }
+      if (newSettings.jDuration !== undefined) currentSettings.jDuration = newSettings.jDuration;
+      if (newSettings.jKey !== undefined) currentSettings.jKey = newSettings.jKey;
+      if (newSettings.lDuration !== undefined) currentSettings.lDuration = newSettings.lDuration;
+      if (newSettings.lKey !== undefined) currentSettings.lKey = newSettings.lKey;
+    }
+
+    function updateMusicModeSettings() {
+      if (musicCinema && musicCinema.stageEl) {
+        musicCinema.stageEl.style.padding = `${currentSettings.musicPadding}px`;
+      }
+      if (musicCinema && musicCinema.bgBlurEl) {
+        musicCinema.bgBlurEl.style.filter = `blur(${currentSettings.musicBlurRadius}px) brightness(0.68) saturate(180%)`;
+      }
+      if (musicCinema && musicCinema.clockHeader) {
+        musicCinema.clockHeader.style.marginTop = `${currentSettings.musicClockTopOffset}px`;
+      }
+      if (musicCinema && musicCinema.artworkCard) {
+        musicCinema.artworkCard.style.width = `${currentSettings.musicCardWidth}px`;
+      }
+      if (musicCinema && musicCinema.controlsCard) {
+        musicCinema.controlsCard.style.width = `${currentSettings.musicCardWidth}px`;
+      }
+      if (musicCinema && musicCinema.musicBlurController) {
+        musicCinema.musicBlurController.updateOptions({
+          isStatic: !!currentSettings.musicStaticCoverEnabled
+        });
+      }
     }
 
     chrome.storage.onChanged.addListener((changes, namespace) => {
@@ -116,13 +258,15 @@
           updated[k] = changes[k].newValue;
         }
         applySettingsUpdate(updated);
+        updateMusicModeSettings();
       }
     });
 
     if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
-      chrome.runtime.onMessage.addListener((msg) => {
+      chrome.runtime.onMessage.addListener(msg => {
         if (msg && msg.type === 'SETTINGS_UPDATED' && msg.settings) {
           applySettingsUpdate(msg.settings);
+          updateMusicModeSettings();
         }
       });
     }
@@ -134,74 +278,127 @@
   function recordWatchHistory(video) {
     try {
       const url = window.location.href;
-      if (!url || url.startsWith('chrome://') || url.startsWith('chrome-extension://') || url.startsWith('about:')) return;
+      if (
+        !url ||
+        url.startsWith('chrome://') ||
+        url.startsWith('chrome-extension://') ||
+        url.startsWith('about:')
+      )
+        return;
       if (recordedUrlForPage === url) return;
 
       // 必须播放达到或超过 1 分钟 (60秒) 才录入，防止误记
       if (!video || typeof video.currentTime !== 'number' || video.currentTime < 60) {
+        console.log('[Theater Mode] Watch history skipped: video not played for 60 seconds');
         return;
       }
 
       const rawTitle = document.title || url;
       const title = rawTitle.trim().replace(/\s+/g, ' ');
       const now = new Date();
-      const pad = (n) => String(n).padStart(2, '0');
+      const pad = n => String(n).padStart(2, '0');
       const timeString = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
+      console.log('[Theater Mode] Attempting to save watch history:', { url, title, timeString });
+
       if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-        chrome.storage.local.get({ history: [] }, (res) => {
-          let list = Array.isArray(res.history) ? res.history : [];
-          // 如果已有相同 URL 记录，滤除旧项，最新放至队首
-          list = list.filter(item => item && item.url !== url);
-          list.unshift({
-            url: url,
-            title: title,
-            time: timeString,
-            timestamp: now.getTime()
-          });
+        chrome.storage.local.get({ history: [] }, res => {
+          try {
+            let list = Array.isArray(res.history) ? res.history : [];
+            // 如果已有相同 URL 记录，滤除旧项，最新放至队首
+            list = list.filter(item => item && item.url !== url);
+            list.unshift({
+              url: url,
+              title: title,
+              time: timeString,
+              timestamp: now.getTime()
+            });
 
-          // 保留最多 90 条历史记录
-          if (list.length > 90) {
-            list = list.slice(0, 90);
+            // 保留最多 90 条历史记录
+            if (list.length > 90) {
+              list = list.slice(0, 90);
+            }
+
+            console.log('[Theater Mode] Watch history saved successfully:', {
+              total: list.length,
+              latest: list[0]
+            });
+
+            chrome.storage.local.set({ history: list }, () => {
+              recordedUrlForPage = url;
+            });
+          } catch (storageError) {
+            console.error('[Theater Mode] Failed to process watch history:', storageError);
           }
-
-          chrome.storage.local.set({ history: list }, () => {
-            recordedUrlForPage = url;
-          });
         });
       }
     } catch (e) {
-      console.warn('[Theater Mode] Failed to record watch history:', e);
+      console.error('[Theater Mode] Failed to record watch history:', e);
     }
   }
 
-  const px = (n) => `${n}px`;
+  const px = n => `${n}px`;
+
+  /**
+   * 将秒数格式化为 MM:SS 格式
+   * @param {number} sec 秒数
+   * @returns {string} 格式化后的时间字符串
+   */
+  function formatSec(sec) {
+    if (isNaN(sec) || sec < 0) return '0:00';
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m}:${String(s).padStart(2, '0')}`;
+  }
 
   /* ---------- 检测 ---------- */
 
-  function visibleArea(v) {
+  function isValidVideo(v) {
+    if (!v || !v.isConnected) return false;
     const r = v.getBoundingClientRect();
-    const left = Math.max(0, r.left);
-    const top = Math.max(0, r.top);
-    const right = Math.min(window.innerWidth, r.right);
-    const bottom = Math.min(window.innerHeight, r.bottom);
-    const w = right - left;
-    const h = bottom - top;
-    return w > 0 && h > 0 ? w * h : 0;
+    const w = r.width || v.offsetWidth || v.videoWidth || 0;
+    const h = r.height || v.offsetHeight || v.videoHeight || 0;
+    if (w < 30 || h < 30) return false;
+
+    try {
+      const style = window.getComputedStyle(v);
+      if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+        return false;
+      }
+    } catch (e) {
+      // 忽略无法获取 style 的异常
+    }
+
+    const hasSource =
+      v.src ||
+      v.currentSrc ||
+      v.srcObject ||
+      v.querySelector('source') ||
+      v.readyState > 0 ||
+      v.videoWidth > 0;
+
+    return !!hasSource;
   }
 
   function isActiveVideo(v) {
-    if (!v || v.readyState < 2) return false;
-    if (visibleArea(v) <= 0) return false;
+    if (!isValidVideo(v)) return false;
     return !v.paused || v.currentTime > 0;
+  }
+
+  function getVideoLayoutArea(v) {
+    if (!v) return 0;
+    const r = v.getBoundingClientRect();
+    const w = r.width || v.offsetWidth || v.videoWidth || 0;
+    const h = r.height || v.offsetHeight || v.videoHeight || 0;
+    return w * h;
   }
 
   function findBestVideo() {
     let best = null;
     let maxArea = 0;
     for (const v of document.querySelectorAll('video')) {
-      const area = visibleArea(v);
-      if (area <= 0) continue;
+      if (!isValidVideo(v)) continue;
+      const area = getVideoLayoutArea(v);
       if (area > maxArea) {
         maxArea = area;
         best = v;
@@ -213,40 +410,45 @@
   /* ---------- 悬浮按钮 ---------- */
 
   function ensureButton() {
-    if (btn) return;
-    btn = document.createElement('div');
-    btn.id = BTN_ID;
-    btn.className = 'cinema-float-bar';
-    btn.innerHTML =
-      '<button class="cinema-float-btn" id="cinema-btn-cinema" title="影院模式 (按 ESC 退出)">' +
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
-      '<rect x="2.5" y="4" width="19" height="16" rx="3"/>' +
-      '<path d="M10 9v6l5-3z" fill="currentColor" stroke="none"/>' +
-      '</svg>' +
-      '<span>影院</span>' +
-      '</button>' +
-      '<button class="cinema-float-btn" id="cinema-btn-music" title="音乐模式 (iOS 锁屏美学)">' +
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
-      '<path d="M9 18V5l12-2v13"/>' +
-      '<circle cx="6" cy="18" r="3"/>' +
-      '<circle cx="18" cy="16" r="3"/>' +
-      '</svg>' +
-      '<span>音乐</span>' +
-      '</button>';
+    if (!btn) {
+      btn = document.createElement('div');
+      btn.id = BTN_ID;
+      btn.className = 'cinema-float-bar';
+      btn.innerHTML =
+        '<button class="cinema-float-btn" id="cinema-btn-cinema" title="影院模式 (按 ESC 退出)">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+        '<rect x="2.5" y="4" width="19" height="16" rx="3"/>' +
+        '<path d="M10 9v6l5-3z" fill="currentColor" stroke="none"/>' +
+        '</svg>' +
+        '<span>影院</span>' +
+        '</button>' +
+        '<button class="cinema-float-btn" id="cinema-btn-music" title="音乐模式 (iOS 锁屏美学)">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M9 18V5l12-2v13"/>' +
+        '<circle cx="6" cy="18" r="3"/>' +
+        '<circle cx="18" cy="16" r="3"/>' +
+        '</svg>' +
+        '<span>音乐</span>' +
+        '</button>';
 
-    btn.querySelector('#cinema-btn-cinema').addEventListener('click', (e) => {
-      e.stopPropagation();
-      const v = findBestVideo();
-      if (v) enterCinema(v);
-    });
+      btn.querySelector('#cinema-btn-cinema').addEventListener('click', e => {
+        e.stopPropagation();
+        const v = findBestVideo();
+        if (v) enterCinema(v);
+      });
 
-    btn.querySelector('#cinema-btn-music').addEventListener('click', (e) => {
-      e.stopPropagation();
-      const v = findBestVideo();
-      if (v) enterMusicMode(v);
-    });
+      btn.querySelector('#cinema-btn-music').addEventListener('click', e => {
+        e.stopPropagation();
+        const v = findBestVideo();
+        if (v) enterMusicMode(v);
+      });
+    }
 
-    ROOT().appendChild(btn);
+    const rootEl = ROOT();
+    if (rootEl && (!btn.parentNode || !btn.isConnected)) {
+      rootEl.appendChild(btn);
+      console.log('[Button] Button created/re-appended to DOM');
+    }
   }
 
   function setButtonVisible(v) {
@@ -255,40 +457,6 @@
   }
 
   /* ---------- 影院模式 ---------- */
-
-  const EXTRA_BAR_SELECTORS = [
-    '.bpx-player-sending-bar',
-    '.bpx-player-sending-area',
-    '.bilibili-player-video-sendbar',
-    '.bilibili-player-area-danmaku-send',
-    '.bpx-player-video-inputbar',
-    '.bpx-player-sending-area-left',
-    '.bpx-player-sending-area-right',
-    '#arc_toolbar_report',
-    '.video-toolbar-v1',
-    '.video-toolbar-container',
-    '.bpx-player-shadow-progress',
-    '.txp_bottom',
-    '.txp_tool',
-    '.txp_danmu_send',
-    '.iqp-bottom',
-    '.iqp-tool',
-    '.iqp-danmu-send',
-    '.iqp-send-bar',
-    '.youku-layer-sendbar',
-    '.k-send-bar',
-    '.play-fn-container',
-    '.danmu-send-bar',
-    '.player-bottom-bar',
-    '.video-bottom-bar',
-    '.player-extra-bar',
-    '.video-toolbar',
-    '.comment-send-box',
-    '.send-btn-wrap',
-    '#actions',
-    '#actions-inner',
-    '#meta'
-  ];
 
   function findPlayerContainer(video) {
     if (!video) return null;
@@ -369,7 +537,7 @@
     // 创建快进/回退控制栏与字幕加载按钮
     const controlBar = document.createElement('div');
     controlBar.className = 'cinema-control-bar';
-    
+
     const buttonsConfig = [
       { label: '-10m', delta: -600, title: '回退 10 分钟' },
       { label: '-1m', delta: -60, title: '回退 1 分钟' },
@@ -384,7 +552,7 @@
       b.className = 'cinema-ctrl-btn';
       b.textContent = cfg.label;
       b.title = cfg.title;
-      b.addEventListener('click', (e) => {
+      b.addEventListener('click', e => {
         e.stopPropagation();
         if (video && !isNaN(video.duration)) {
           video.currentTime = Math.min(Math.max(0, video.currentTime + cfg.delta), video.duration);
@@ -403,11 +571,11 @@
     fileInput.type = 'file';
     fileInput.accept = '.srt,.vtt,.ass';
     fileInput.style.display = 'none';
-    fileInput.addEventListener('change', (e) => {
+    fileInput.addEventListener('change', e => {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = (evt) => {
+      reader.onload = evt => {
         try {
           const content = evt.target.result;
           const cues = SubtitleParser.parse(content, file.name);
@@ -417,13 +585,14 @@
           const shortName = file.name.length > 8 ? file.name.slice(0, 8) + '...' : file.name;
           uploadBtn.innerHTML = `✅ ${shortName}`;
           uploadBtn.title = `已加载字幕: ${file.name} (${cues.length}条)`;
+          showToast(`字幕加载成功：${file.name}`, 'success');
         } catch (err) {
-          alert(`字幕解析失败：\n${err.message}`);
+          showToast(`字幕解析失败：${err.message}`, 'error');
           uploadBtn.innerHTML = '📂 加载失败';
         }
       };
       reader.onerror = () => {
-        alert('读取字幕文件失败！');
+        showToast('读取字幕文件失败', 'error');
       };
       reader.readAsText(file, 'utf-8');
     });
@@ -435,7 +604,7 @@
     musicModeBtn.className = 'cinema-ctrl-btn';
     musicModeBtn.textContent = '🎵 音乐模式';
     musicModeBtn.title = '切换至 iOS 锁屏美学音乐模式';
-    musicModeBtn.addEventListener('click', (e) => {
+    musicModeBtn.addEventListener('click', e => {
       e.stopPropagation();
       const v = video;
       exitCinema();
@@ -459,7 +628,9 @@
       player.style.setProperty('width', '100%', 'important');
       player.style.setProperty('height', '100%', 'important');
 
-      const innerContainers = player.querySelectorAll('.html5-video-container, .bpx-player-video-area, .bpx-player-primary-area');
+      const innerContainers = player.querySelectorAll(
+        '.html5-video-container, .bpx-player-video-area, .bpx-player-primary-area'
+      );
       innerContainers.forEach(c => {
         c.style.setProperty('width', '100%', 'important');
         c.style.setProperty('height', '100%', 'important');
@@ -497,7 +668,8 @@
 
     if (currentSettings.ambilightEnabled) {
       ambilightEl = document.createElement('div');
-      ambilightEl.className = 'cinema-ambilight-glow' + (currentSettings.ambilightWaveEnabled ? ' has-edge-wave' : '');
+      ambilightEl.className =
+        'cinema-ambilight-glow' + (currentSettings.ambilightWaveEnabled ? ' has-edge-wave' : '');
       ambilightEl.style.opacity = currentSettings.ambilightIntensity;
 
       if (typeof BlurBackgroundController !== 'undefined') {
@@ -511,9 +683,9 @@
       stage.appendChild(ambilightEl);
     }
 
-    let hiddenElements = [];
+    const hiddenElements = [];
     if (currentSettings.cleanPlayerEnabled !== false) {
-      EXTRA_BAR_SELECTORS.forEach(sel => {
+      getAllSelectors().forEach(sel => {
         const nodes = document.querySelectorAll(sel);
         nodes.forEach(el => {
           hiddenElements.push({ el, display: el.style.display });
@@ -572,12 +744,12 @@
 
     handleMouseMove();
 
-    cinema = { 
-      video, 
-      player, 
-      saved, 
-      subtitleRenderer, 
-      ambilightEl, 
+    cinema = {
+      video,
+      player,
+      saved,
+      subtitleRenderer,
+      ambilightEl,
       ambilightController,
       hiddenElements,
       stageRef,
@@ -595,12 +767,12 @@
 
   function exitCinema() {
     if (!cinema) return;
-    const { 
-      video, 
-      player, 
-      saved, 
-      subtitleRenderer, 
-      ambilightEl, 
+    const {
+      video,
+      player,
+      saved,
+      subtitleRenderer,
+      ambilightEl,
       ambilightController,
       hiddenElements,
       stageRef,
@@ -677,6 +849,10 @@
     overlay = null;
     stage = null;
     cinema = null;
+    if (keydownListener) {
+      document.removeEventListener('keydown', keydownListener);
+      keydownListener = null;
+    }
     updateButton();
     setTimeout(() => {
       window.dispatchEvent(new Event('resize'));
@@ -685,10 +861,12 @@
 
   /* ---------- 🎵 音乐模式 (iOS 锁屏美学) ---------- */
 
-  let musicCinema = null;
-
   function enterMusicMode(video) {
-    if (!video) return;
+    console.log('[Music Mode] Starting music mode...');
+    if (!video) {
+      console.error('[Music Mode] No video provided!');
+      return;
+    }
     if (cinema) exitCinema();
     if (musicCinema) exitMusicMode();
 
@@ -703,6 +881,10 @@
     }
 
     const player = findPlayerContainer(video);
+    if (!player) {
+      console.error('[Music Mode] Player container not found!');
+    }
+
     const playerMoved = !currentSettings.musicStaticCoverEnabled;
     const saved = {
       parent: player.parentNode,
@@ -714,32 +896,44 @@
 
     const overlayEl = document.createElement('div');
     overlayEl.id = 'music-mode-overlay';
+    console.log('[Music Mode] Overlay element created:', overlayEl);
 
     // 动态 3D 氛围光背景 (优先尝试 BlurHash 算法极佳色彩晕染)
     const bgBlurEl = document.createElement('div');
-    bgBlurEl.className = 'music-bg-blur' + (currentSettings.ambilightWaveEnabled ? ' has-edge-wave' : '');
+    bgBlurEl.className =
+      'music-bg-blur' + (currentSettings.ambilightWaveEnabled ? ' has-edge-wave' : '');
     bgBlurEl.style.filter = `blur(${currentSettings.musicBlurRadius}px) brightness(0.68) saturate(180%)`;
+    console.log('[Music Mode] Background blur element created:', bgBlurEl);
 
     let musicBlurController = null;
 
     if (typeof BlurBackgroundController !== 'undefined') {
-      musicBlurController = new BlurBackgroundController(video, {
-        enableBlurHash: currentSettings.blurHashEnabled !== false,
-        isStatic: !!currentSettings.musicStaticCoverEnabled,
-        throttleMs: 150
-      });
-      musicBlurController.mount(bgBlurEl);
+      try {
+        musicBlurController = new BlurBackgroundController(video, {
+          enableBlurHash: currentSettings.blurHashEnabled !== false,
+          isStatic: !!currentSettings.musicStaticCoverEnabled,
+          throttleMs: 150
+        });
+        musicBlurController.mount(bgBlurEl);
+        console.log('[Music Mode] Background controller mounted successfully');
+      } catch (error) {
+        console.error('[Music Mode] Failed to mount background controller:', error);
+      }
+    } else {
+      console.warn('[Music Mode] BlurBackgroundController not available');
     }
 
     // 锁屏全局框架
     const stageEl = document.createElement('div');
     stageEl.className = 'music-lockscreen-stage';
     stageEl.style.padding = `${currentSettings.musicPadding}px`;
+    console.log('[Music Mode] Stage element created');
 
     // 1. 顶部时间与日期 (iOS 锁屏横向排版 12:12  8月9日 星期日)
     const clockHeader = document.createElement('div');
     clockHeader.className = 'music-clock-header';
     clockHeader.style.marginTop = `${currentSettings.musicClockTopOffset}px`;
+    console.log('[Music Mode] Clock header element created');
 
     const timeText = document.createElement('span');
     timeText.className = 'music-time-text';
@@ -749,13 +943,13 @@
 
     const updateClock = () => {
       const now = new Date();
-      const pad = (n) => String(n).padStart(2, '0');
+      const pad = n => String(n).padStart(2, '0');
       timeText.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
       const options = { month: 'short', day: 'numeric', weekday: 'short' };
       dateText.textContent = now.toLocaleDateString('zh-CN', options);
     };
     updateClock();
-    let clockTimer = setInterval(updateClock, 1000);
+    const clockTimer = setInterval(updateClock, 1000);
 
     clockHeader.appendChild(timeText);
     clockHeader.appendChild(dateText);
@@ -764,6 +958,7 @@
     const artworkCard = document.createElement('div');
     artworkCard.className = 'music-artwork-card';
     artworkCard.style.width = `${currentSettings.musicCardWidth}px`;
+    console.log('[Music Mode] Artwork card element created');
 
     const updateArtworkAspectRatio = () => {
       if (video) {
@@ -774,6 +969,34 @@
     updateArtworkAspectRatio();
     video.addEventListener('loadedmetadata', updateArtworkAspectRatio);
     video.addEventListener('resize', updateArtworkAspectRatio);
+
+    function mountLivePlayerToCard() {
+      if (!player) return;
+      if (saved) saved.playerMoved = true;
+      player.style.setProperty('width', '100%', 'important');
+      player.style.setProperty('height', '100%', 'important');
+
+      if (video) {
+        video.style.setProperty('width', '100%', 'important');
+        video.style.setProperty('height', '100%', 'important');
+        video.style.setProperty('object-fit', 'cover', 'important');
+        video.style.setProperty('position', 'absolute', 'important');
+        video.style.setProperty('left', '0', 'important');
+        video.style.setProperty('top', '0', 'important');
+        video.style.setProperty('transform', 'none', 'important');
+      }
+
+      const innerContainers = player.querySelectorAll(
+        '.html5-video-container, .bpx-player-video-area, .bpx-player-primary-area, .bpx-player-video-wrap, .bpx-player-video-periph'
+      );
+      innerContainers.forEach(c => {
+        c.style.setProperty('width', '100%', 'important');
+        c.style.setProperty('height', '100%', 'important');
+      });
+
+      artworkCard.appendChild(player);
+      console.log('[Music Mode] Live video player mounted to artwork card');
+    }
 
     if (currentSettings.musicStaticCoverEnabled) {
       let isStaticCaptured = false;
@@ -787,29 +1010,42 @@
           isStaticCaptured = true;
         }
       } catch (e) {
+        console.error('[Music Mode] Failed to capture static image (CORS/Tainted):', e);
         isStaticCaptured = false;
       }
 
       if (isStaticCaptured) {
-        staticCanvas.style.cssText = 'width: 100%; height: 100%; object-fit: cover; display: block; border-radius: inherit;';
+        staticCanvas.style.cssText =
+          'width: 100%; height: 100%; object-fit: cover; display: block; border-radius: inherit;';
         artworkCard.appendChild(staticCanvas);
+        console.log('[Music Mode] Static image appended to artwork card');
       } else {
-        const img = document.createElement('img');
-        img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; display: block; border-radius: inherit;';
-        img.src = video.poster || '';
-        artworkCard.appendChild(img);
+        const metaPoster =
+          video.poster ||
+          document.querySelector('meta[property="og:image"]')?.content ||
+          document.querySelector('meta[name="twitter:image"]')?.content ||
+          '';
+        if (metaPoster) {
+          const img = document.createElement('img');
+          img.style.cssText =
+            'width: 100%; height: 100%; object-fit: cover; display: block; border-radius: inherit;';
+          img.src = metaPoster;
+          artworkCard.appendChild(img);
+          console.log('[Music Mode] Poster image appended to artwork card');
+        } else {
+          // 截图与 Poster 均不可用时，安全退化降级挂载 Live Video Player
+          mountLivePlayerToCard();
+        }
       }
     } else {
-      player.style.width = '100%';
-      player.style.height = '100%';
-      player.style.objectFit = 'cover';
-      artworkCard.appendChild(player);
+      mountLivePlayerToCard();
     }
 
     // 3. 独立 iOS 播放控件小面板 (在封面正下方)
     const controlsCard = document.createElement('div');
     controlsCard.className = 'music-controls-card';
     controlsCard.style.width = `${currentSettings.musicCardWidth}px`;
+    console.log('[Music Mode] Controls card element created');
 
     // 头部: 标题与作者信息 + 模式切换小按钮
     const metaBox = document.createElement('div');
@@ -833,8 +1069,9 @@
     const modeBtn = document.createElement('button');
     modeBtn.className = 'music-icon-btn mode-switch-icon';
     modeBtn.title = '切换至影院模式';
-    modeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="16" rx="3"/><path d="M10 9v6l5-3z" fill="currentColor" stroke="none"/></svg>';
-    modeBtn.addEventListener('click', (e) => {
+    modeBtn.innerHTML =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="16" rx="3"/><path d="M10 9v6l5-3z" fill="currentColor" stroke="none"/></svg>';
+    modeBtn.addEventListener('click', e => {
       e.stopPropagation();
       const v = video;
       exitMusicMode();
@@ -874,15 +1111,10 @@
       slider.style.background = `linear-gradient(to right, #ffffff ${val}%, rgba(255, 255, 255, 0.25) ${val}%)`;
     };
 
-    const formatSec = (sec) => {
-      if (isNaN(sec) || sec < 0) return '0:00';
-      const m = Math.floor(sec / 60);
-      const s = Math.floor(sec % 60);
-      return `${m}:${String(s).padStart(2, '0')}`;
-    };
-
     let isDraggingSlider = false;
-    slider.addEventListener('mousedown', () => { isDraggingSlider = true; });
+    slider.addEventListener('mousedown', () => {
+      isDraggingSlider = true;
+    });
     slider.addEventListener('mouseup', () => {
       isDraggingSlider = false;
       if (video && !isNaN(video.duration)) {
@@ -899,94 +1131,101 @@
       updateSliderBg();
     });
 
-    let syncProgressTimer = setInterval(() => {
-      if (video && !isNaN(video.duration) && video.duration > 0) {
-        if (!isDraggingSlider) {
-          slider.value = (video.currentTime / video.duration) * 100;
-          curTimeSpan.textContent = formatSec(video.currentTime);
-          durTimeSpan.textContent = `-${formatSec(video.duration - video.currentTime)}`;
-          updateSliderBg();
-        }
-      }
-    }, 500);
-
     // 纯极简 Icon 控制条 (纯 Icon 无文字，极简苹果风格)
     const ctrlRow = document.createElement('div');
     ctrlRow.className = 'music-ctrl-row';
 
     const muteBtn = document.createElement('button');
     muteBtn.className = 'music-icon-btn';
-    muteBtn.title = video.muted ? '取消静音' : '静音';
-    muteBtn.innerHTML = video.muted
-      ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>'
-      : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
-    muteBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      video.muted = !video.muted;
-      muteBtn.innerHTML = video.muted
-        ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>'
-        : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
-    });
 
     const rewindBtn = document.createElement('button');
     rewindBtn.className = 'music-icon-btn';
     rewindBtn.title = '回退 15 秒';
-    rewindBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 5l-7 7 7 7V5zm9 0l-7 7 7 7V5z"/></svg>';
-    rewindBtn.addEventListener('click', (e) => {
+    rewindBtn.innerHTML =
+      '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 5l-7 7 7 7V5zm9 0l-7 7 7 7V5z"/></svg>';
+    rewindBtn.addEventListener('click', e => {
       e.stopPropagation();
       if (video && !isNaN(video.duration)) video.currentTime = Math.max(0, video.currentTime - 15);
     });
 
     const playToggleBtn = document.createElement('button');
     playToggleBtn.className = 'music-icon-btn play-main';
-    playToggleBtn.title = video.paused ? '播放' : '暂停';
-    playToggleBtn.innerHTML = video.paused
-      ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86a1 1 0 0 0-1.5.86z"/></svg>'
-      : '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1.5"/><rect x="14" y="4" width="4" height="16" rx="1.5"/></svg>';
-    playToggleBtn.addEventListener('click', (e) => {
+
+    const syncUIStatus = () => {
+      if (!video) return;
+      if (!isNaN(video.duration) && video.duration > 0 && !isDraggingSlider) {
+        slider.value = (video.currentTime / video.duration) * 100;
+        curTimeSpan.textContent = formatSec(video.currentTime);
+        durTimeSpan.textContent = `-${formatSec(video.duration - video.currentTime)}`;
+        updateSliderBg();
+      }
+
+      playToggleBtn.title = video.paused ? '播放' : '暂停';
+      playToggleBtn.innerHTML = video.paused
+        ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86a1 1 0 0 0-1.5.86z"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1.5"/><rect x="14" y="4" width="4" height="16" rx="1.5"/></svg>';
+
+      muteBtn.title = video.muted ? '取消静音' : '静音';
+      muteBtn.innerHTML = video.muted
+        ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
+    };
+
+    muteBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      video.muted = !video.muted;
+      syncUIStatus();
+    });
+
+    playToggleBtn.addEventListener('click', e => {
       e.stopPropagation();
       if (video.paused) {
         video.play().catch(() => {});
-        playToggleBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1.5"/><rect x="14" y="4" width="4" height="16" rx="1.5"/></svg>';
       } else {
         video.pause();
-        playToggleBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86a1 1 0 0 0-1.5.86z"/></svg>';
       }
+      syncUIStatus();
     });
+
+    const syncProgressTimer = setInterval(syncUIStatus, 300);
+    syncUIStatus();
 
     const forwardBtn = document.createElement('button');
     forwardBtn.className = 'music-icon-btn';
     forwardBtn.title = '快进 15 秒';
-    forwardBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 19l7-7-7-7v14zm-9 0l7-7-7-7v14z"/></svg>';
-    forwardBtn.addEventListener('click', (e) => {
+    forwardBtn.innerHTML =
+      '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 19l7-7-7-7v14zm-9 0l7-7-7-7v14z"/></svg>';
+    forwardBtn.addEventListener('click', e => {
       e.stopPropagation();
-      if (video && !isNaN(video.duration)) video.currentTime = Math.min(video.duration, video.currentTime + 15);
+      if (video && !isNaN(video.duration))
+        video.currentTime = Math.min(video.duration, video.currentTime + 15);
     });
 
     const subBtn = document.createElement('button');
     subBtn.className = 'music-icon-btn';
     subBtn.title = '加载本地字幕';
-    subBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM4 12h4v2H4v-2zm10 4H4v-2h10v2zm6 0h-4v-2h4v2zm0-4H10v-2h10v2z"/></svg>';
+    subBtn.innerHTML =
+      '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM4 12h4v2H4v-2zm10 4H4v-2h10v2zm6 0h-4v-2h4v2zm0-4H10v-2h10v2z"/></svg>';
     const subFileInput = document.createElement('input');
     subFileInput.type = 'file';
     subFileInput.accept = '.srt,.vtt,.ass';
     subFileInput.style.display = 'none';
-    subFileInput.addEventListener('change', (e) => {
+    subFileInput.addEventListener('change', e => {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = (evt) => {
+      reader.onload = evt => {
         try {
           const content = evt.target.result;
           SubtitleParser.parse(content, file.name);
-          alert(`字幕文件解析成功！`);
+          showToast(`字幕加载成功`, 'success');
         } catch (err) {
-          alert(`字幕解析失败：${err.message}`);
+          showToast(`字幕解析失败：${err.message}`, 'error');
         }
       };
       reader.readAsText(file, 'utf-8');
     });
-    subBtn.addEventListener('click', (e) => {
+    subBtn.addEventListener('click', e => {
       e.stopPropagation();
       subFileInput.click();
     });
@@ -1005,11 +1244,11 @@
     stageEl.appendChild(clockHeader);
     stageEl.appendChild(artworkCard);
     stageEl.appendChild(controlsCard);
+    console.log('[Music Mode] All stage elements added');
 
     overlayEl.appendChild(bgBlurEl);
     overlayEl.appendChild(stageEl);
-
-    ROOT().appendChild(overlayEl);
+    console.log('[Music Mode] All elements appended to overlay');
 
     // 鼠标在封面/播放器卡片上划过与无操作 2.5s 自动柔和隐藏播放器内置控件/头像/暂停图标
     let musicMouseIdleTimer = null;
@@ -1033,12 +1272,6 @@
       hideMusicControls();
     };
 
-    artworkCard.addEventListener('mousemove', handleMusicMouseMove);
-    artworkCard.addEventListener('mouseenter', handleMusicMouseMove);
-    artworkCard.addEventListener('mouseleave', handleMusicMouseLeave);
-
-    handleMusicMouseMove();
-
     musicCinema = {
       video,
       player,
@@ -1058,12 +1291,40 @@
       updateArtworkAspectRatio
     };
 
+    try {
+      updateMusicModeSettings();
+    } catch (error) {
+      console.error('[Music Mode] Failed to update settings:', error);
+    }
+
+    ROOT().appendChild(overlayEl);
+    console.log('[Music Mode] Overlay appended to DOM');
+    console.log('[Music Mode] Music mode initialization complete');
+
+    artworkCard.addEventListener('mousemove', handleMusicMouseMove);
+    artworkCard.addEventListener('mouseenter', handleMusicMouseMove);
+    artworkCard.addEventListener('mouseleave', handleMusicMouseLeave);
+
+    handleMusicMouseMove();
     setButtonVisible(false);
   }
 
   function exitMusicMode() {
     if (!musicCinema) return;
-    const { video, player, saved, overlayEl, artworkCard, musicBlurController, clockTimer, syncProgressTimer, musicMouseIdleTimer, handleMusicMouseMove, handleMusicMouseLeave, updateArtworkAspectRatio } = musicCinema;
+    const {
+      video,
+      player,
+      saved,
+      overlayEl,
+      artworkCard,
+      musicBlurController,
+      clockTimer,
+      syncProgressTimer,
+      musicMouseIdleTimer,
+      handleMusicMouseMove,
+      handleMusicMouseLeave,
+      updateArtworkAspectRatio
+    } = musicCinema;
 
     document.documentElement.classList.remove('music-mode-active');
     document.body.classList.remove('music-mode-active');
@@ -1089,7 +1350,10 @@
     if (clockTimer) clearInterval(clockTimer);
     if (syncProgressTimer) clearInterval(syncProgressTimer);
 
-    if (saved && saved.playerMoved) {
+    const isPlayerMoved =
+      saved &&
+      (saved.playerMoved || (player && player.parentNode && player.parentNode !== saved.parent));
+    if (isPlayerMoved && player && saved) {
       if (player.parentNode) {
         player.parentNode.removeChild(player);
       }
@@ -1115,7 +1379,17 @@
     if (overlayEl) overlayEl.remove();
 
     musicCinema = null;
-    updateButton();
+    console.log('[Exit Music Mode] musicCinema set to null');
+    updateMusicModeSettings();
+    if (keydownListener) {
+      document.removeEventListener('keydown', keydownListener);
+      keydownListener = null;
+    }
+    // 延迟调用 updateButton，确保视频状态已更新
+    setTimeout(() => {
+      console.log('[Exit Music Mode] Calling updateButton() with delay');
+      updateButton();
+    }, 100);
   }
 
   /* ---------- 状态刷新 ---------- */
@@ -1125,12 +1399,13 @@
       setButtonVisible(false);
       return;
     }
-    const active = Array.from(document.querySelectorAll('video')).some(isActiveVideo);
-    setButtonVisible(active);
+    ensureButton();
+    const best = findBestVideo();
+    setButtonVisible(!!best);
   }
 
   setInterval(() => {
-    const activeVideo = cinema ? cinema.video : (musicCinema ? musicCinema.video : findBestVideo());
+    const activeVideo = cinema ? cinema.video : musicCinema ? musicCinema.video : findBestVideo();
     if (activeVideo && isActiveVideo(activeVideo)) {
       recordWatchHistory(activeVideo);
     }
@@ -1139,11 +1414,11 @@
       if (!cinema.video.isConnected || !cinema.player.isConnected) {
         exitCinema();
       } else {
-        if (cinema.subtitleRenderer && cinema.video) {
+        if (cinema.subtitleRenderer && cinema.video && !cinema.video.paused) {
           cinema.subtitleRenderer.syncTime(cinema.video.currentTime);
         }
         if (currentSettings.cleanPlayerEnabled !== false) {
-          EXTRA_BAR_SELECTORS.forEach(sel => {
+          getAllSelectors().forEach(sel => {
             document.querySelectorAll(sel).forEach(el => {
               if (el.style.display !== 'none') {
                 if (cinema.hiddenElements && !cinema.hiddenElements.some(item => item.el === el)) {
@@ -1166,16 +1441,20 @@
     updateButton();
   }, 500);
 
-  document.addEventListener('play', () => {
-    updateButton();
-    const best = findBestVideo();
-    if (best && isActiveVideo(best)) {
-      recordWatchHistory(best);
-    }
-  }, true);
+  document.addEventListener(
+    'play',
+    () => {
+      updateButton();
+      const best = findBestVideo();
+      if (best && isActiveVideo(best)) {
+        recordWatchHistory(best);
+      }
+    },
+    true
+  );
   document.addEventListener('pause', () => updateButton(), true);
 
-  document.addEventListener('keydown', (e) => {
+  keydownListener = e => {
     if (!cinema && !musicCinema) return;
     if (e.key === 'Escape') {
       e.preventDefault();
@@ -1186,7 +1465,13 @@
     }
     // 忽略在输入框中的按键
     const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-    if (tag === 'input' || tag === 'textarea' || tag === 'select' || (document.activeElement && document.activeElement.isContentEditable)) return;
+    if (
+      tag === 'input' ||
+      tag === 'textarea' ||
+      tag === 'select' ||
+      (document.activeElement && document.activeElement.isContentEditable)
+    )
+      return;
 
     const key = e.key.toLowerCase();
     const activeSession = cinema || musicCinema;
@@ -1205,7 +1490,9 @@
       e.stopImmediatePropagation();
       v.currentTime = Math.min(v.duration, v.currentTime + currentSettings.lDuration);
     }
-  }, true);
+  };
+
+  document.addEventListener('keydown', keydownListener, true);
 
   window.addEventListener('resize', () => {
     if (cinema && cinema.updateStageDimensions) {
