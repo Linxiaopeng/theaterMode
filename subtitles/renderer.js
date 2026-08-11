@@ -1,7 +1,7 @@
 /**
  * 字幕渲染模块 (Subtitle Renderer Module)
  * 职责：负责在影院模式的视频舞台渲染字幕、根据视频播放进度实时同步、处理样式及排版。
- * 架构设计：独立模块，支持样式动态更新、多行与长文本自动换行、预留双语字幕与 AI 翻译显示位。
+ * 架构设计：独立模块，支持样式动态更新、多行与长文本自动换行。
  */
 
 class SubtitleRenderer {
@@ -21,8 +21,6 @@ class SubtitleRenderer {
 
     this.container = null;
     this.textEl = null;
-    // 预留双语字幕渲染元素
-    this.transEl = null;
 
     this.initDOM();
   }
@@ -41,12 +39,6 @@ class SubtitleRenderer {
     this.textEl.className = 'cinema-subtitle-main-text';
     this.container.appendChild(this.textEl);
 
-    // 预留双语字幕 DOM 结构
-    this.transEl = document.createElement('div');
-    this.transEl.className = 'cinema-subtitle-trans-text';
-    this.transEl.style.display = 'none'; // 默认隐藏，双语开启时显示
-    this.container.appendChild(this.transEl);
-
     this.stage.appendChild(this.container);
   }
 
@@ -57,7 +49,7 @@ class SubtitleRenderer {
     if (!this.container) return;
 
     const { fontSize, fontColor, bgColor, bgOpacity, fontWeight, bottomOffset } = this.settings;
-    
+
     // 转换背景颜色 hex/rgb 到 rgba
     let bgRgba = 'rgba(0, 0, 0, 0.6)';
     if (bgColor.startsWith('#')) {
@@ -97,7 +89,7 @@ class SubtitleRenderer {
 
   /**
    * 加载字幕数据
-   * @param {Array} cues 
+   * @param {Array} cues
    */
   setCues(cues) {
     this.cues = cues || [];
@@ -109,7 +101,7 @@ class SubtitleRenderer {
 
   /**
    * 更新字幕样式设置
-   * @param {Object} newSettings 
+   * @param {Object} newSettings
    */
   updateSettings(newSettings) {
     this.settings = { ...this.settings, ...newSettings };
@@ -132,31 +124,26 @@ class SubtitleRenderer {
     if (activeCue) {
       this.container.style.display = 'block';
       this.textEl.textContent = activeCue.text;
-
-      // 预留双语字幕渲染桩
-      if (activeCue.translation && this.transEl) {
-        this.transEl.textContent = activeCue.translation;
-        this.transEl.style.display = 'block';
-      } else if (this.transEl) {
-        this.transEl.style.display = 'none';
-      }
     } else {
       this.textEl.textContent = '';
-      if (this.transEl) this.transEl.textContent = '';
       this.container.style.display = 'none';
     }
   }
 
   /**
    * 高效查找指定时间的字幕（利用二分查找或缓存指针优化同步准确性）
-   * @param {number} t 
+   * @param {number} t
    */
   findCueAtTime(t) {
     // 优化：先检查当前索引及其邻近区域，提升性能与同步准确性
     const len = this.cues.length;
     if (len === 0) return null;
 
-    if (this.currentIndex < len && t >= this.cues[this.currentIndex].start && t <= this.cues[this.currentIndex].end) {
+    if (
+      this.currentIndex < len &&
+      t >= this.cues[this.currentIndex].start &&
+      t <= this.cues[this.currentIndex].end
+    ) {
       return this.cues[this.currentIndex];
     }
 
@@ -185,7 +172,6 @@ class SubtitleRenderer {
     }
     this.container = null;
     this.textEl = null;
-    this.transEl = null;
     this.cues = [];
   }
 

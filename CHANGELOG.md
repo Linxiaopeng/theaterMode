@@ -1,3 +1,16 @@
+## [2.3.0] - 2026-08-11
+
+### 📚 Technical Documentation & 🛠️ Engineering Standards
+- **建立开发者与技术文档体系**：新增 `API.md`（组件架构与生命周期 API）、`DEVELOPER_GUIDE.md`（二次开发与贡献指南）、`CODE_QUALITY.md`（代码质量指导原则）与 `MUSIC_BLUR_FIX.md`（音乐模式模糊晕染排查与原理）。
+- **接入静态语法与格式规范工程配置**：配置 `.eslintrc.json` 及 `.prettierignore`，全面完成核心代码与样式的代码风格重构与规范格式化。
+
+### 🐛 Fixed & ⚡ Optimization
+- **全面增强防错防护与日志可追溯性**：在 Popup 面板、History 记录读写以及全局通信广播中注入深层 `try-catch` 容错逻辑，增加模块化结构日志输出。
+- **实时参数响应与设置广播**：完善 Popup 界面在修改尺寸、模糊半径、时间偏移及流光参数时的即时绑定机制，并通过跨标签页 `SETTINGS_UPDATED` 消息实现无感即时生效。
+- **精简字幕渲染模块架构**：重构并精简 `SubtitleParser` 与 `SubtitleRenderer` 中的废弃与占位代码，提高字幕同步效率与内存利用率。
+
+---
+
 ## [2.2.0] - 2026-08-10
 
 ### 🎨 Features & 🛠️ Architecture

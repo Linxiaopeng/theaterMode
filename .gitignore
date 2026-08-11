@@ -9,7 +9,8 @@ ehthumbs.db
 .vscode/
 .idea/
 
-# 浏览器插件打包产物与压缩包
+# 依赖与打包
+node_modules/
 *.crx
 *.pem
 *.zip
