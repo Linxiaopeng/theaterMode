@@ -1,0 +1,39 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:prettier/recommended"
+  ],
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "script"
+  },
+  "rules": {
+    "no-unused-vars": "warn",
+    "no-console": "off",
+    "no-undef": "off",
+    "no-constant-condition": "warn",
+    "no-inner-declarations": "warn",
+    "no-dupe-args": "error",
+    "no-dupe-keys": "error",
+    "no-duplicate-case": "error",
+    "no-empty": "warn",
+    "no-empty-function": "warn",
+    "no-ex-assign": "error",
+    "no-extra-boolean-cast": "warn",
+    "no-func-assign": "error",
+    "no-inner-declarations": "warn",
+    "no-irregular-whitespace": "error",
+    "no-obj-calls": "error",
+    "no-self-assign": "warn",
+    "no-unexpected-multiline": "error",
+    "no-unreachable": "error",
+    "no-unused-expressions": "warn",
+    "no-useless-return": "warn",
+    "no-var": "error",
+    "prefer-const": "error"
+  }
+}
