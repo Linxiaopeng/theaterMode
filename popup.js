@@ -301,8 +301,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (list.length === 0) {
           historyList.innerHTML = `
             <div class="history-empty">
-              <div class="history-empty-icon">🎬</div>
-              <div class="history-empty-text">尚无视频播放历史记录</div>
+              <div class="history-empty-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M10 9v6l5-3z" fill="currentColor" stroke="none"/></svg>
+              </div>
+              <div class="history-empty-title">尚无播放记录</div>
+              <div class="history-empty-sub">在任意网页播放视频即可自动记录</div>
             </div>
           `;
           return;
