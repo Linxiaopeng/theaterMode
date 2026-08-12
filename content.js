@@ -351,6 +351,26 @@
     return `${m}:${String(s).padStart(2, '0')}`;
   }
 
+  /**
+   * 生成极简苹果/iOS 风格环状快退与快进 SVG 图标
+   * @param {'rewind'|'forward'} type 箭头方向：'rewind' (逆时针环状) | 'forward' (顺时针环状)
+   * @param {string} textLabel 中心显示的字样（如 '15', '10s', '1m', '10m'）
+   * @returns {string} SVG HTML 字符串
+   */
+  function createCircularJumpIcon(type, textLabel) {
+    const isRewind = type === 'rewind';
+    const arrowPath = isRewind
+      ? '<path d="M3.5 12a8.5 8.5 0 1 0 8.5-8.5 9.2 9.2 0 0 0-6.4 2.6L3.5 8"/><path d="M3.5 3.5v4.5h4.5"/>'
+      : '<path d="M20.5 12a8.5 8.5 0 1 1-8.5-8.5 9.2 9.2 0 0 1 6.4 2.6l2.1 1.9"/><path d="M20.5 3.5v4.5h-4.5"/>';
+
+    const fontSize = textLabel.length > 3 ? '6' : textLabel.length > 2 ? '6.8' : '8';
+
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="cinema-circular-icon">
+      ${arrowPath}
+      <text x="12" y="12.6" font-size="${fontSize}" font-weight="700" text-anchor="middle" dominant-baseline="central" fill="currentColor" stroke="none" font-family="system-ui, -apple-system, sans-serif">${textLabel}</text>
+    </svg>`;
+  }
+
   /* ---------- 检测 ---------- */
 
   function isValidVideo(v) {
@@ -539,18 +559,18 @@
     controlBar.className = 'cinema-control-bar';
 
     const buttonsConfig = [
-      { label: '-10m', delta: -600, title: '回退 10 分钟' },
-      { label: '-1m', delta: -60, title: '回退 1 分钟' },
-      { label: '-10s', delta: -10, title: '回退 10 秒' },
-      { label: '+10s', delta: 10, title: '快进 10 秒' },
-      { label: '+1m', delta: 60, title: '快进 1 分钟' },
-      { label: '+10m', delta: 600, title: '快进 10 分钟' }
+      { label: '10m', type: 'rewind', delta: -600, title: '回退 10 分钟' },
+      { label: '1m', type: 'rewind', delta: -60, title: '回退 1 分钟' },
+      { label: '10s', type: 'rewind', delta: -10, title: '回退 10 秒' },
+      { label: '10s', type: 'forward', delta: 10, title: '快进 10 秒' },
+      { label: '1m', type: 'forward', delta: 60, title: '快进 1 分钟' },
+      { label: '10m', type: 'forward', delta: 600, title: '快进 10 分钟' }
     ];
 
     buttonsConfig.forEach(cfg => {
       const b = document.createElement('button');
-      b.className = 'cinema-ctrl-btn';
-      b.textContent = cfg.label;
+      b.className = 'cinema-ctrl-btn cinema-icon-btn';
+      b.innerHTML = createCircularJumpIcon(cfg.type, cfg.label);
       b.title = cfg.title;
       b.addEventListener('click', e => {
         e.stopPropagation();
@@ -1143,8 +1163,7 @@
     const rewindBtn = document.createElement('button');
     rewindBtn.className = 'music-icon-btn';
     rewindBtn.title = '回退 15 秒';
-    rewindBtn.innerHTML =
-      '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 5l-7 7 7 7V5zm9 0l-7 7 7 7V5z"/></svg>';
+    rewindBtn.innerHTML = createCircularJumpIcon('rewind', '15');
     rewindBtn.addEventListener('click', e => {
       e.stopPropagation();
       const v = musicCinema ? musicCinema.video : video;
@@ -1203,8 +1222,7 @@
     const forwardBtn = document.createElement('button');
     forwardBtn.className = 'music-icon-btn';
     forwardBtn.title = '快进 15 秒';
-    forwardBtn.innerHTML =
-      '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 19l7-7-7-7v14zm-9 0l7-7-7-7v14z"/></svg>';
+    forwardBtn.innerHTML = createCircularJumpIcon('forward', '15');
     forwardBtn.addEventListener('click', e => {
       e.stopPropagation();
       const v = musicCinema ? musicCinema.video : video;
