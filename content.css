@@ -27,23 +27,23 @@ body.cinema-mode-active::-webkit-scrollbar {
 
 #cinema-mode-toggle-btn.cinema-float-bar {
   position: fixed;
-  right: 20px;
-  bottom: 20px;
+  right: 24px;
+  bottom: 24px;
   display: none;
   align-items: center;
   gap: 4px;
-  background: rgba(15, 15, 15, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-  border-radius: 28px;
+  background: rgba(18, 18, 22, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
   padding: 4px;
   z-index: 2147483646;
   opacity: 0;
-  transition: transform 0.2s ease, opacity 0.2s ease, background 0.15s ease;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), background 0.15s ease;
   user-select: none;
   -webkit-user-select: none;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
 }
 
 #cinema-mode-toggle-btn.cinema-float-bar.visible {
@@ -57,29 +57,30 @@ body.cinema-mode-active::-webkit-scrollbar {
 .cinema-float-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid transparent;
-  color: #f1f1f1;
-  padding: 6px 12px;
-  border-radius: 20px;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #f4f4f5;
+  padding: 6px 14px;
+  border-radius: 9999px;
   font-family: var(--cinema-font-sans);
   font-size: 12px;
   line-height: 1;
   font-weight: 500;
+  letter-spacing: -0.01em;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .cinema-float-btn:hover {
-  background: rgba(255, 255, 255, 0.22);
-  border-color: rgba(255, 255, 255, 0.25);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
   transform: translateY(-1px);
 }
 
 .cinema-float-btn:active {
-  transform: scale(0.96);
+  transform: scale(0.95);
 }
 
 .cinema-float-btn svg {
@@ -92,7 +93,7 @@ body.cinema-mode-active::-webkit-scrollbar {
   position: fixed;
   inset: 0;
   z-index: 2147483645;
-  background: rgba(0, 0, 0, 0.88);
+  background: rgba(9, 9, 11, 0.92);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -112,11 +113,11 @@ body.cinema-mode-active::-webkit-scrollbar {
   position: relative;
   margin: auto;
   pointer-events: auto;
-  box-shadow: 0 12px 60px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.75), 0 8px 24px rgba(0, 0, 0, 0.5);
   max-width: 96vw;
   max-height: calc(100vh - 100px);
   display: block !important;
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
 .cinema-stage > *,
@@ -133,7 +134,7 @@ body.cinema-mode-active::-webkit-scrollbar {
   width: 100% !important;
   height: 100% !important;
   object-fit: contain !important;
-  border-radius: 6px !important;
+  border-radius: 10px !important;
 }
 
 .cinema-control-bar {
@@ -142,22 +143,22 @@ body.cinema-mode-active::-webkit-scrollbar {
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 10px;
+  gap: 8px;
   z-index: 2147483647;
   pointer-events: auto;
-  background: rgba(15, 15, 15, 0.85);
-  padding: 8px 14px;
-  border-radius: 28px;
+  background: rgba(18, 18, 22, 0.82);
+  padding: 6px 12px;
+  border-radius: 9999px;
   border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
   user-select: none;
   -webkit-user-select: none;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.15s ease;
+  transition: opacity 0.25s ease, visibility 0.25s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .cinema-control-bar.visible,
@@ -169,16 +170,16 @@ body.cinema-mode-active::-webkit-scrollbar {
 }
 
 .cinema-ctrl-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fafafa;
   font-family: var(--cinema-font-sans);
   font-size: 13px;
   line-height: 1;
   padding: 8px 12px;
-  border-radius: 18px;
+  border-radius: 9999px;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.1s ease, border-color 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
@@ -197,26 +198,27 @@ body.cinema-mode-active::-webkit-scrollbar {
 }
 
 .cinema-ctrl-btn:hover {
-  background: rgba(255, 255, 255, 0.22);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
   transform: translateY(-1px);
 }
 
 .cinema-ctrl-btn:active {
-  transform: translateY(0) scale(0.96);
+  transform: translateY(0) scale(0.94);
 }
 
 .cinema-upload-btn {
-  background: rgba(59, 130, 246, 0.2);
-  border: 1px solid rgba(59, 130, 246, 0.4);
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
   color: #60a5fa;
   font-family: var(--cinema-font-sans);
   font-size: 13px;
   line-height: 1;
-  padding: 8px 12px;
-  border-radius: 16px;
+  padding: 8px 14px;
+  border-radius: 9999px;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.1s ease, border-color 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
@@ -224,13 +226,13 @@ body.cinema-mode-active::-webkit-scrollbar {
 }
 
 .cinema-upload-btn:hover {
-  background: rgba(59, 130, 246, 0.35);
-  border-color: rgba(59, 130, 246, 0.6);
+  background: rgba(59, 130, 246, 0.28);
+  border-color: rgba(59, 130, 246, 0.5);
   transform: translateY(-1px);
 }
 
 .cinema-upload-btn:active {
-  transform: translateY(0) scale(0.96);
+  transform: translateY(0) scale(0.94);
 }
 
 .cinema-subtitle-trans-text {
@@ -804,9 +806,10 @@ body.music-mode-active {
   display: flex;
   justify-content: space-between;
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.6);
   margin-top: 4px;
   font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }
 
 /* 极简 iOS Icon 控制栏 */
@@ -819,7 +822,7 @@ body.music-mode-active {
 .music-icon-btn {
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.88);
   width: 38px;
   height: 38px;
   border-radius: 50%;
@@ -827,12 +830,12 @@ body.music-mode-active {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   padding: 0;
 }
 
 .music-icon-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.16);
   color: #ffffff;
   transform: scale(1.08);
 }
@@ -850,12 +853,13 @@ body.music-mode-active {
 .music-icon-btn.play-main {
   width: 44px;
   height: 44px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.22);
   color: #ffffff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .music-icon-btn.play-main:hover {
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.36);
   transform: scale(1.06);
 }
 
@@ -879,64 +883,69 @@ body.music-mode-active {
   height: 18px;
 }
 
-/* Toast 通知样式 */
+/* Toast 通知样式 (Vercel / Apple 悬浮胶囊) */
 .cinema-toast {
   position: fixed;
-  top: 20px;
-  right: 20px;
-  padding: 12px 20px;
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.9);
-  color: #fff;
-  font-size: 14px;
+  top: 24px;
+  right: 24px;
+  padding: 10px 18px;
+  border-radius: 9999px;
+  background: rgba(18, 18, 22, 0.88);
+  color: #fafafa;
+  font-family: var(--cinema-font-sans);
+  font-size: 13px;
   font-weight: 500;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   display: flex;
   align-items: center;
   gap: 8px;
   z-index: 2147483648;
   opacity: 0;
-  transform: translateY(-20px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transform: translateY(-12px) scale(0.96);
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
 }
 
 .cinema-toast.show {
   opacity: 1;
-  transform: translateY(0);
-}
-
-.cinema-toast.success {
-  border-left: 4px solid #34d399;
-}
-
-.cinema-toast.error {
-  border-left: 4px solid #ef4444;
-}
-
-.cinema-toast.info {
-  border-left: 4px solid #3b82f6;
+  transform: translateY(0) scale(1);
 }
 
 .cinema-toast-icon {
-  font-size: 16px;
-  font-weight: bold;
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  line-height: 1;
 }
 
+.cinema-toast-success .cinema-toast-icon,
 .cinema-toast.success .cinema-toast-icon {
+  background: rgba(52, 211, 153, 0.2);
   color: #34d399;
 }
 
+.cinema-toast-error .cinema-toast-icon,
 .cinema-toast.error .cinema-toast-icon {
-  color: #ef4444;
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
 }
 
+.cinema-toast-info .cinema-toast-icon,
 .cinema-toast.info .cinema-toast-icon {
-  color: #3b82f6;
+  background: rgba(96, 165, 250, 0.2);
+  color: #60a5fa;
 }
 
 .cinema-toast-fade-out {
   opacity: 0 !important;
-  transform: translateY(-20px) !important;
+  transform: translateY(-12px) scale(0.96) !important;
 }
 

@@ -9,84 +9,84 @@
       --font-family-sans: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
       --font-family-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Monaco, "Cascadia Code", Consolas, "Liberation Mono", "Courier New", monospace;
 
-      /* 默认暗色模式 Design Tokens */
-      --bg-color: #0f0f0f;
-      --text-main: #f1f1f1;
-      --text-title: #ffffff;
-      --text-muted: #aaaaaa;
-      --header-border: rgba(255, 255, 255, 0.1);
-      
-      --tabs-bg: rgba(255, 255, 255, 0.08);
-      --tabs-border: transparent;
-      --tab-btn-text: #aaaaaa;
-      --tab-active-bg: #ffffff;
-      --tab-active-text: #0f0f0f;
-      --tab-active-shadow: rgba(0, 0, 0, 0.3);
-      
-      --card-bg: rgba(255, 255, 255, 0.05);
-      --card-border: rgba(255, 255, 255, 0.08);
-      --card-title: #3ea6ff;
-      
-      --input-bg: rgba(255, 255, 255, 0.08);
-      --input-border: rgba(255, 255, 255, 0.12);
-      --input-text: #f1f1f1;
-      
-      --kbd-bg: rgba(255, 255, 255, 0.12);
-      --kbd-border: rgba(255, 255, 255, 0.2);
+      /* 默认 Vercel / Apple 暗黑高级质感 Design Tokens */
+      --bg-color: #09090b;
+      --text-main: #e4e4e7;
+      --text-title: #fafafa;
+      --text-muted: #a1a1aa;
+      --header-border: rgba(255, 255, 255, 0.08);
+
+      --tabs-bg: rgba(255, 255, 255, 0.04);
+      --tabs-border: rgba(255, 255, 255, 0.06);
+      --tab-btn-text: #a1a1aa;
+      --tab-active-bg: rgba(255, 255, 255, 0.14);
+      --tab-active-text: #ffffff;
+      --tab-active-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+
+      --card-bg: rgba(255, 255, 255, 0.035);
+      --card-border: rgba(255, 255, 255, 0.07);
+      --card-title: #fafafa;
+
+      --input-bg: rgba(255, 255, 255, 0.05);
+      --input-border: rgba(255, 255, 255, 0.1);
+      --input-text: #fafafa;
+
+      --kbd-bg: rgba(255, 255, 255, 0.08);
+      --kbd-border: rgba(255, 255, 255, 0.15);
       --kbd-shadow: rgba(0, 0, 0, 0.4);
-      --kbd-text: #3ea6ff;
+      --kbd-text: #ffffff;
 
-      --history-item-bg: rgba(255, 255, 255, 0.04);
-      --history-item-border: rgba(255, 255, 255, 0.07);
-      --history-item-hover-bg: rgba(255, 255, 255, 0.08);
-      --history-item-hover-border: rgba(255, 255, 255, 0.15);
-      --history-title-color: #3ea6ff;
+      --history-item-bg: rgba(255, 255, 255, 0.03);
+      --history-item-border: rgba(255, 255, 255, 0.06);
+      --history-item-hover-bg: rgba(255, 255, 255, 0.07);
+      --history-item-hover-border: rgba(255, 255, 255, 0.12);
+      --history-title-color: #ffffff;
 
-      --btn-primary-bg: #3ea6ff;
-      --btn-primary-text: #0f0f0f;
+      --btn-primary-bg: #ffffff;
+      --btn-primary-text: #09090b;
 
-      --window-shadow: rgba(0, 0, 0, 0.4);
+      --window-shadow: rgba(0, 0, 0, 0.6);
     }
 
     @media (prefers-color-scheme: light) {
       :root {
         /* 设备亮色模式 Design Tokens */
-        --bg-color: #ffffff;
-        --text-main: #0f0f0f;
-        --text-title: #0f0f0f;
-        --text-muted: #606060;
-        --header-border: #e5e5e5;
-        
-        --tabs-bg: #f2f2f2;
-        --tabs-border: transparent;
-        --tab-btn-text: #606060;
-        --tab-active-bg: #0f0f0f;
+        --bg-color: #fafafa;
+        --text-main: #18181b;
+        --text-title: #09090b;
+        --text-muted: #71717a;
+        --header-border: #e4e4e7;
+
+        --tabs-bg: #f4f4f5;
+        --tabs-border: rgba(0, 0, 0, 0.05);
+        --tab-btn-text: #71717a;
+        --tab-active-bg: #09090b;
         --tab-active-text: #ffffff;
-        --tab-active-shadow: rgba(0, 0, 0, 0.15);
-        
-        --card-bg: #f9f9f9;
-        --card-border: #e5e5e5;
-        --card-title: #065fd4;
-        
+        --tab-active-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+
+        --card-bg: #ffffff;
+        --card-border: #e4e4e7;
+        --card-title: #09090b;
+
         --input-bg: #ffffff;
-        --input-border: #ccc;
-        --input-text: #0f0f0f;
-        
-        --kbd-bg: #f2f2f2;
-        --kbd-border: #ccc;
-        --kbd-shadow: #e5e5e5;
-        --kbd-text: #065fd4;
+        --input-border: #d4d4d8;
+        --input-text: #09090b;
 
-        --history-item-bg: #f9f9f9;
-        --history-item-border: #e5e5e5;
-        --history-item-hover-bg: #f2f2f2;
-        --history-item-hover-border: #ccc;
-        --history-title-color: #065fd4;
+        --kbd-bg: #f4f4f5;
+        --kbd-border: #d4d4d8;
+        --kbd-shadow: #e4e4e7;
+        --kbd-text: #09090b;
 
-        --btn-primary-bg: #065fd4;
+        --history-item-bg: #ffffff;
+        --history-item-border: #e4e4e7;
+        --history-item-hover-bg: #f4f4f5;
+        --history-item-hover-border: #d4d4d8;
+        --history-title-color: #09090b;
+
+        --btn-primary-bg: #09090b;
         --btn-primary-text: #ffffff;
 
-        --window-shadow: rgba(0, 0, 0, 0.1);
+        --window-shadow: rgba(0, 0, 0, 0.08);
       }
     }
 
