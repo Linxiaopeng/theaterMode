@@ -1,3 +1,12 @@
+## [2.3.1] - 2026-08-12
+
+### 🛡️ Resilience & 🔄 Tab Self-Healing
+- **解决切离开/恢复 Chrome 标签页自动退出问题**：新增后台标签页挂起防护与恢复自愈机制（`checkAndHealSession`与`tryRebindSession`）。在页面隐匿（`document.hidden`）期间挂起剔除判定，防止误退；在切回标签页或窗口获得焦点时，自动检测并寻获网页新实例化的视频节点进行无感重连绑定（Re-binding）。
+- **优化背景控制器重新绑定能力**：给 `BlurBackgroundController` 增加 `rebindVideo()` 方法，支持在播放器节点重建或切页自愈时平滑重置事件监听与色彩采样。
+- **提升音乐模式控制响应**：重构音乐面板进度与按钮逻辑，动态获取绑定视频对象，保障在自动切歌或节点自愈后按钮操作与播放状态无感无缝。
+
+---
+
 ## [2.3.0] - 2026-08-11
 
 ### 📚 Technical Documentation & 🛠️ Engineering Standards

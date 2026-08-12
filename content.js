@@ -1117,16 +1117,18 @@
     });
     slider.addEventListener('mouseup', () => {
       isDraggingSlider = false;
-      if (video && !isNaN(video.duration)) {
-        video.currentTime = (parseFloat(slider.value) / 100) * video.duration;
+      const v = musicCinema ? musicCinema.video : video;
+      if (v && !isNaN(v.duration)) {
+        v.currentTime = (parseFloat(slider.value) / 100) * v.duration;
       }
       updateSliderBg();
     });
     slider.addEventListener('input', () => {
-      if (video && !isNaN(video.duration)) {
-        const cur = (parseFloat(slider.value) / 100) * video.duration;
+      const v = musicCinema ? musicCinema.video : video;
+      if (v && !isNaN(v.duration)) {
+        const cur = (parseFloat(slider.value) / 100) * v.duration;
         curTimeSpan.textContent = formatSec(cur);
-        durTimeSpan.textContent = `-${formatSec(video.duration - cur)}`;
+        durTimeSpan.textContent = `-${formatSec(v.duration - cur)}`;
       }
       updateSliderBg();
     });
@@ -1145,46 +1147,54 @@
       '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 5l-7 7 7 7V5zm9 0l-7 7 7 7V5z"/></svg>';
     rewindBtn.addEventListener('click', e => {
       e.stopPropagation();
-      if (video && !isNaN(video.duration)) video.currentTime = Math.max(0, video.currentTime - 15);
+      const v = musicCinema ? musicCinema.video : video;
+      if (v && !isNaN(v.duration)) v.currentTime = Math.max(0, v.currentTime - 15);
     });
 
     const playToggleBtn = document.createElement('button');
     playToggleBtn.className = 'music-icon-btn play-main';
 
     const syncUIStatus = () => {
-      if (!video) return;
-      if (!isNaN(video.duration) && video.duration > 0 && !isDraggingSlider) {
-        slider.value = (video.currentTime / video.duration) * 100;
-        curTimeSpan.textContent = formatSec(video.currentTime);
-        durTimeSpan.textContent = `-${formatSec(video.duration - video.currentTime)}`;
+      const v = musicCinema ? musicCinema.video : video;
+      if (!v) return;
+      if (!isNaN(v.duration) && v.duration > 0 && !isDraggingSlider) {
+        slider.value = (v.currentTime / v.duration) * 100;
+        curTimeSpan.textContent = formatSec(v.currentTime);
+        durTimeSpan.textContent = `-${formatSec(v.duration - v.currentTime)}`;
         updateSliderBg();
       }
 
-      playToggleBtn.title = video.paused ? '播放' : '暂停';
-      playToggleBtn.innerHTML = video.paused
+      playToggleBtn.title = v.paused ? '播放' : '暂停';
+      playToggleBtn.innerHTML = v.paused
         ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86a1 1 0 0 0-1.5.86z"/></svg>'
         : '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1.5"/><rect x="14" y="4" width="4" height="16" rx="1.5"/></svg>';
 
-      muteBtn.title = video.muted ? '取消静音' : '静音';
-      muteBtn.innerHTML = video.muted
+      muteBtn.title = v.muted ? '取消静音' : '静音';
+      muteBtn.innerHTML = v.muted
         ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>'
         : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
     };
 
     muteBtn.addEventListener('click', e => {
       e.stopPropagation();
-      video.muted = !video.muted;
-      syncUIStatus();
+      const v = musicCinema ? musicCinema.video : video;
+      if (v) {
+        v.muted = !v.muted;
+        syncUIStatus();
+      }
     });
 
     playToggleBtn.addEventListener('click', e => {
       e.stopPropagation();
-      if (video.paused) {
-        video.play().catch(() => {});
-      } else {
-        video.pause();
+      const v = musicCinema ? musicCinema.video : video;
+      if (v) {
+        if (v.paused) {
+          v.play().catch(() => {});
+        } else {
+          v.pause();
+        }
+        syncUIStatus();
       }
-      syncUIStatus();
     });
 
     const syncProgressTimer = setInterval(syncUIStatus, 300);
@@ -1197,8 +1207,8 @@
       '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 19l7-7-7-7v14zm-9 0l7-7-7-7v14z"/></svg>';
     forwardBtn.addEventListener('click', e => {
       e.stopPropagation();
-      if (video && !isNaN(video.duration))
-        video.currentTime = Math.min(video.duration, video.currentTime + 15);
+      const v = musicCinema ? musicCinema.video : video;
+      if (v && !isNaN(v.duration)) v.currentTime = Math.min(v.duration, v.currentTime + 15);
     });
 
     const subBtn = document.createElement('button');
@@ -1392,7 +1402,7 @@
     }, 100);
   }
 
-  /* ---------- 状态刷新 ---------- */
+  /* ---------- 状态刷新与自愈恢复 ---------- */
 
   function updateButton() {
     if (cinema || musicCinema) {
@@ -1404,6 +1414,124 @@
     setButtonVisible(!!best);
   }
 
+  /**
+   * 自动修复重连：当播放器/视频节点离线或受切页影响时，尝试在 DOM 中寻获新节点并无感重连
+   * @param {Object} session 当前影院模式/音乐模式会话
+   * @param {string} type 'cinema' | 'music'
+   * @returns {boolean} 是否重连成功
+   */
+  function tryRebindSession(session, type) {
+    if (!session) return false;
+    const newVideo = findBestVideo();
+    if (!newVideo || !isValidVideo(newVideo)) {
+      return false;
+    }
+
+    const newPlayer = findPlayerContainer(newVideo);
+    if (!newPlayer) return false;
+
+    console.log(`[Self-Healing] Re-binding ${type} session to new video element:`, newVideo);
+
+    session.video = newVideo;
+    session.player = newPlayer;
+
+    if (type === 'cinema') {
+      if (session.ambilightController) {
+        session.ambilightController.rebindVideo(newVideo);
+      }
+      if (session.updateStageDimensions) {
+        newVideo.addEventListener('loadedmetadata', session.updateStageDimensions);
+        newVideo.addEventListener('resize', session.updateStageDimensions);
+        session.updateStageDimensions();
+      }
+      newVideo.style.width = '100%';
+      newVideo.style.height = '100%';
+      newVideo.style.maxWidth = '100%';
+      newVideo.style.maxHeight = '100%';
+      newVideo.style.objectFit = 'contain';
+
+      if (session.stageRef && newPlayer.parentNode !== session.stageRef) {
+        session.stageRef.appendChild(newPlayer);
+      }
+    } else if (type === 'music') {
+      if (session.musicBlurController) {
+        session.musicBlurController.rebindVideo(newVideo);
+      }
+      if (session.updateArtworkAspectRatio) {
+        newVideo.addEventListener('loadedmetadata', session.updateArtworkAspectRatio);
+        newVideo.addEventListener('resize', session.updateArtworkAspectRatio);
+        session.updateArtworkAspectRatio();
+      }
+      if (!currentSettings.musicStaticCoverEnabled && session.artworkCard) {
+        newPlayer.style.setProperty('width', '100%', 'important');
+        newPlayer.style.setProperty('height', '100%', 'important');
+        newVideo.style.setProperty('width', '100%', 'important');
+        newVideo.style.setProperty('height', '100%', 'important');
+        newVideo.style.setProperty('object-fit', 'cover', 'important');
+        newVideo.style.setProperty('position', 'absolute', 'important');
+        newVideo.style.setProperty('left', '0', 'important');
+        newVideo.style.setProperty('top', '0', 'important');
+        newVideo.style.setProperty('transform', 'none', 'important');
+        if (newPlayer.parentNode !== session.artworkCard) {
+          session.artworkCard.appendChild(newPlayer);
+        }
+      }
+      if (session.controlsCard) {
+        const titleEl = session.controlsCard.querySelector('.music-track-title');
+        if (titleEl) {
+          const rawTitle = document.title || '未知视频/曲目';
+          titleEl.textContent = rawTitle.replace(/\s*[-_|_—].*$/, '').trim() || rawTitle;
+        }
+      }
+    }
+
+    session.disconnectCount = 0;
+    showToast('播放器恢复自愈连接', 'success');
+    return true;
+  }
+
+  function checkAndHealSession() {
+    // 当 Chrome 标签页处于后台隐藏状态时，挂起断开剔除逻辑，防止误关
+    if (document.hidden) return;
+
+    if (cinema) {
+      const isConnected =
+        cinema.video && cinema.video.isConnected && cinema.player && cinema.player.isConnected;
+      if (!isConnected) {
+        const ok = tryRebindSession(cinema, 'cinema');
+        if (!ok) {
+          cinema.disconnectCount = (cinema.disconnectCount || 0) + 1;
+          if (cinema.disconnectCount >= 3) {
+            console.warn('[Self-Healing] Cinema video lost for 3 checks while visible. Exiting...');
+            exitCinema();
+          }
+        }
+      } else {
+        cinema.disconnectCount = 0;
+      }
+    }
+
+    if (musicCinema) {
+      const isConnected =
+        musicCinema.video &&
+        musicCinema.video.isConnected &&
+        musicCinema.player &&
+        musicCinema.player.isConnected;
+      if (!isConnected) {
+        const ok = tryRebindSession(musicCinema, 'music');
+        if (!ok) {
+          musicCinema.disconnectCount = (musicCinema.disconnectCount || 0) + 1;
+          if (musicCinema.disconnectCount >= 3) {
+            console.warn('[Self-Healing] Music video lost for 3 checks while visible. Exiting...');
+            exitMusicMode();
+          }
+        }
+      } else {
+        musicCinema.disconnectCount = 0;
+      }
+    }
+  }
+
   setInterval(() => {
     const activeVideo = cinema ? cinema.video : musicCinema ? musicCinema.video : findBestVideo();
     if (activeVideo && isActiveVideo(activeVideo)) {
@@ -1411,9 +1539,8 @@
     }
 
     if (cinema) {
-      if (!cinema.video.isConnected || !cinema.player.isConnected) {
-        exitCinema();
-      } else {
+      checkAndHealSession();
+      if (cinema) {
         if (cinema.subtitleRenderer && cinema.video && !cinema.video.paused) {
           cinema.subtitleRenderer.syncTime(cinema.video.currentTime);
         }
@@ -1433,13 +1560,26 @@
       return;
     }
     if (musicCinema) {
-      if (!musicCinema.video.isConnected || !musicCinema.player.isConnected) {
-        exitMusicMode();
-      }
+      checkAndHealSession();
       return;
     }
     updateButton();
   }, 500);
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      console.log('[Theater Mode] Tab regained visibility. Running self-healing checks...');
+      setTimeout(checkAndHealSession, 150);
+      setTimeout(checkAndHealSession, 600);
+      setTimeout(checkAndHealSession, 1200);
+    }
+  });
+
+  window.addEventListener('focus', () => {
+    if (!document.hidden) {
+      setTimeout(checkAndHealSession, 200);
+    }
+  });
 
   document.addEventListener(
     'play',
