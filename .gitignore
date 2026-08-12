@@ -16,3 +16,12 @@ node_modules/
 *.zip
 dist/
 build/
+
+# 环境变量与敏感凭证防泄漏
+.env
+.env.*
+*.key
+*.token
+*.secret
+*.log
+scratch/
