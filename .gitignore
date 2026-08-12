@@ -25,3 +25,10 @@ build/
 *.secret
 *.log
 scratch/
+
+# 本地留存但不上传 GitHub 的开发文档
+API.md
+CHANGELOG.md
+CODE_QUALITY.md
+DEVELOPER_GUIDE.md
+MUSIC_BLUR_FIX.md
