@@ -378,8 +378,14 @@
     const r = v.getBoundingClientRect();
     const w = r.width || v.offsetWidth || v.videoWidth || 0;
     const h = r.height || v.offsetHeight || v.videoHeight || 0;
-    if (w < 30 || h < 30) return false;
 
+    // 1. 尺寸过滤：忽略尺寸过小（小于 200x120）的预览小控件、悬停卡片或小图标视频
+    if (w < 200 || h < 120 || w * h < 24000) return false;
+
+    // 2. 视频时长过滤：忽略小于 15 秒的短视频预览、动图替代品或广告片条
+    if (!isNaN(v.duration) && v.duration > 0 && v.duration < 15) return false;
+
+    // 3. CSS 隐蔽性过滤
     try {
       const style = window.getComputedStyle(v);
       if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
@@ -387,6 +393,16 @@
       }
     } catch (e) {
       // 忽略无法获取 style 的异常
+    }
+
+    // 4. 预览卡片与广告 DOM 节点过滤 (如 Bilibili 鼠标悬停预览卡片、YouTube 悬停预览、广告 Overlay)
+    if (
+      v.closest &&
+      v.closest(
+        '.bili-feed-card, .bili-video-card__cover, .bili-video-card__stats, [data-preview], [data-is-preview], .ytp-ad-module, .ytp-ad-overlay, .ad-showing'
+      )
+    ) {
+      return false;
     }
 
     const hasSource =
@@ -398,6 +414,12 @@
       v.videoWidth > 0;
 
     return !!hasSource;
+  }
+
+  function isPlayingVideo(v) {
+    if (!isValidVideo(v)) return false;
+    // 只有当视频处于【非暂停状态（正在播放）、未播放结束、且数据就绪】时才判定为有效播放
+    return !v.paused && !v.ended && v.readyState >= 2;
   }
 
   function isActiveVideo(v) {
@@ -1427,9 +1449,14 @@
       setButtonVisible(false);
       return;
     }
-    ensureButton();
     const best = findBestVideo();
-    setButtonVisible(!!best);
+    // 仅当找到有效主视频，且该视频正处于【播放状态】时，才显示悬浮按钮
+    if (best && isPlayingVideo(best)) {
+      ensureButton();
+      setButtonVisible(true);
+    } else {
+      setButtonVisible(false);
+    }
   }
 
   /**
@@ -1610,7 +1637,9 @@
     },
     true
   );
+  document.addEventListener('playing', () => updateButton(), true);
   document.addEventListener('pause', () => updateButton(), true);
+  document.addEventListener('ended', () => updateButton(), true);
 
   keydownListener = e => {
     if (!cinema && !musicCinema) return;
