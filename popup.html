@@ -556,8 +556,21 @@
         <div class="form-group">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
             <input type="checkbox" id="pomodoroEnabled" style="width:16px; height:16px; accent-color:#3b82f6;">
-            <span>开启番茄钟控件 (在影院工具栏上方显示 45min 专注 / 10min 休息倒计时)</span>
+            <span>开启番茄钟控件 (在工具栏上方/锁屏中显示倒计时)</span>
           </label>
+        </div>
+
+        <div class="form-group">
+          <div class="row">
+            <div style="flex:1;">
+              <label>专注时长 (分钟)</label>
+              <input type="number" id="pomodoroWorkDuration" min="1" max="180" step="1" value="45">
+            </div>
+            <div style="flex:1;">
+              <label>休息时长 (分钟)</label>
+              <input type="number" id="pomodoroBreakDuration" min="1" max="60" step="1" value="10">
+            </div>
+          </div>
         </div>
       </div>
 

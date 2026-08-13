@@ -119,7 +119,9 @@
     musicClockTopOffset: 50,
     musicBlurRadius: 65,
     musicStaticCoverEnabled: false,
-    pomodoroEnabled: false
+    pomodoroEnabled: false,
+    pomodoroWorkDuration: 45,
+    pomodoroBreakDuration: 10
   };
 
   function updateMusicModeSettings() {
@@ -174,6 +176,10 @@
       if (items.lKey !== undefined) currentSettings.lKey = items.lKey || 'l';
       if (items.pomodoroEnabled !== undefined)
         currentSettings.pomodoroEnabled = !!items.pomodoroEnabled;
+      if (items.pomodoroWorkDuration !== undefined)
+        currentSettings.pomodoroWorkDuration = parseInt(items.pomodoroWorkDuration, 10) || 45;
+      if (items.pomodoroBreakDuration !== undefined)
+        currentSettings.pomodoroBreakDuration = parseInt(items.pomodoroBreakDuration, 10) || 10;
     });
     function applySettingsUpdate(newSettings) {
       if (!newSettings) return;
@@ -242,6 +248,15 @@
       if (newSettings.pomodoroEnabled !== undefined) {
         currentSettings.pomodoroEnabled = !!newSettings.pomodoroEnabled;
         updatePomodoroVisibility();
+      }
+      if (newSettings.pomodoroWorkDuration !== undefined) {
+        currentSettings.pomodoroWorkDuration = parseInt(newSettings.pomodoroWorkDuration, 10) || 45;
+        updatePomodoroTimeFromSettings();
+      }
+      if (newSettings.pomodoroBreakDuration !== undefined) {
+        currentSettings.pomodoroBreakDuration =
+          parseInt(newSettings.pomodoroBreakDuration, 10) || 10;
+        updatePomodoroTimeFromSettings();
       }
     }
 
@@ -315,15 +330,18 @@
     const timeDisplay = pomodoroBarEl.querySelector('.pomodoro-timer-time');
     const playPauseBtn = pomodoroBarEl.querySelector('.pomodoro-toggle-btn');
 
+    const workM = currentSettings.pomodoroWorkDuration || 45;
+    const breakM = currentSettings.pomodoroBreakDuration || 10;
+
     if (modeBadge) {
       if (pomodoroState.mode === 'work') {
         modeBadge.className = 'pomodoro-badge mode-work';
-        modeBadge.innerHTML = '🍅 专注 45m';
-        modeBadge.title = '点击手动切换至 10 分钟休息模式';
+        modeBadge.innerHTML = `🍅 专注 ${workM}m`;
+        modeBadge.title = `点击手动切换至 ${breakM} 分钟休息模式`;
       } else {
         modeBadge.className = 'pomodoro-badge mode-break';
-        modeBadge.innerHTML = '☕ 休息 10m';
-        modeBadge.title = '点击手动切换至 45 分钟专注模式';
+        modeBadge.innerHTML = `☕ 休息 ${breakM}m`;
+        modeBadge.title = `点击手动切换至 ${workM} 分钟专注模式`;
       }
     }
 
@@ -349,15 +367,17 @@
         pomodoroState.timeLeft--;
         updatePomodoroUI();
       } else {
+        const workM = currentSettings.pomodoroWorkDuration || 45;
+        const breakM = currentSettings.pomodoroBreakDuration || 10;
         if (pomodoroState.mode === 'work') {
           pomodoroState.mode = 'break';
-          pomodoroState.timeLeft = 10 * 60;
-          showToast('🍅 45 分钟专注完成！休息 10 分钟时间到 ~', 'success');
+          pomodoroState.timeLeft = breakM * 60;
+          showToast(`🍅 ${workM} 分钟专注完成！休息 ${breakM} 分钟时间到 ~`, 'success');
           playPomodoroChime('work');
         } else {
           pomodoroState.mode = 'work';
-          pomodoroState.timeLeft = 45 * 60;
-          showToast('☕ 10 分钟休息结束！开始新的专注 ~', 'info');
+          pomodoroState.timeLeft = workM * 60;
+          showToast(`☕ ${breakM} 分钟休息结束！开始新的 ${workM} 分钟专注 ~`, 'info');
           playPomodoroChime('break');
         }
         updatePomodoroUI();
@@ -385,14 +405,27 @@
 
   function resetPomodoroTimer() {
     pausePomodoroTimer();
-    pomodoroState.timeLeft = pomodoroState.mode === 'work' ? 45 * 60 : 10 * 60;
+    const workSec = (currentSettings.pomodoroWorkDuration || 45) * 60;
+    const breakSec = (currentSettings.pomodoroBreakDuration || 10) * 60;
+    pomodoroState.timeLeft = pomodoroState.mode === 'work' ? workSec : breakSec;
     updatePomodoroUI();
   }
 
   function switchPomodoroMode(newMode) {
     pausePomodoroTimer();
     pomodoroState.mode = newMode || (pomodoroState.mode === 'work' ? 'break' : 'work');
-    pomodoroState.timeLeft = pomodoroState.mode === 'work' ? 45 * 60 : 10 * 60;
+    const workSec = (currentSettings.pomodoroWorkDuration || 45) * 60;
+    const breakSec = (currentSettings.pomodoroBreakDuration || 10) * 60;
+    pomodoroState.timeLeft = pomodoroState.mode === 'work' ? workSec : breakSec;
+    updatePomodoroUI();
+  }
+
+  function updatePomodoroTimeFromSettings() {
+    if (!pomodoroState.isRunning) {
+      const workSec = (currentSettings.pomodoroWorkDuration || 45) * 60;
+      const breakSec = (currentSettings.pomodoroBreakDuration || 10) * 60;
+      pomodoroState.timeLeft = pomodoroState.mode === 'work' ? workSec : breakSec;
+    }
     updatePomodoroUI();
   }
 

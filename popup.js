@@ -44,6 +44,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const opacityInput = document.getElementById('opacity');
   const cleanPlayerEnabledInput = document.getElementById('cleanPlayerEnabled');
   const pomodoroEnabledInput = document.getElementById('pomodoroEnabled');
+  const pomodoroWorkDurationInput = document.getElementById('pomodoroWorkDuration');
+  const pomodoroBreakDurationInput = document.getElementById('pomodoroBreakDuration');
 
   const subFontSizeInput = document.getElementById('subFontSize');
   const subFontColorInput = document.getElementById('subFontColor');
@@ -92,7 +94,9 @@ document.addEventListener('DOMContentLoaded', () => {
       musicClockTopOffset: 50,
       musicBlurRadius: 65,
       musicStaticCoverEnabled: false,
-      pomodoroEnabled: false
+      pomodoroEnabled: false,
+      pomodoroWorkDuration: 45,
+      pomodoroBreakDuration: 10
     },
     items => {
       try {
@@ -125,6 +129,12 @@ document.addEventListener('DOMContentLoaded', () => {
         musicStaticCoverEnabledInput.checked = !!items.musicStaticCoverEnabled;
         if (pomodoroEnabledInput) {
           pomodoroEnabledInput.checked = !!items.pomodoroEnabled;
+        }
+        if (pomodoroWorkDurationInput) {
+          pomodoroWorkDurationInput.value = items.pomodoroWorkDuration || 45;
+        }
+        if (pomodoroBreakDurationInput) {
+          pomodoroBreakDurationInput.value = items.pomodoroBreakDuration || 10;
         }
 
         isLoaded = true;
@@ -177,6 +187,14 @@ document.addEventListener('DOMContentLoaded', () => {
     );
     const musicStaticCoverEnabled = musicStaticCoverEnabledInput.checked;
     const pomodoroEnabled = pomodoroEnabledInput ? pomodoroEnabledInput.checked : false;
+    const pomodoroWorkDuration = Math.max(
+      1,
+      Math.min(180, parseInt(pomodoroWorkDurationInput.value, 10) || 45)
+    );
+    const pomodoroBreakDuration = Math.max(
+      1,
+      Math.min(60, parseInt(pomodoroBreakDurationInput.value, 10) || 10)
+    );
 
     if (isNaN(jSec) || isNaN(lSec) || jSec <= 0 || lSec <= 0) {
       logStorageOperation('saveSettings', 'error', { reason: 'Invalid time values' });
@@ -209,7 +227,9 @@ document.addEventListener('DOMContentLoaded', () => {
       musicClockTopOffset,
       musicBlurRadius,
       musicStaticCoverEnabled,
-      pomodoroEnabled
+      pomodoroEnabled,
+      pomodoroWorkDuration,
+      pomodoroBreakDuration
     };
 
     logStorageOperation('saveSettings', 'success', {
@@ -261,7 +281,9 @@ document.addEventListener('DOMContentLoaded', () => {
     subBottomOffsetInput,
     subBgOpacityInput,
     jValueInput,
-    lValueInput
+    lValueInput,
+    pomodoroWorkDurationInput,
+    pomodoroBreakDurationInput
   ].forEach(el => {
     if (el) el.addEventListener('input', () => saveAllSettings(false));
   });
