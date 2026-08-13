@@ -138,6 +138,9 @@
     if (musicCinema && musicCinema.controlsCard) {
       musicCinema.controlsCard.style.width = `${currentSettings.musicCardWidth}px`;
     }
+    if (musicCinema && musicCinema.pomodoroBar) {
+      musicCinema.pomodoroBar.style.width = `${currentSettings.musicCardWidth}px`;
+    }
     if (musicCinema && musicCinema.musicBlurController) {
       musicCinema.musicBlurController.updateOptions({
         isStatic: !!currentSettings.musicStaticCoverEnabled
@@ -447,16 +450,18 @@
     divider.className = 'pomodoro-divider';
     bar.appendChild(divider);
 
-    // 4. 播放/暂停 按钮
+    // 4. 按钮组 (播放/暂停 + 重置)
+    const actionsBox = document.createElement('div');
+    actionsBox.className = 'pomodoro-actions';
+
     const playPauseBtn = document.createElement('button');
     playPauseBtn.className = 'cinema-ctrl-btn cinema-icon-btn pomodoro-toggle-btn';
     playPauseBtn.addEventListener('click', e => {
       e.stopPropagation();
       togglePomodoroTimer();
     });
-    bar.appendChild(playPauseBtn);
+    actionsBox.appendChild(playPauseBtn);
 
-    // 5. 重置 按钮
     const resetBtn = document.createElement('button');
     resetBtn.className = 'cinema-ctrl-btn cinema-icon-btn';
     resetBtn.title = '重置倒计时';
@@ -466,7 +471,9 @@
       e.stopPropagation();
       resetPomodoroTimer();
     });
-    bar.appendChild(resetBtn);
+    actionsBox.appendChild(resetBtn);
+
+    bar.appendChild(actionsBox);
 
     pomodoroBarEl = bar;
     updatePomodoroUI();
@@ -1529,6 +1536,9 @@
     controlsCard.appendChild(ctrlRow);
 
     const pomodoroBar = createPomodoroBar();
+    if (pomodoroBar) {
+      pomodoroBar.style.width = `${currentSettings.musicCardWidth}px`;
+    }
 
     stageEl.appendChild(clockHeader);
     stageEl.appendChild(artworkCard);
@@ -1570,6 +1580,7 @@
       stageEl,
       artworkCard,
       controlsCard,
+      pomodoroBar,
       clockHeader,
       bgBlurEl,
       musicBlurController,

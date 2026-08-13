@@ -1054,21 +1054,138 @@ body.music-mode-active {
   margin: 0 2px;
 }
 
-/* 音乐模式下的番茄钟布局适配 */
+/* ==========================================================================
+   🎵 音乐模式 (iOS 锁屏美学) 下的番茄钟卡片 - taste-skill 高阶设计重构
+   ========================================================================== */
 body.music-mode-active .cinema-pomodoro-bar {
   position: static !important;
   transform: none !important;
   opacity: 1 !important;
   visibility: visible !important;
   pointer-events: auto !important;
-  margin: 4px 0;
+  margin: 0 !important;
   flex-shrink: 0;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  height: 60px !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18), inset 0 1px 0 0 rgba(255, 255, 255, 0.25) !important;
+  border-radius: 24px !important;
+  padding: 0 20px !important;
+  backdrop-filter: blur(30px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
+  box-sizing: border-box !important;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+body.music-mode-active .cinema-pomodoro-bar:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.24) !important;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.24), inset 0 1px 0 0 rgba(255, 255, 255, 0.35) !important;
 }
 
 body.music-mode-active .cinema-pomodoro-bar.hidden {
   display: none !important;
 }
+
+/* 隐藏分割线 */
+body.music-mode-active .pomodoro-divider {
+  display: none !important;
+}
+
+/* 模式 Badge 标签 (iOS 胶囊高光) */
+body.music-mode-active .pomodoro-badge {
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 9999px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  letter-spacing: 0.2px;
+  user-select: none;
+}
+
+body.music-mode-active .pomodoro-badge.mode-work {
+  background: rgba(239, 68, 68, 0.25) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3), inset 0 1px 0 0 rgba(255, 255, 255, 0.3) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+body.music-mode-active .pomodoro-badge.mode-work:hover {
+  background: rgba(239, 68, 68, 0.38) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  transform: translateY(-1px) scale(1.02);
+}
+
+body.music-mode-active .pomodoro-badge.mode-break {
+  background: rgba(52, 211, 153, 0.25) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  box-shadow: 0 4px 14px rgba(52, 211, 153, 0.3), inset 0 1px 0 0 rgba(255, 255, 255, 0.3) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+body.music-mode-active .pomodoro-badge.mode-break:hover {
+  background: rgba(52, 211, 153, 0.38) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  transform: translateY(-1px) scale(1.02);
+}
+
+/* 时间倒计时数字 (SF Pro 居中高清晰数字) */
+body.music-mode-active .pomodoro-timer-time {
+  font-family: SF Pro Display, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.8px;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  margin: 0 8px;
+}
+
+/* 按钮组 (匹配 music-icon-btn 物理微动感) */
+body.music-mode-active .pomodoro-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+body.music-mode-active .cinema-ctrl-btn {
+  background: transparent !important;
+  border: none !important;
+  color: rgba(255, 255, 255, 0.88) !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 50% !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: none !important;
+}
+
+body.music-mode-active .cinema-ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+  transform: scale(1.08) !important;
+}
+
+body.music-mode-active .cinema-ctrl-btn:active {
+  transform: scale(0.92) !important;
+}
+
+body.music-mode-active .cinema-ctrl-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
 
 
 
