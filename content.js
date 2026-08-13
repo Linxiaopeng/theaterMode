@@ -139,7 +139,14 @@
       musicCinema.controlsCard.style.width = `${currentSettings.musicCardWidth}px`;
     }
     if (musicCinema && musicCinema.pomodoroBar) {
-      musicCinema.pomodoroBar.style.width = `${currentSettings.musicCardWidth}px`;
+      musicCinema.pomodoroBar.style.setProperty(
+        'width',
+        `${currentSettings.musicCardWidth}px`,
+        'important'
+      );
+    }
+    if (pomodoroBarEl && document.body.classList.contains('music-mode-active')) {
+      pomodoroBarEl.style.setProperty('width', `${currentSettings.musicCardWidth}px`, 'important');
     }
     if (musicCinema && musicCinema.musicBlurController) {
       musicCinema.musicBlurController.updateOptions({
@@ -235,29 +242,6 @@
       if (newSettings.pomodoroEnabled !== undefined) {
         currentSettings.pomodoroEnabled = !!newSettings.pomodoroEnabled;
         updatePomodoroVisibility();
-      }
-    }
-
-    function updateMusicModeSettings() {
-      if (musicCinema && musicCinema.stageEl) {
-        musicCinema.stageEl.style.padding = `${currentSettings.musicPadding}px`;
-      }
-      if (musicCinema && musicCinema.bgBlurEl) {
-        musicCinema.bgBlurEl.style.filter = `blur(${currentSettings.musicBlurRadius}px) brightness(0.68) saturate(180%)`;
-      }
-      if (musicCinema && musicCinema.clockHeader) {
-        musicCinema.clockHeader.style.marginTop = `${currentSettings.musicClockTopOffset}px`;
-      }
-      if (musicCinema && musicCinema.artworkCard) {
-        musicCinema.artworkCard.style.width = `${currentSettings.musicCardWidth}px`;
-      }
-      if (musicCinema && musicCinema.controlsCard) {
-        musicCinema.controlsCard.style.width = `${currentSettings.musicCardWidth}px`;
-      }
-      if (musicCinema && musicCinema.musicBlurController) {
-        musicCinema.musicBlurController.updateOptions({
-          isStatic: !!currentSettings.musicStaticCoverEnabled
-        });
       }
     }
 
@@ -1521,7 +1505,7 @@
 
     const pomodoroBar = createPomodoroBar();
     if (pomodoroBar) {
-      pomodoroBar.style.width = `${currentSettings.musicCardWidth}px`;
+      pomodoroBar.style.setProperty('width', `${currentSettings.musicCardWidth}px`, 'important');
     }
 
     stageEl.appendChild(clockHeader);

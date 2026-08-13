@@ -1065,7 +1065,6 @@ body.music-mode-active .cinema-pomodoro-bar {
   pointer-events: auto !important;
   margin: 0 !important;
   flex-shrink: 0;
-  width: 380px;
   max-width: calc(100vw - 32px);
   height: 60px !important;
   background: rgba(255, 255, 255, 0.12) !important;
