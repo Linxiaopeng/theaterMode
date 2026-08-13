@@ -1054,4 +1054,21 @@ body.music-mode-active {
   margin: 0 2px;
 }
 
+/* 音乐模式下的番茄钟布局适配 */
+body.music-mode-active .cinema-pomodoro-bar {
+  position: static !important;
+  transform: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  margin: 4px 0;
+  flex-shrink: 0;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+}
+
+body.music-mode-active .cinema-pomodoro-bar.hidden {
+  display: none !important;
+}
+
+
 

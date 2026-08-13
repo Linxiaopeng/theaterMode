@@ -1502,18 +1502,37 @@
     });
     subBtn.appendChild(subFileInput);
 
+    const pomodoroBtn = document.createElement('button');
+    pomodoroBtn.className = 'music-icon-btn';
+    pomodoroBtn.title = '切换显示/隐藏番茄钟倒计时';
+    pomodoroBtn.innerHTML =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 2v3"/><path d="M9 5c1.5 1 4.5 1 6 0"/></svg>';
+    pomodoroBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      currentSettings.pomodoroEnabled = !currentSettings.pomodoroEnabled;
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+        chrome.storage.sync.set({ pomodoroEnabled: currentSettings.pomodoroEnabled });
+      }
+      updatePomodoroVisibility();
+      showToast(currentSettings.pomodoroEnabled ? '🍅 已开启番茄钟' : '🍅 已隐藏番茄钟', 'info');
+    });
+
     ctrlRow.appendChild(muteBtn);
     ctrlRow.appendChild(rewindBtn);
     ctrlRow.appendChild(playToggleBtn);
     ctrlRow.appendChild(forwardBtn);
     ctrlRow.appendChild(subBtn);
+    ctrlRow.appendChild(pomodoroBtn);
 
     controlsCard.appendChild(metaBox);
     controlsCard.appendChild(progressBox);
     controlsCard.appendChild(ctrlRow);
 
+    const pomodoroBar = createPomodoroBar();
+
     stageEl.appendChild(clockHeader);
     stageEl.appendChild(artworkCard);
+    if (pomodoroBar) stageEl.appendChild(pomodoroBar);
     stageEl.appendChild(controlsCard);
     console.log('[Music Mode] All stage elements added');
 
@@ -1648,6 +1667,7 @@
     }
 
     if (overlayEl) overlayEl.remove();
+    if (pomodoroBarEl) pomodoroBarEl = null;
 
     musicCinema = null;
     console.log('[Exit Music Mode] musicCinema set to null');
