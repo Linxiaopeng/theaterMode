@@ -965,11 +965,13 @@ body.music-mode-active {
   transform: translate(-50%, 12px) scale(0.94);
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
   gap: 8px;
   z-index: 2147483647;
   pointer-events: auto;
   background: rgba(18, 18, 22, 0.82);
-  padding: 5px 12px;
+  padding: 6px 14px;
   border-radius: 9999px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
@@ -980,7 +982,7 @@ body.music-mode-active {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), width 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .cinema-pomodoro-bar.visible,

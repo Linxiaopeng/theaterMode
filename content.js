@@ -921,11 +921,19 @@
         c.style.setProperty('width', '100%', 'important');
         c.style.setProperty('height', '100%', 'important');
       });
+
+      if (controlBar && pomodoroBar && !document.body.classList.contains('music-mode-active')) {
+        const cbWidth = controlBar.offsetWidth;
+        if (cbWidth > 0) {
+          pomodoroBar.style.setProperty('width', `${cbWidth}px`, 'important');
+        }
+      }
     };
 
     updateStageDimensions();
     video.addEventListener('loadedmetadata', updateStageDimensions);
     video.addEventListener('resize', updateStageDimensions);
+    window.addEventListener('resize', updateStageDimensions);
 
     video.style.width = '100%';
     video.style.height = '100%';
@@ -935,6 +943,12 @@
 
     setTimeout(() => {
       updateStageDimensions();
+      if (controlBar && pomodoroBar && !document.body.classList.contains('music-mode-active')) {
+        const cbWidth = controlBar.offsetWidth;
+        if (cbWidth > 0) {
+          pomodoroBar.style.setProperty('width', `${cbWidth}px`, 'important');
+        }
+      }
       window.dispatchEvent(new Event('resize'));
     }, 50);
 
@@ -1038,7 +1052,9 @@
       ambilightEl,
       ambilightController,
       hiddenElements,
-      stageRef,
+      stageRef: stage,
+      controlBar,
+      pomodoroBar,
       handleMouseMove,
       handleMouseLeave,
       mouseIdleTimer,
