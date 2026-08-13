@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const lKeyInput = document.getElementById('lKey');
   const opacityInput = document.getElementById('opacity');
   const cleanPlayerEnabledInput = document.getElementById('cleanPlayerEnabled');
+  const pomodoroEnabledInput = document.getElementById('pomodoroEnabled');
 
   const subFontSizeInput = document.getElementById('subFontSize');
   const subFontColorInput = document.getElementById('subFontColor');
@@ -90,7 +91,8 @@ document.addEventListener('DOMContentLoaded', () => {
       musicPadding: 40,
       musicClockTopOffset: 50,
       musicBlurRadius: 65,
-      musicStaticCoverEnabled: false
+      musicStaticCoverEnabled: false,
+      pomodoroEnabled: false
     },
     items => {
       try {
@@ -121,6 +123,9 @@ document.addEventListener('DOMContentLoaded', () => {
         musicClockTopOffsetInput.value = items.musicClockTopOffset;
         musicBlurRadiusInput.value = items.musicBlurRadius;
         musicStaticCoverEnabledInput.checked = !!items.musicStaticCoverEnabled;
+        if (pomodoroEnabledInput) {
+          pomodoroEnabledInput.checked = !!items.pomodoroEnabled;
+        }
 
         isLoaded = true;
       } catch (error) {
@@ -171,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
       Math.min(150, parseInt(musicBlurRadiusInput.value, 10) || 65)
     );
     const musicStaticCoverEnabled = musicStaticCoverEnabledInput.checked;
+    const pomodoroEnabled = pomodoroEnabledInput ? pomodoroEnabledInput.checked : false;
 
     if (isNaN(jSec) || isNaN(lSec) || jSec <= 0 || lSec <= 0) {
       logStorageOperation('saveSettings', 'error', { reason: 'Invalid time values' });
@@ -202,7 +208,8 @@ document.addEventListener('DOMContentLoaded', () => {
       musicPadding,
       musicClockTopOffset,
       musicBlurRadius,
-      musicStaticCoverEnabled
+      musicStaticCoverEnabled,
+      pomodoroEnabled
     };
 
     logStorageOperation('saveSettings', 'success', {
@@ -264,7 +271,6 @@ document.addEventListener('DOMContentLoaded', () => {
     ambilightEnabledInput,
     blurHashEnabledInput,
     ambilightWaveEnabledInput,
-    subFontColorInput,
     subBgColorInput,
     subFontWeightSelect,
     jUnitSelect,

@@ -955,3 +955,103 @@ body.music-mode-active {
   transform: translateY(-12px) scale(0.96) !important;
 }
 
+/* ==========================================================================
+   番茄钟控件 (Pomodoro Timer Widget - 工具栏上方)
+   ========================================================================== */
+.cinema-pomodoro-bar {
+  position: fixed;
+  bottom: 76px;
+  left: 50%;
+  transform: translate(-50%, 12px) scale(0.94);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 2147483647;
+  pointer-events: auto;
+  background: rgba(18, 18, 22, 0.82);
+  padding: 5px 12px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  user-select: none;
+  -webkit-user-select: none;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cinema-pomodoro-bar.visible,
+.cinema-stage.user-active ~ .cinema-pomodoro-bar,
+.cinema-control-bar.visible ~ .cinema-pomodoro-bar,
+.cinema-control-bar:hover ~ .cinema-pomodoro-bar,
+.cinema-pomodoro-bar:hover {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  transform: translate(-50%, 0) scale(1) !important;
+}
+
+.cinema-pomodoro-bar.hidden {
+  display: none !important;
+}
+
+.pomodoro-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-family: var(--cinema-font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.pomodoro-badge.mode-work {
+  background: rgba(239, 68, 68, 0.16);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.pomodoro-badge.mode-work:hover {
+  background: rgba(239, 68, 68, 0.28);
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #fca5a5;
+}
+
+.pomodoro-badge.mode-break {
+  background: rgba(52, 211, 153, 0.16);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.pomodoro-badge.mode-break:hover {
+  background: rgba(52, 211, 153, 0.28);
+  border-color: rgba(52, 211, 153, 0.45);
+  color: #6ee7b7;
+}
+
+.pomodoro-timer-time {
+  font-family: SF Pro Display, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.6px;
+  font-variant-numeric: tabular-nums;
+  min-width: 48px;
+  text-align: center;
+}
+
+.pomodoro-divider {
+  width: 1px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.15);
+  margin: 0 2px;
+}
+
+

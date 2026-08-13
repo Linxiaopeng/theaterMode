@@ -118,7 +118,8 @@
     musicPadding: 40,
     musicClockTopOffset: 50,
     musicBlurRadius: 65,
-    musicStaticCoverEnabled: false
+    musicStaticCoverEnabled: false,
+    pomodoroEnabled: false
   };
 
   function updateMusicModeSettings() {
@@ -161,6 +162,8 @@
       if (items.lDuration !== undefined)
         currentSettings.lDuration = parseInt(items.lDuration, 10) || 60;
       if (items.lKey !== undefined) currentSettings.lKey = items.lKey || 'l';
+      if (items.pomodoroEnabled !== undefined)
+        currentSettings.pomodoroEnabled = !!items.pomodoroEnabled;
     });
     function applySettingsUpdate(newSettings) {
       if (!newSettings) return;
@@ -226,6 +229,10 @@
       if (newSettings.jKey !== undefined) currentSettings.jKey = newSettings.jKey;
       if (newSettings.lDuration !== undefined) currentSettings.lDuration = newSettings.lDuration;
       if (newSettings.lKey !== undefined) currentSettings.lKey = newSettings.lKey;
+      if (newSettings.pomodoroEnabled !== undefined) {
+        currentSettings.pomodoroEnabled = !!newSettings.pomodoroEnabled;
+        updatePomodoroVisibility();
+      }
     }
 
     function updateMusicModeSettings() {
@@ -270,6 +277,200 @@
         }
       });
     }
+  }
+
+  // ==========================================================================
+  // 🍅 番茄钟 (Pomodoro Timer) 专注与休息模式全局控制器
+  // ==========================================================================
+  let pomodoroTimerId = null;
+  let pomodoroBarEl = null;
+  const pomodoroState = {
+    mode: 'work', // 'work' (45分钟) 或 'break' (10分钟)
+    timeLeft: 45 * 60, // 初始 45 分钟 (2700秒)
+    isRunning: false
+  };
+
+  function formatPomodoroTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  function playPomodoroChime(type) {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const now = ctx.currentTime;
+      const notes = type === 'work' ? [523.25, 659.25, 783.99] : [783.99, 659.25, 523.25];
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.15);
+        gain.gain.setValueAtTime(0, now + idx * 0.15);
+        gain.gain.linearRampToValueAtTime(0.18, now + idx * 0.15 + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.15 + 0.4);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + idx * 0.15);
+        osc.stop(now + idx * 0.15 + 0.45);
+      });
+    } catch (e) {
+      // 忽略 Web Audio 声音阻断异常
+    }
+  }
+
+  function updatePomodoroUI() {
+    if (!pomodoroBarEl) return;
+
+    const modeBadge = pomodoroBarEl.querySelector('.pomodoro-badge');
+    const timeDisplay = pomodoroBarEl.querySelector('.pomodoro-timer-time');
+    const playPauseBtn = pomodoroBarEl.querySelector('.pomodoro-toggle-btn');
+
+    if (modeBadge) {
+      if (pomodoroState.mode === 'work') {
+        modeBadge.className = 'pomodoro-badge mode-work';
+        modeBadge.innerHTML = '🍅 专注 45m';
+        modeBadge.title = '点击手动切换至 10 分钟休息模式';
+      } else {
+        modeBadge.className = 'pomodoro-badge mode-break';
+        modeBadge.innerHTML = '☕ 休息 10m';
+        modeBadge.title = '点击手动切换至 45 分钟专注模式';
+      }
+    }
+
+    if (timeDisplay) {
+      timeDisplay.textContent = formatPomodoroTime(pomodoroState.timeLeft);
+    }
+
+    if (playPauseBtn) {
+      const playSvg =
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6,4 20,12 6,20"/></svg>';
+      const pauseSvg =
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
+      playPauseBtn.innerHTML = pomodoroState.isRunning ? pauseSvg : playSvg;
+      playPauseBtn.title = pomodoroState.isRunning ? '暂停倒计时' : '开始倒计时';
+    }
+  }
+
+  function startPomodoroTimer() {
+    if (pomodoroTimerId) clearInterval(pomodoroTimerId);
+    pomodoroState.isRunning = true;
+    pomodoroTimerId = setInterval(() => {
+      if (pomodoroState.timeLeft > 0) {
+        pomodoroState.timeLeft--;
+        updatePomodoroUI();
+      } else {
+        if (pomodoroState.mode === 'work') {
+          pomodoroState.mode = 'break';
+          pomodoroState.timeLeft = 10 * 60;
+          showToast('🍅 45 分钟专注完成！休息 10 分钟时间到 ~', 'success');
+          playPomodoroChime('work');
+        } else {
+          pomodoroState.mode = 'work';
+          pomodoroState.timeLeft = 45 * 60;
+          showToast('☕ 10 分钟休息结束！开始新的专注 ~', 'info');
+          playPomodoroChime('break');
+        }
+        updatePomodoroUI();
+      }
+    }, 1000);
+    updatePomodoroUI();
+  }
+
+  function pausePomodoroTimer() {
+    if (pomodoroTimerId) {
+      clearInterval(pomodoroTimerId);
+      pomodoroTimerId = null;
+    }
+    pomodoroState.isRunning = false;
+    updatePomodoroUI();
+  }
+
+  function togglePomodoroTimer() {
+    if (pomodoroState.isRunning) {
+      pausePomodoroTimer();
+    } else {
+      startPomodoroTimer();
+    }
+  }
+
+  function resetPomodoroTimer() {
+    pausePomodoroTimer();
+    pomodoroState.timeLeft = pomodoroState.mode === 'work' ? 45 * 60 : 10 * 60;
+    updatePomodoroUI();
+  }
+
+  function switchPomodoroMode(newMode) {
+    pausePomodoroTimer();
+    pomodoroState.mode = newMode || (pomodoroState.mode === 'work' ? 'break' : 'work');
+    pomodoroState.timeLeft = pomodoroState.mode === 'work' ? 45 * 60 : 10 * 60;
+    updatePomodoroUI();
+  }
+
+  function updatePomodoroVisibility() {
+    if (!pomodoroBarEl) return;
+    if (currentSettings.pomodoroEnabled) {
+      pomodoroBarEl.classList.remove('hidden');
+    } else {
+      pomodoroBarEl.classList.add('hidden');
+    }
+  }
+
+  function createPomodoroBar() {
+    if (pomodoroBarEl && pomodoroBarEl.isConnected) return pomodoroBarEl;
+
+    const bar = document.createElement('div');
+    bar.className = 'cinema-pomodoro-bar';
+    if (!currentSettings.pomodoroEnabled) {
+      bar.classList.add('hidden');
+    }
+
+    // 1. 模式 Badge
+    const modeBadge = document.createElement('div');
+    modeBadge.className = 'pomodoro-badge mode-work';
+    modeBadge.addEventListener('click', e => {
+      e.stopPropagation();
+      switchPomodoroMode();
+    });
+    bar.appendChild(modeBadge);
+
+    // 2. 时间显示
+    const timeDisplay = document.createElement('div');
+    timeDisplay.className = 'pomodoro-timer-time';
+    timeDisplay.textContent = formatPomodoroTime(pomodoroState.timeLeft);
+    bar.appendChild(timeDisplay);
+
+    // 3. 分割线
+    const divider = document.createElement('div');
+    divider.className = 'pomodoro-divider';
+    bar.appendChild(divider);
+
+    // 4. 播放/暂停 按钮
+    const playPauseBtn = document.createElement('button');
+    playPauseBtn.className = 'cinema-ctrl-btn cinema-icon-btn pomodoro-toggle-btn';
+    playPauseBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      togglePomodoroTimer();
+    });
+    bar.appendChild(playPauseBtn);
+
+    // 5. 重置 按钮
+    const resetBtn = document.createElement('button');
+    resetBtn.className = 'cinema-ctrl-btn cinema-icon-btn';
+    resetBtn.title = '重置倒计时';
+    resetBtn.innerHTML =
+      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>';
+    resetBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      resetPomodoroTimer();
+    });
+    bar.appendChild(resetBtn);
+
+    pomodoroBarEl = bar;
+    updatePomodoroUI();
+    return bar;
   }
 
   /* ---------- 历史记录管理 (最多90条，播放满1分钟方可入库) ---------- */
@@ -654,7 +855,26 @@
     });
     controlBar.appendChild(musicModeBtn);
 
+    // 新增：番茄钟显隐切换按钮
+    const pomodoroToggleBtn = document.createElement('button');
+    pomodoroToggleBtn.className = 'cinema-ctrl-btn';
+    pomodoroToggleBtn.textContent = '🍅 番茄钟';
+    pomodoroToggleBtn.title = '切换显示/隐藏番茄钟倒计时';
+    pomodoroToggleBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      currentSettings.pomodoroEnabled = !currentSettings.pomodoroEnabled;
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+        chrome.storage.sync.set({ pomodoroEnabled: currentSettings.pomodoroEnabled });
+      }
+      updatePomodoroVisibility();
+      showToast(currentSettings.pomodoroEnabled ? '🍅 已开启番茄钟' : '🍅 已隐藏番茄钟', 'info');
+    });
+    controlBar.appendChild(pomodoroToggleBtn);
+
+    const pomodoroBar = createPomodoroBar();
+
     overlay.appendChild(stage);
+    if (pomodoroBar) overlay.appendChild(pomodoroBar);
     overlay.appendChild(controlBar);
     ROOT().appendChild(overlay);
 
@@ -887,6 +1107,7 @@
       }
     }
     if (overlay) overlay.remove();
+    if (pomodoroBarEl) pomodoroBarEl = null;
 
     overlay = null;
     stage = null;
