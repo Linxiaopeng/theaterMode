@@ -4,6 +4,7 @@
  * 架构设计：独立模块，支持样式动态更新、多行与长文本自动换行。
  */
 
+/* exported SubtitleRenderer */
 class SubtitleRenderer {
   constructor(stageElement, options = {}) {
     this.stage = stageElement;
@@ -182,7 +183,7 @@ class SubtitleRenderer {
   /**
    * [预留] 双语字幕显示开关
    */
-  toggleBilingual(enabled) {
+  toggleBilingual(_enabled) {
     // 预留双语显示切换逻辑
   }
 
@@ -196,7 +197,7 @@ class SubtitleRenderer {
   /**
    * [预留] 字幕导出
    */
-  exportCues(format = 'srt') {
+  exportCues(_format = 'srt') {
     // 预留导出逻辑
   }
 }

@@ -4,6 +4,7 @@
  * 架构设计：支持格式检测、时间戳解析、错误处理以及未来 AI 翻译、双语字幕、时间偏移等扩展。
  */
 
+/* exported SubtitleParser */
 class SubtitleParser {
   /**
    * 解析字幕文件内容
@@ -100,7 +101,7 @@ class SubtitleParser {
    * 解析 ASS 格式字幕（暂不支持）
    * @deprecated 此方法已弃用，请使用 parseSRT() 代替
    */
-  static parseASS(content) {
+  static parseASS(_content) {
     throw new Error('暂不支持 .ass 格式，敬请期待后续版本。');
   }
 

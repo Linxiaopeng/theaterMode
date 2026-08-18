@@ -251,7 +251,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (tabs && tabs[0] && tabs[0].id) {
               chrome.tabs
                 .sendMessage(tabs[0].id, { type: 'SETTINGS_UPDATED', settings })
-                .catch(() => {});
+                .catch(() => {
+                  // 忽略未注入 content script 的标签页报错
+                });
             }
           });
         }

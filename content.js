@@ -3,7 +3,6 @@
 
   const BTN_ID = 'cinema-mode-toggle-btn';
   const OVERLAY_ID = 'cinema-mode-overlay';
-  const SCAN_INTERVAL = 500;
   const ROOT = () => document.body || document.documentElement;
 
   /**
@@ -36,20 +35,6 @@
       '#meta'
     ]
   };
-
-  /**
-   * 获取指定平台的工具栏选择器
-   * @param {string} platform 平台名称
-   * @param {boolean} includeDefault 是否包含默认选择器
-   * @returns {string[]} 选择器数组
-   */
-  function getPlatformSelectors(platform, includeDefault = true) {
-    const selectors = [...(PLATFORM_SELECTORS[platform] || [])];
-    if (includeDefault) {
-      selectors.push(...PLATFORM_SELECTORS.default);
-    }
-    return selectors;
-  }
 
   /**
    * 获取所有平台的选择器（包括所有平台的特殊选择器 + 默认选择器）
@@ -201,7 +186,7 @@
       if (items.pomodoroBreakDuration !== undefined)
         currentSettings.pomodoroBreakDuration = parseInt(items.pomodoroBreakDuration, 10) || 10;
     });
-    function applySettingsUpdate(newSettings) {
+    const applySettingsUpdate = newSettings => {
       if (!newSettings) return;
       currentSettings = Object.assign({}, currentSettings, newSettings);
 
@@ -282,7 +267,7 @@
           parseInt(newSettings.pomodoroBreakDuration, 10) || 10;
         updatePomodoroTimeFromSettings();
       }
-    }
+    };
 
     chrome.storage.onChanged.addListener((changes, namespace) => {
       if (namespace === 'sync') {
@@ -1876,7 +1861,9 @@
       const v = musicCinema ? musicCinema.video : video;
       if (v) {
         if (v.paused) {
-          v.play().catch(() => {});
+          v.play().catch(() => {
+            // 忽略播放被浏览器拦截的错误
+          });
         } else {
           v.pause();
         }
