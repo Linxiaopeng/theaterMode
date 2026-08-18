@@ -588,7 +588,7 @@ html.cinema-mode-active .bilibili-player-video-area {
   transition: opacity 0.2s ease, visibility 0.2s ease !important;
 }
 
-/* 🎵 音乐模式 (iOS 锁屏美学) 样式全套方案 */
+/* 🎵 音乐模式 (Apple Music 正在播放美学) 样式全套方案 */
 html.music-mode-active,
 body.music-mode-active {
   overflow: hidden !important;
@@ -643,70 +643,57 @@ body.music-mode-active {
   will-change: transform, border-radius;
 }
 
-.music-lockscreen-stage {
+.music-nowplaying-stage {
   position: relative !important;
   z-index: 1 !important;
   width: 100%;
   height: 100%;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: safe center;
-  gap: 16px;
   box-sizing: border-box;
   overflow-y: auto;
   scrollbar-width: none;
 }
 
-.music-lockscreen-stage::-webkit-scrollbar {
+.music-nowplaying-stage::-webkit-scrollbar {
   display: none;
 }
 
-/* 1. 顶部 iOS 横向数字时钟与日期 */
-.music-clock-header {
-  position: relative !important;
-  z-index: 10 !important;
-  display: flex !important;
+/* 内容单列 (封面 / 元信息 / 进度 / 控制, Apple Music 网格行规格) */
+.music-nowplaying-column {
+  display: grid;
+  grid-template-rows: auto 54px 50px 70px 26px;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  color: rgba(255, 255, 255, 0.95);
-  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
-  pointer-events: none;
+  width: 600px;
+  max-width: 100%;
+  margin: auto;
+  box-sizing: border-box;
   flex-shrink: 0;
 }
 
-.music-time-text {
-  font-size: 19px;
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: 0px;
-  font-family: var(--cinema-font-sans);
+/* 1. 封面区: Radiosity 光晕 + 方形封面卡片 */
+.music-artwork-wrap {
+  position: relative;
+  width: 100%;
+  max-width: min(100%, calc(100vh - 290px));
+  margin: 0 auto 26px auto;
+  aspect-ratio: 1 / 1;
 }
 
-.music-date-text {
-  font-size: 19px;
-  font-weight: 500;
-  opacity: 0.85;
-  letter-spacing: 0.2px;
+.music-artwork-radiosity {
+  display: none !important;
 }
 
-/* 2. 独立封面卡片 (自适应视频真实比例 1:1, 16:9, 4:3, 9:16，无黑边) */
 .music-artwork-card {
   position: relative !important;
-  max-height: min(65vh, calc(100vh - 200px));
-  max-width: calc(100vw - 32px);
-  border-radius: 28px;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
   overflow: hidden !important;
-  box-shadow: 0 20px 48px -8px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), aspect-ratio 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: none !important;
   flex-shrink: 0;
-}
-
-.music-artwork-card:hover {
-  transform: translateY(-2px) scale(1.01);
-  box-shadow: 0 28px 60px -10px rgba(0, 0, 0, 0.65), inset 0 1px 0 0 rgba(255, 255, 255, 0.25);
 }
 
 .music-artwork-card > *,
@@ -739,111 +726,224 @@ body.music-mode-active {
   position: absolute !important;
 }
 
-/* 3. 独立 iOS 控件小面板 (在封面正下方) */
-.music-controls-card {
-  max-width: calc(100vw - 32px);
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
-  border-radius: 24px;
-  padding: 16px 20px;
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  box-sizing: border-box;
-  transition: width 0.3s ease;
-  flex-shrink: 0;
-}
-
-.music-meta-box {
+/* 2. 元信息行: 标题 / 来源 + 右侧辅助按钮 */
+.music-metadata {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
 }
 
-.music-text-group {
+.music-meta-text {
   min-width: 0;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  overflow: hidden;
 }
 
-.music-track-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #ffffff;
-  white-space: nowrap;
+.music-track-title-wrap {
+  width: 100%;
+  min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
-  margin-bottom: 2px;
+  position: relative;
+}
+
+.music-track-title-wrap.has-overflow {
+  mask-image: linear-gradient(90deg, #000 0%, #000 calc(100% - 24px), transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 calc(100% - 24px), transparent 100%);
+}
+
+.music-track-title-track {
+  display: inline-flex;
+  white-space: nowrap;
+  width: max-content;
+  will-change: transform;
+}
+
+.music-track-title-track.is-marquee {
+  animation: music-title-seamless-scroll var(--marquee-duration, 20s) linear infinite;
+  animation-play-state: paused;
+}
+
+/* 由 is-running 类精准控制播放状态，当鼠标静止后保持播放直至完整一轮结束返回起点 */
+.music-track-title-track.is-marquee.is-running {
+  animation-play-state: running;
+}
+
+@keyframes music-title-seamless-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.music-track-title-text {
+  display: inline-block;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.2941176471;
+  color: rgba(255, 255, 255, 0.94);
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.music-track-title-wrap.has-overflow .music-track-title-text {
+  padding-right: 48px;
+}
+
+.music-track-title-text.music-track-title-dup {
+  display: none;
+}
+
+.music-track-title-wrap.has-overflow .music-track-title-text.music-track-title-dup {
+  display: inline-block;
 }
 
 .music-track-sub {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.2941176471;
+  color: rgba(255, 255, 255, 0.52);
+  letter-spacing: -0.1px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.music-progress-box {
-  margin-bottom: 14px;
+.music-accessory {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* 元信息行右侧辅助按钮 (字幕 / 模式切换, 28px 圆形半透明无描边背景) */
+.music-icon-btn.accessory {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  color: rgba(255, 255, 255, 0.88);
+  opacity: 1;
+  box-shadow: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.music-icon-btn.accessory:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: #ffffff;
+  transform: scale(1.06);
+  box-shadow: none;
+}
+
+.music-icon-btn.accessory:active {
+  transform: scale(0.92);
+}
+
+.music-icon-btn.accessory svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* 3. 进度区: 顶部全宽滑块 + 底部两端时间 */
+.music-scrubber-wrap {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 6px;
 }
 
 .music-progress-slider {
   width: 100%;
   height: 4px;
   -webkit-appearance: none;
-  background: linear-gradient(to right, #ffffff 0%, rgba(255, 255, 255, 0.25) 0%);
-  border-radius: 2px;
+  appearance: none;
+  background: linear-gradient(to right, #ffffff 0%, rgba(255, 255, 255, 0.24) 0%);
+  border-radius: 9999px;
   outline: none;
   cursor: pointer;
-  transition: background 0.08s linear;
+  transition: height 0.2s cubic-bezier(0.16, 1, 0.3, 1), background 0.08s linear;
+  margin: 0;
+  padding: 0;
+}
+
+.music-scrubber-wrap:hover .music-progress-slider,
+.music-progress-slider:active {
+  height: 6px;
 }
 
 .music-progress-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
+  opacity: 0;
   border-radius: 50%;
   background: #ffffff;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  transition: opacity 0.15s ease;
 }
 
-.music-time-labels {
+.music-scrubber-wrap:hover .music-progress-slider::-webkit-slider-thumb,
+.music-progress-slider:active::-webkit-slider-thumb {
+  opacity: 1;
+}
+
+.music-time-row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.6);
-  margin-top: 4px;
+  width: 100%;
+  user-select: none;
+}
+
+.music-time {
+  font-size: 12px;
   font-weight: 500;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.52);
   font-variant-numeric: tabular-nums;
 }
 
-/* 极简 iOS Icon 控制栏 */
-.music-ctrl-row {
+.music-time-elapsed {
+  text-align: left;
+}
+
+.music-time-remaining {
+  text-align: right;
+}
+
+/* 4. 播放控制行 (上一首 50px / 播放暂停 55px / 下一首 50px) */
+.music-controls {
   display: flex;
   align-items: center;
-  justify-content: space-around;
+  justify-content: center;
+  gap: 48px;
+  width: 100%;
 }
 
 .music-icon-btn {
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.88);
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
+  padding: 0;
+  margin: 0;
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  padding: 0;
-}
-
-.music-icon-btn:hover {
-  background: rgba(255, 255, 255, 0.16);
-  color: #ffffff;
-  transform: scale(1.08);
+  transition: transform 0.2s ease-out, opacity 0.15s ease;
 }
 
 .music-icon-btn:active {
@@ -851,42 +951,89 @@ body.music-mode-active {
 }
 
 .music-icon-btn svg {
-  width: 22px;
-  height: 22px;
   display: block;
 }
 
-.music-icon-btn.play-main {
-  width: 44px;
-  height: 44px;
-  background: rgba(255, 255, 255, 0.22);
-  color: #ffffff;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+.music-icon-btn.prev,
+.music-icon-btn.next {
+  width: 50px;
+  height: 50px;
+  opacity: 0.88;
 }
 
-.music-icon-btn.play-main:hover {
-  background: rgba(255, 255, 255, 0.36);
-  transform: scale(1.06);
+.music-icon-btn.prev svg,
+.music-icon-btn.next svg {
+  width: 30px;
+  height: 30px;
+}
+
+.music-icon-btn.prev:hover,
+.music-icon-btn.next:hover {
+  opacity: 1;
+  transform: scale(1.08);
+}
+
+.music-icon-btn.prev:active,
+.music-icon-btn.next:active {
+  transform: scale(0.92);
+}
+
+.music-icon-btn.prev.disabled,
+.music-icon-btn.next.disabled {
+  opacity: 0.25 !important;
+  cursor: not-allowed !important;
+  pointer-events: none;
+  transform: none !important;
+}
+
+.music-icon-btn.play-main {
+  width: 55px;
+  height: 55px;
+  opacity: 0.95;
 }
 
 .music-icon-btn.play-main svg {
-  width: 26px;
-  height: 26px;
+  width: 52px;
+  height: 52px;
 }
 
-.music-icon-btn.mode-switch-icon {
+.music-icon-btn.play-main:hover {
+  opacity: 1;
+  transform: scale(1.06);
+}
+
+/* 右上角关闭按钮 (退出音乐模式) */
+.music-close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 20;
   width: 30px;
   height: 30px;
-  opacity: 0.7;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, transform 0.15s ease;
 }
 
-.music-icon-btn.mode-switch-icon:hover {
-  opacity: 1;
+.music-close-btn:hover {
+  background: rgba(255, 255, 255, 0.24);
 }
 
-.music-icon-btn.mode-switch-icon svg {
-  width: 18px;
-  height: 18px;
+.music-close-btn:active {
+  transform: scale(0.9);
+}
+
+.music-close-btn svg {
+  width: 15px;
+  height: 15px;
 }
 
 /* Toast 通知样式 (Vercel / Apple 悬浮胶囊) */
@@ -1057,7 +1204,7 @@ body.music-mode-active {
 }
 
 /* ==========================================================================
-   🎵 音乐模式 (iOS 锁屏美学) 下的番茄钟卡片 - taste-skill 高阶设计重构
+   🎵 音乐模式 (Apple Music 正在播放美学) 下的番茄钟卡片 - taste-skill 高阶设计重构
    ========================================================================== */
 body.music-mode-active .cinema-pomodoro-bar {
   position: static !important;
@@ -1065,17 +1212,17 @@ body.music-mode-active .cinema-pomodoro-bar {
   opacity: 1 !important;
   visibility: visible !important;
   pointer-events: auto !important;
-  margin: 0 !important;
+  margin: 16px 0 0 !important;
   flex-shrink: 0;
   max-width: calc(100vw - 32px);
   height: 60px !important;
-  background: rgba(255, 255, 255, 0.12) !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18), inset 0 1px 0 0 rgba(255, 255, 255, 0.25) !important;
-  border-radius: 24px !important;
+  background: rgba(255, 255, 255, 0.11) !important;
+  border: 0.5px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.35), inset 0 0.5px 0 0 rgba(255, 255, 255, 0.25) !important;
+  border-radius: 22px !important;
   padding: 0 20px !important;
-  backdrop-filter: blur(30px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
+  backdrop-filter: blur(50px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(50px) saturate(200%) !important;
   box-sizing: border-box !important;
   transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease !important;
   display: flex !important;
@@ -1188,7 +1335,7 @@ body.music-mode-active .cinema-ctrl-btn svg {
 }
 
 /* ==========================================================================
-   🎵 音乐模式 (iOS 锁屏美学) 右下角悬浮番茄钟开关与静止隐显
+   🎵 音乐模式 (Apple Music 正在播放美学) 右下角悬浮番茄钟开关与静止隐显
    ========================================================================== */
 .music-pomodoro-fab {
   position: fixed;
@@ -1231,7 +1378,7 @@ body.music-mode-active .cinema-ctrl-btn svg {
 
 /* 鼠标活动时自动平滑淡入右下角按钮与番茄钟卡片 */
 #music-mode-overlay.user-active .music-pomodoro-fab,
-.music-lockscreen-stage.user-active .music-pomodoro-fab,
+.music-nowplaying-stage.user-active .music-pomodoro-fab,
 .music-pomodoro-fab:hover {
   opacity: 1 !important;
   visibility: visible !important;
@@ -1247,7 +1394,7 @@ body.music-mode-active .cinema-pomodoro-bar {
   transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s cubic-bezier(0.16, 1, 0.3, 1), width 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-body.music-mode-active .music-lockscreen-stage.user-active .cinema-pomodoro-bar,
+body.music-mode-active .music-nowplaying-stage.user-active .cinema-pomodoro-bar,
 body.music-mode-active #music-mode-overlay.user-active .cinema-pomodoro-bar,
 body.music-mode-active .cinema-pomodoro-bar:hover {
   opacity: 1 !important;

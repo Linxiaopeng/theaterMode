@@ -61,7 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const musicCardWidthInput = document.getElementById('musicCardWidth');
   const musicPaddingInput = document.getElementById('musicPadding');
-  const musicClockTopOffsetInput = document.getElementById('musicClockTopOffset');
   const musicBlurRadiusInput = document.getElementById('musicBlurRadius');
   const musicStaticCoverEnabledInput = document.getElementById('musicStaticCoverEnabled');
 
@@ -89,9 +88,8 @@ document.addEventListener('DOMContentLoaded', () => {
       blurHashEnabled: true,
       ambilightWaveEnabled: true,
       ambilightIntensity: 0.65,
-      musicCardWidth: 380,
+      musicCardWidth: 600,
       musicPadding: 40,
-      musicClockTopOffset: 50,
       musicBlurRadius: 65,
       musicStaticCoverEnabled: false,
       pomodoroEnabled: false,
@@ -124,7 +122,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         musicCardWidthInput.value = items.musicCardWidth;
         musicPaddingInput.value = items.musicPadding;
-        musicClockTopOffsetInput.value = items.musicClockTopOffset;
         musicBlurRadiusInput.value = items.musicBlurRadius;
         musicStaticCoverEnabledInput.checked = !!items.musicStaticCoverEnabled;
         if (pomodoroEnabledInput) {
@@ -174,13 +171,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const musicCardWidth = Math.max(
       100,
-      Math.min(1200, parseInt(musicCardWidthInput.value, 10) || 380)
+      Math.min(1200, parseInt(musicCardWidthInput.value, 10) || 600)
     );
     const musicPadding = Math.max(0, Math.min(150, parseInt(musicPaddingInput.value, 10) || 40));
-    const musicClockTopOffset = Math.max(
-      0,
-      Math.min(200, parseInt(musicClockTopOffsetInput.value, 10) || 50)
-    );
     const musicBlurRadius = Math.max(
       0,
       Math.min(150, parseInt(musicBlurRadiusInput.value, 10) || 65)
@@ -224,7 +217,6 @@ document.addEventListener('DOMContentLoaded', () => {
       ambilightIntensity,
       musicCardWidth,
       musicPadding,
-      musicClockTopOffset,
       musicBlurRadius,
       musicStaticCoverEnabled,
       pomodoroEnabled,
@@ -273,7 +265,6 @@ document.addEventListener('DOMContentLoaded', () => {
   [
     musicCardWidthInput,
     musicPaddingInput,
-    musicClockTopOffsetInput,
     musicBlurRadiusInput,
     opacityInput,
     ambilightIntensityInput,
@@ -301,7 +292,6 @@ document.addEventListener('DOMContentLoaded', () => {
     lKeyInput,
     musicCardWidthInput,
     musicPaddingInput,
-    musicClockTopOffsetInput,
     musicBlurRadiusInput
   ].forEach(el => {
     if (el) el.addEventListener('change', () => saveAllSettings(false));
