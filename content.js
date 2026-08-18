@@ -114,15 +114,38 @@
     blurHashEnabled: true,
     ambilightWaveEnabled: true,
     ambilightIntensity: 0.65,
-    musicCardWidth: 380,
+    musicCardWidth: 600,
     musicPadding: 40,
-    musicClockTopOffset: 50,
     musicBlurRadius: 65,
     musicStaticCoverEnabled: false,
     pomodoroEnabled: false,
     pomodoroWorkDuration: 45,
     pomodoroBreakDuration: 10
   };
+
+  function cleanPageTitle(rawTitle) {
+    if (!rawTitle || typeof rawTitle !== 'string') return '未知视频/曲目';
+    let title = rawTitle.trim();
+
+    // 精准剥离常见视频网站的固定后缀（保留原标题中所有曲名、歌手、分集、标签、横杠等）
+    // B站: _哔哩哔哩_bilibili, _哔哩哔哩, -哔哩哔哩, _bilibili
+    title = title.replace(/\s*([_—\-–]\s*)?(哔哩哔哩(_bilibili)?|bilibili)\s*$/i, '');
+    // YouTube: - YouTube
+    title = title.replace(/\s*([_—\-–]\s*)?YouTube\s*$/i, '');
+    // 优酷: -电视剧-高清正版视频在线观看-优酷, _优酷视频, -优酷
+    title = title.replace(/\s*([_—\-–]\s*)?(优酷(视频)?|YOUKU)(\s*.*)?$/i, '');
+    // 爱奇艺: -高清正版视频在线观看-爱奇艺, _爱奇艺
+    title = title.replace(/\s*([_—\-–]\s*)?爱奇艺(\s*.*)?$/i, '');
+    // 腾讯视频: _腾讯视频, -腾讯视频
+    title = title.replace(/\s*([_—\-–]\s*)?腾讯视频(\s*.*)?$/i, '');
+    // 芒果TV: _芒果TV, -芒果TV
+    title = title.replace(/\s*([_—\-–]\s*)?(芒果TV|mgtv)\s*$/i, '');
+    // 抖音 / 西瓜 / 快手
+    title = title.replace(/\s*([_—\-–]\s*)?(抖音|西瓜视频|快手)\s*$/i, '');
+
+    title = title.trim();
+    return title || rawTitle.trim() || '未知视频/曲目';
+  }
 
   function updateMusicModeSettings() {
     if (musicCinema && musicCinema.stageEl) {
@@ -131,38 +154,35 @@
     if (musicCinema && musicCinema.bgBlurEl) {
       musicCinema.bgBlurEl.style.filter = `blur(${currentSettings.musicBlurRadius}px) brightness(0.68) saturate(180%)`;
     }
-    if (musicCinema && musicCinema.clockHeader) {
-      musicCinema.clockHeader.style.marginTop = `${currentSettings.musicClockTopOffset}px`;
-    }
-    if (musicCinema && musicCinema.artworkCard) {
-      musicCinema.artworkCard.style.width = `${currentSettings.musicCardWidth}px`;
-    }
-    if (musicCinema && musicCinema.controlsCard) {
-      musicCinema.controlsCard.style.width = `${currentSettings.musicCardWidth}px`;
+    if (musicCinema && musicCinema.columnEl) {
+      musicCinema.columnEl.style.width = `${currentSettings.musicCardWidth}px`;
     }
     if (musicCinema && musicCinema.pomodoroBar) {
-      musicCinema.pomodoroBar.style.setProperty(
-        'width',
-        `${currentSettings.musicCardWidth}px`,
-        'important'
-      );
+      musicCinema.pomodoroBar.style.setProperty('width', '100%', 'important');
     }
     if (pomodoroBarEl && document.body.classList.contains('music-mode-active')) {
-      pomodoroBarEl.style.setProperty('width', `${currentSettings.musicCardWidth}px`, 'important');
+      pomodoroBarEl.style.setProperty('width', '100%', 'important');
     }
     if (musicCinema && musicCinema.musicBlurController) {
       musicCinema.musicBlurController.updateOptions({
         isStatic: !!currentSettings.musicStaticCoverEnabled
       });
     }
+    if (musicCinema && musicCinema.radiosityController) {
+      musicCinema.radiosityController.updateOptions({
+        isStatic: !!currentSettings.musicStaticCoverEnabled
+      });
+    }
+    if (musicCinema && musicCinema.updateTitleMarquee) {
+      musicCinema.updateTitleMarquee();
+    }
   }
 
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
     chrome.storage.sync.get(currentSettings, items => {
       currentSettings = Object.assign({}, currentSettings, items);
-      currentSettings.musicCardWidth = parseInt(items.musicCardWidth, 10) || 380;
+      currentSettings.musicCardWidth = parseInt(items.musicCardWidth, 10) || 600;
       currentSettings.musicPadding = parseInt(items.musicPadding, 10) || 40;
-      currentSettings.musicClockTopOffset = parseInt(items.musicClockTopOffset, 10) || 50;
       currentSettings.musicBlurRadius = parseInt(items.musicBlurRadius, 10) || 65;
       if (items.cleanPlayerEnabled === undefined) currentSettings.cleanPlayerEnabled = true;
       if (items.blurHashEnabled === undefined) currentSettings.blurHashEnabled = true;
@@ -209,6 +229,11 @@
             enableBlurHash: !!newSettings.blurHashEnabled
           });
         }
+        if (musicCinema && musicCinema.radiosityController) {
+          musicCinema.radiosityController.updateOptions({
+            enableBlurHash: !!newSettings.blurHashEnabled
+          });
+        }
       }
       if (newSettings.ambilightWaveEnabled !== undefined) {
         if (cinema && cinema.ambilightEl) {
@@ -225,7 +250,6 @@
       if (
         newSettings.musicCardWidth !== undefined ||
         newSettings.musicPadding !== undefined ||
-        newSettings.musicClockTopOffset !== undefined ||
         newSettings.musicBlurRadius !== undefined ||
         newSettings.musicStaticCoverEnabled !== undefined
       ) {
@@ -282,15 +306,85 @@
   }
 
   // ==========================================================================
-  // 🍅 番茄钟 (Pomodoro Timer) 专注与休息模式全局控制器
+  // 🍅 番茄钟 (Pomodoro Timer) 基于 Date.now() 真实物理时间戳与跨标签页同步
   // ==========================================================================
   let pomodoroTimerId = null;
   let pomodoroBarEl = null;
   const pomodoroState = {
-    mode: 'work', // 'work' (45分钟) 或 'break' (10分钟)
-    timeLeft: 45 * 60, // 初始 45 分钟 (2700秒)
+    mode: 'work', // 'work' 或 'break'
+    timeLeft: 45 * 60, // 当前剩余秒数
+    targetEndTime: null, // 倒计时到达的目标 Date.now() 毫秒时间戳
     isRunning: false
   };
+
+  function savePomodoroStorage() {
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.set({
+        pomodoroRuntimeState: {
+          mode: pomodoroState.mode,
+          timeLeft: pomodoroState.timeLeft,
+          targetEndTime: pomodoroState.targetEndTime,
+          isRunning: pomodoroState.isRunning,
+          updatedAt: Date.now()
+        }
+      });
+    }
+  }
+
+  function loadPomodoroStorage() {
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.get(['pomodoroRuntimeState'], items => {
+        if (items && items.pomodoroRuntimeState) {
+          const s = items.pomodoroRuntimeState;
+          pomodoroState.mode = s.mode || 'work';
+          pomodoroState.isRunning = !!s.isRunning;
+          pomodoroState.targetEndTime = s.targetEndTime || null;
+
+          if (pomodoroState.isRunning && pomodoroState.targetEndTime) {
+            const now = Date.now();
+            const remSec = Math.max(0, Math.ceil((pomodoroState.targetEndTime - now) / 1000));
+            pomodoroState.timeLeft = remSec;
+            startPomodoroTimer(false); // 恢复定时器但不覆盖 targetEndTime
+          } else {
+            pomodoroState.timeLeft = typeof s.timeLeft === 'number' ? s.timeLeft : 45 * 60;
+            updatePomodoroUI();
+          }
+        }
+      });
+    }
+  }
+
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
+    chrome.storage.onChanged.addListener((changes, namespace) => {
+      if (namespace === 'local' && changes.pomodoroRuntimeState) {
+        const s = changes.pomodoroRuntimeState.newValue;
+        if (!s) return;
+        pomodoroState.mode = s.mode || 'work';
+        pomodoroState.isRunning = !!s.isRunning;
+        pomodoroState.targetEndTime = s.targetEndTime || null;
+
+        if (pomodoroState.isRunning && pomodoroState.targetEndTime) {
+          const now = Date.now();
+          pomodoroState.timeLeft = Math.max(
+            0,
+            Math.ceil((pomodoroState.targetEndTime - now) / 1000)
+          );
+          if (!pomodoroTimerId) {
+            startPomodoroTimer(false);
+          } else {
+            updatePomodoroUI();
+          }
+        } else {
+          if (pomodoroTimerId) {
+            clearInterval(pomodoroTimerId);
+            pomodoroTimerId = null;
+          }
+          pomodoroState.timeLeft = typeof s.timeLeft === 'number' ? s.timeLeft : 45 * 60;
+          updatePomodoroUI();
+        }
+      }
+    });
+  }
 
   function formatPomodoroTime(seconds) {
     const m = Math.floor(seconds / 60);
@@ -319,7 +413,7 @@
         osc.stop(now + idx * 0.15 + 0.45);
       });
     } catch (e) {
-      // 忽略 Web Audio 声音阻断异常
+      // 忽略 Web Audio 阻断
     }
   }
 
@@ -359,31 +453,47 @@
     }
   }
 
-  function startPomodoroTimer() {
+  function tickPomodoro() {
+    if (!pomodoroState.isRunning || !pomodoroState.targetEndTime) return;
+
+    const now = Date.now();
+    const remSec = Math.max(0, Math.ceil((pomodoroState.targetEndTime - now) / 1000));
+
+    if (remSec > 0) {
+      pomodoroState.timeLeft = remSec;
+      updatePomodoroUI();
+    } else {
+      const workM = currentSettings.pomodoroWorkDuration || 45;
+      const breakM = currentSettings.pomodoroBreakDuration || 10;
+      if (pomodoroState.mode === 'work') {
+        pomodoroState.mode = 'break';
+        pomodoroState.timeLeft = breakM * 60;
+        pomodoroState.targetEndTime = Date.now() + pomodoroState.timeLeft * 1000;
+        showToast(`🍅 ${workM} 分钟专注完成！休息 ${breakM} 分钟时间到 ~`, 'success');
+        playPomodoroChime('work');
+      } else {
+        pomodoroState.mode = 'work';
+        pomodoroState.timeLeft = workM * 60;
+        pomodoroState.targetEndTime = Date.now() + pomodoroState.timeLeft * 1000;
+        showToast(`☕ ${breakM} 分钟休息结束！开始新的 ${workM} 分钟专注 ~`, 'info');
+        playPomodoroChime('break');
+      }
+      savePomodoroStorage();
+      updatePomodoroUI();
+    }
+  }
+
+  function startPomodoroTimer(setNewTarget = true) {
     if (pomodoroTimerId) clearInterval(pomodoroTimerId);
     pomodoroState.isRunning = true;
-    pomodoroTimerId = setInterval(() => {
-      if (pomodoroState.timeLeft > 0) {
-        pomodoroState.timeLeft--;
-        updatePomodoroUI();
-      } else {
-        const workM = currentSettings.pomodoroWorkDuration || 45;
-        const breakM = currentSettings.pomodoroBreakDuration || 10;
-        if (pomodoroState.mode === 'work') {
-          pomodoroState.mode = 'break';
-          pomodoroState.timeLeft = breakM * 60;
-          showToast(`🍅 ${workM} 分钟专注完成！休息 ${breakM} 分钟时间到 ~`, 'success');
-          playPomodoroChime('work');
-        } else {
-          pomodoroState.mode = 'work';
-          pomodoroState.timeLeft = workM * 60;
-          showToast(`☕ ${breakM} 分钟休息结束！开始新的 ${workM} 分钟专注 ~`, 'info');
-          playPomodoroChime('break');
-        }
-        updatePomodoroUI();
-      }
-    }, 1000);
-    updatePomodoroUI();
+
+    if (setNewTarget || !pomodoroState.targetEndTime) {
+      pomodoroState.targetEndTime = Date.now() + pomodoroState.timeLeft * 1000;
+      savePomodoroStorage();
+    }
+
+    tickPomodoro();
+    pomodoroTimerId = setInterval(tickPomodoro, 1000);
   }
 
   function pausePomodoroTimer() {
@@ -391,7 +501,15 @@
       clearInterval(pomodoroTimerId);
       pomodoroTimerId = null;
     }
+    if (pomodoroState.isRunning && pomodoroState.targetEndTime) {
+      pomodoroState.timeLeft = Math.max(
+        0,
+        Math.ceil((pomodoroState.targetEndTime - Date.now()) / 1000)
+      );
+    }
+    pomodoroState.targetEndTime = null;
     pomodoroState.isRunning = false;
+    savePomodoroStorage();
     updatePomodoroUI();
   }
 
@@ -399,24 +517,36 @@
     if (pomodoroState.isRunning) {
       pausePomodoroTimer();
     } else {
-      startPomodoroTimer();
+      startPomodoroTimer(true);
     }
   }
 
   function resetPomodoroTimer() {
-    pausePomodoroTimer();
+    if (pomodoroTimerId) {
+      clearInterval(pomodoroTimerId);
+      pomodoroTimerId = null;
+    }
+    pomodoroState.isRunning = false;
+    pomodoroState.targetEndTime = null;
     const workSec = (currentSettings.pomodoroWorkDuration || 45) * 60;
     const breakSec = (currentSettings.pomodoroBreakDuration || 10) * 60;
     pomodoroState.timeLeft = pomodoroState.mode === 'work' ? workSec : breakSec;
+    savePomodoroStorage();
     updatePomodoroUI();
   }
 
   function switchPomodoroMode(newMode) {
-    pausePomodoroTimer();
+    if (pomodoroTimerId) {
+      clearInterval(pomodoroTimerId);
+      pomodoroTimerId = null;
+    }
+    pomodoroState.isRunning = false;
+    pomodoroState.targetEndTime = null;
     pomodoroState.mode = newMode || (pomodoroState.mode === 'work' ? 'break' : 'work');
     const workSec = (currentSettings.pomodoroWorkDuration || 45) * 60;
     const breakSec = (currentSettings.pomodoroBreakDuration || 10) * 60;
     pomodoroState.timeLeft = pomodoroState.mode === 'work' ? workSec : breakSec;
+    savePomodoroStorage();
     updatePomodoroUI();
   }
 
@@ -425,9 +555,35 @@
       const workSec = (currentSettings.pomodoroWorkDuration || 45) * 60;
       const breakSec = (currentSettings.pomodoroBreakDuration || 10) * 60;
       pomodoroState.timeLeft = pomodoroState.mode === 'work' ? workSec : breakSec;
+      pomodoroState.targetEndTime = null;
+      savePomodoroStorage();
     }
     updatePomodoroUI();
   }
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && pomodoroState.isRunning) {
+      const now = Date.now();
+      const remSec = Math.max(0, Math.ceil((pomodoroState.targetEndTime - now) / 1000));
+      pomodoroState.timeLeft = remSec;
+      if (!pomodoroTimerId) {
+        startPomodoroTimer(false);
+      }
+    }
+  });
+
+  window.addEventListener('focus', () => {
+    if (pomodoroState.isRunning) {
+      const now = Date.now();
+      const remSec = Math.max(0, Math.ceil((pomodoroState.targetEndTime - now) / 1000));
+      pomodoroState.timeLeft = remSec;
+      if (!pomodoroTimerId) {
+        startPomodoroTimer(false);
+      }
+    }
+  });
+
+  loadPomodoroStorage();
 
   function updatePomodoroVisibility() {
     if (!pomodoroBarEl) return;
@@ -689,7 +845,7 @@
         '</svg>' +
         '<span>影院</span>' +
         '</button>' +
-        '<button class="cinema-float-btn" id="cinema-btn-music" title="音乐模式 (iOS 锁屏美学)">' +
+        '<button class="cinema-float-btn" id="cinema-btn-music" title="音乐模式 (Apple Music 美学)">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
         '<path d="M9 18V5l12-2v13"/>' +
         '<circle cx="6" cy="18" r="3"/>' +
@@ -870,7 +1026,7 @@
     const musicModeBtn = document.createElement('button');
     musicModeBtn.className = 'cinema-ctrl-btn';
     musicModeBtn.textContent = '🎵 音乐模式';
-    musicModeBtn.title = '切换至 iOS 锁屏美学音乐模式';
+    musicModeBtn.title = '切换至 Apple Music 美学音乐模式';
     musicModeBtn.addEventListener('click', e => {
       e.stopPropagation();
       const v = video;
@@ -1162,7 +1318,107 @@
     }, 50);
   }
 
-  /* ---------- 🎵 音乐模式 (iOS 锁屏美学) ---------- */
+  /* ---------- 🎵 音乐模式 (Apple Music 正在播放美学) ---------- */
+
+  function findNextVideoTrigger() {
+    // 1. YouTube 播放器内置下一曲或播放列表
+    const ytNext = document.querySelector('.ytp-next-button');
+    if (ytNext && ytNext.offsetParent !== null && ytNext.getAttribute('aria-disabled') !== 'true') {
+      return ytNext;
+    }
+    const ytPlaylistNext = document.querySelector(
+      'ytd-playlist-panel-video-renderer[selected] + ytd-playlist-panel-video-renderer a#wc-endpoint, ytd-playlist-panel-video-renderer[selected] + ytd-playlist-panel-video-renderer a'
+    );
+    if (ytPlaylistNext && ytPlaylistNext.offsetParent !== null) {
+      return ytPlaylistNext;
+    }
+
+    // 2. Bilibili 播放器下一P或分P/合集/播单列表下一项
+    const biliNext = document.querySelector(
+      '.bpx-player-ctrl-next, .bilibili-player-video-btn-next, .squirtle-video-next'
+    );
+    if (biliNext && biliNext.offsetParent !== null && !biliNext.classList.contains('disabled')) {
+      return biliNext;
+    }
+    const biliPodNext = document.querySelector(
+      '.video-pod__list .active + .video-pod__item, .video-pod__list .active + .video-pod__item a, .cur-list .on + li a, .cur-list .on + li, .list-box .active + li a, .list-box .active + li, .ep-item.cursor + .ep-item, .sections-item.active + .sections-item'
+    );
+    if (biliPodNext && biliPodNext.offsetParent !== null) {
+      return biliPodNext;
+    }
+
+    // 3. 腾讯视频、爱奇艺等流媒体
+    const txNext = document.querySelector(
+      '.txp_btn_next, .txp_next, .episode-item.current + .episode-item'
+    );
+    if (txNext && txNext.offsetParent !== null) return txNext;
+    const iqiyiNext = document.querySelector('.iqp-btn-next, .iqp-next');
+    if (iqiyiNext && iqiyiNext.offsetParent !== null) return iqiyiNext;
+
+    // 4. 通用属性选择器兜底
+    const genericNext = document.querySelector(
+      'button[aria-label*="下一"], [aria-label*="Next" i], [title*="下一"], [title*="Next" i], [class*="btn-next"], [class*="ctrl-next"]'
+    );
+    if (
+      genericNext &&
+      genericNext.offsetParent !== null &&
+      !genericNext.closest('#music-mode-overlay')
+    ) {
+      return genericNext;
+    }
+
+    return null;
+  }
+
+  function findPrevVideoTrigger() {
+    // 1. YouTube 播放器内置上一曲或播放列表
+    const ytPrev = document.querySelector('.ytp-prev-button');
+    if (ytPrev && ytPrev.offsetParent !== null && ytPrev.getAttribute('aria-disabled') !== 'true') {
+      return ytPrev;
+    }
+    const ytSelected = document.querySelector('ytd-playlist-panel-video-renderer[selected]');
+    if (ytSelected && ytSelected.previousElementSibling) {
+      const prevA = ytSelected.previousElementSibling.querySelector('a#wc-endpoint, a');
+      if (prevA && prevA.offsetParent !== null) return prevA;
+    }
+
+    // 2. Bilibili 播放器上一P或分P/合集/播单列表上一项
+    const biliPrev = document.querySelector(
+      '.bpx-player-ctrl-prev, .bilibili-player-video-btn-prev'
+    );
+    if (biliPrev && biliPrev.offsetParent !== null && !biliPrev.classList.contains('disabled')) {
+      return biliPrev;
+    }
+    const biliPodActive = document.querySelector(
+      '.video-pod__list .active, .cur-list .on, .list-box .active, .ep-item.cursor, .sections-item.active'
+    );
+    if (biliPodActive && biliPodActive.previousElementSibling) {
+      const prevItem =
+        biliPodActive.previousElementSibling.querySelector('a') ||
+        biliPodActive.previousElementSibling;
+      if (prevItem && prevItem.offsetParent !== null) return prevItem;
+    }
+
+    // 3. 腾讯视频、爱奇艺等流媒体
+    const txPrev = document.querySelector('.txp_btn_prev, .txp_prev');
+    if (txPrev && txPrev.offsetParent !== null) return txPrev;
+    const iqiyiPrev = document.querySelector('.iqp-btn-prev, .iqp-next');
+    if (iqiyiPrev && iqiyiPrev.offsetParent !== null) return iqiyiPrev;
+
+    // 4. 通用属性选择器兜底
+    const genericPrev = document.querySelector(
+      'button[aria-label*="上一"], [aria-label*="Previous" i], [aria-label*="prev" i], [title*="上一"], [title*="Previous" i], [title*="prev" i], [class*="btn-prev"], [class*="ctrl-prev"]'
+    );
+    if (
+      genericPrev &&
+      genericPrev.offsetParent !== null &&
+      !genericPrev.closest('#music-mode-overlay')
+    ) {
+      return genericPrev;
+    }
+
+    return null;
+  }
 
   function enterMusicMode(video) {
     console.log('[Music Mode] Starting music mode...');
@@ -1201,16 +1457,34 @@
     overlayEl.id = 'music-mode-overlay';
     console.log('[Music Mode] Overlay element created:', overlayEl);
 
-    // 动态 3D 氛围光背景 (优先尝试 BlurHash 算法极佳色彩晕染)
+    // 动态 3D 流体渐变背景 (优先使用 WebGL ShaderGradient 3D 流体引擎，优雅退化至 BlurBackgroundController)
     const bgBlurEl = document.createElement('div');
     bgBlurEl.className =
       'music-bg-blur' + (currentSettings.ambilightWaveEnabled ? ' has-edge-wave' : '');
-    bgBlurEl.style.filter = `blur(${currentSettings.musicBlurRadius}px) brightness(0.68) saturate(180%)`;
     console.log('[Music Mode] Background blur element created:', bgBlurEl);
 
     let musicBlurController = null;
 
-    if (typeof BlurBackgroundController !== 'undefined') {
+    if (typeof ShaderGradientController !== 'undefined') {
+      try {
+        musicBlurController = new ShaderGradientController(video, {
+          isStatic: !!currentSettings.musicStaticCoverEnabled,
+          speed: 0.65,
+          strength: 2.1,
+          density: 1.75,
+          grain: 0.022,
+          brightness: 0.86,
+          saturation: 1.28
+        });
+        musicBlurController.mount(bgBlurEl);
+        bgBlurEl.style.filter = 'none';
+        console.log('[Music Mode] ShaderGradientController mounted successfully');
+      } catch (error) {
+        console.warn('[Music Mode] ShaderGradientController mount failed, falling back:', error);
+      }
+    }
+
+    if (!musicBlurController && typeof BlurBackgroundController !== 'undefined') {
       try {
         musicBlurController = new BlurBackgroundController(video, {
           enableBlurHash: currentSettings.blurHashEnabled !== false,
@@ -1218,60 +1492,52 @@
           throttleMs: 150
         });
         musicBlurController.mount(bgBlurEl);
-        console.log('[Music Mode] Background controller mounted successfully');
+        bgBlurEl.style.filter = `blur(${currentSettings.musicBlurRadius}px) brightness(0.68) saturate(180%)`;
+        console.log('[Music Mode] BlurBackgroundController fallback mounted successfully');
       } catch (error) {
-        console.error('[Music Mode] Failed to mount background controller:', error);
+        console.error('[Music Mode] Failed to mount background controller fallback:', error);
       }
-    } else {
-      console.warn('[Music Mode] BlurBackgroundController not available');
     }
 
-    // 锁屏全局框架
+    // 全屏舞台框架 (Apple Music「正在播放」单列居中布局)
     const stageEl = document.createElement('div');
-    stageEl.className = 'music-lockscreen-stage';
+    stageEl.className = 'music-nowplaying-stage';
     stageEl.style.padding = `${currentSettings.musicPadding}px`;
     console.log('[Music Mode] Stage element created');
 
-    // 1. 顶部时间与日期 (iOS 锁屏横向排版 12:12  8月9日 星期日)
-    const clockHeader = document.createElement('div');
-    clockHeader.className = 'music-clock-header';
-    clockHeader.style.marginTop = `${currentSettings.musicClockTopOffset}px`;
-    console.log('[Music Mode] Clock header element created');
+    // 内容单列: 封面 / 元信息 / 进度 / 控制
+    const columnEl = document.createElement('div');
+    columnEl.className = 'music-nowplaying-column';
+    columnEl.style.width = `${currentSettings.musicCardWidth}px`;
 
-    const timeText = document.createElement('span');
-    timeText.className = 'music-time-text';
+    // 1. 封面区: Radiosity 光晕 + 方形封面卡片
+    const artworkWrap = document.createElement('div');
+    artworkWrap.className = 'music-artwork-wrap';
 
-    const dateText = document.createElement('span');
-    dateText.className = 'music-date-text';
+    const radiosityEl = document.createElement('div');
+    radiosityEl.className = 'music-artwork-radiosity';
 
-    const updateClock = () => {
-      const now = new Date();
-      const pad = n => String(n).padStart(2, '0');
-      timeText.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-      const options = { month: 'short', day: 'numeric', weekday: 'short' };
-      dateText.textContent = now.toLocaleDateString('zh-CN', options);
-    };
-    updateClock();
-    const clockTimer = setInterval(updateClock, 1000);
+    let radiosityController = null;
+    if (typeof BlurBackgroundController !== 'undefined') {
+      try {
+        radiosityController = new BlurBackgroundController(video, {
+          enableBlurHash: currentSettings.blurHashEnabled !== false,
+          isStatic: !!currentSettings.musicStaticCoverEnabled,
+          throttleMs: 150
+        });
+        radiosityController.mount(radiosityEl);
+        console.log('[Music Mode] Radiosity controller mounted successfully');
+      } catch (error) {
+        console.error('[Music Mode] Failed to mount radiosity controller:', error);
+      }
+    }
 
-    clockHeader.appendChild(timeText);
-    clockHeader.appendChild(dateText);
-
-    // 2. 独立专辑封面大卡片 (视频真实宽高比动态自适应，消除黑边)
     const artworkCard = document.createElement('div');
     artworkCard.className = 'music-artwork-card';
-    artworkCard.style.width = `${currentSettings.musicCardWidth}px`;
     console.log('[Music Mode] Artwork card element created');
 
-    const updateArtworkAspectRatio = () => {
-      if (video) {
-        const ar = getVideoAspectRatio(video);
-        artworkCard.style.aspectRatio = `${ar}`;
-      }
-    };
-    updateArtworkAspectRatio();
-    video.addEventListener('loadedmetadata', updateArtworkAspectRatio);
-    video.addEventListener('resize', updateArtworkAspectRatio);
+    artworkWrap.appendChild(radiosityEl);
+    artworkWrap.appendChild(artworkCard);
 
     function mountLivePlayerToCard() {
       if (!player) return;
@@ -1344,176 +1610,79 @@
       mountLivePlayerToCard();
     }
 
-    // 3. 独立 iOS 播放控件小面板 (在封面正下方)
-    const controlsCard = document.createElement('div');
-    controlsCard.className = 'music-controls-card';
-    controlsCard.style.width = `${currentSettings.musicCardWidth}px`;
-    console.log('[Music Mode] Controls card element created');
+    // 2. 元信息行: 标题 / 来源 + 右侧辅助按钮 (字幕加载 / 模式切换)
+    const metadataEl = document.createElement('div');
+    metadataEl.className = 'music-metadata';
 
-    // 头部: 标题与作者信息 + 模式切换小按钮
-    const metaBox = document.createElement('div');
-    metaBox.className = 'music-meta-box';
+    const metaText = document.createElement('div');
+    metaText.className = 'music-meta-text';
 
-    const textGroup = document.createElement('div');
-    textGroup.className = 'music-text-group';
+    const titleWrap = document.createElement('div');
+    titleWrap.className = 'music-track-title-wrap';
 
-    const trackTitle = document.createElement('div');
-    trackTitle.className = 'music-track-title';
+    const titleTrack = document.createElement('div');
+    titleTrack.className = 'music-track-title-track';
+
+    const trackTitleText = document.createElement('span');
+    trackTitleText.className = 'music-track-title-text';
     const rawTitle = document.title || '未知视频/曲目';
-    trackTitle.textContent = rawTitle.replace(/\s*[-_|_—].*$/, '').trim() || rawTitle;
+    const cleanTitle = cleanPageTitle(rawTitle);
+    trackTitleText.textContent = cleanTitle;
+
+    const trackTitleDup = document.createElement('span');
+    trackTitleDup.className = 'music-track-title-text music-track-title-dup';
+    trackTitleDup.textContent = cleanTitle;
+
+    titleTrack.appendChild(trackTitleText);
+    titleTrack.appendChild(trackTitleDup);
+    titleWrap.appendChild(titleTrack);
+    titleWrap.title = cleanTitle;
 
     const trackSub = document.createElement('div');
     trackSub.className = 'music-track-sub';
     trackSub.textContent = window.location.hostname.replace('www.', '');
 
-    textGroup.appendChild(trackTitle);
-    textGroup.appendChild(trackSub);
+    metaText.appendChild(titleWrap);
+    metaText.appendChild(trackSub);
 
-    const modeBtn = document.createElement('button');
-    modeBtn.className = 'music-icon-btn mode-switch-icon';
-    modeBtn.title = '切换至影院模式';
-    modeBtn.innerHTML =
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="16" rx="3"/><path d="M10 9v6l5-3z" fill="currentColor" stroke="none"/></svg>';
-    modeBtn.addEventListener('click', e => {
-      e.stopPropagation();
-      const v = video;
-      exitMusicMode();
-      enterCinema(v);
-    });
+    let isUserActive = false;
 
-    metaBox.appendChild(textGroup);
-    metaBox.appendChild(modeBtn);
-
-    // 进度条与数字时间
-    const progressBox = document.createElement('div');
-    progressBox.className = 'music-progress-box';
-
-    const slider = document.createElement('input');
-    slider.type = 'range';
-    slider.className = 'music-progress-slider';
-    slider.min = '0';
-    slider.max = '100';
-    slider.value = '0';
-
-    const timeLabels = document.createElement('div');
-    timeLabels.className = 'music-time-labels';
-
-    const curTimeSpan = document.createElement('span');
-    curTimeSpan.textContent = '0:00';
-
-    const durTimeSpan = document.createElement('span');
-    durTimeSpan.textContent = '-0:00';
-
-    timeLabels.appendChild(curTimeSpan);
-    timeLabels.appendChild(durTimeSpan);
-    progressBox.appendChild(slider);
-    progressBox.appendChild(timeLabels);
-
-    const updateSliderBg = () => {
-      const val = parseFloat(slider.value) || 0;
-      slider.style.background = `linear-gradient(to right, #ffffff ${val}%, rgba(255, 255, 255, 0.25) ${val}%)`;
+    const onTitleIteration = () => {
+      if (!isUserActive && titleTrack) {
+        titleTrack.classList.remove('is-running');
+      }
     };
+    titleTrack.addEventListener('animationiteration', onTitleIteration);
 
-    let isDraggingSlider = false;
-    slider.addEventListener('mousedown', () => {
-      isDraggingSlider = true;
-    });
-    slider.addEventListener('mouseup', () => {
-      isDraggingSlider = false;
-      const v = musicCinema ? musicCinema.video : video;
-      if (v && !isNaN(v.duration)) {
-        v.currentTime = (parseFloat(slider.value) / 100) * v.duration;
-      }
-      updateSliderBg();
-    });
-    slider.addEventListener('input', () => {
-      const v = musicCinema ? musicCinema.video : video;
-      if (v && !isNaN(v.duration)) {
-        const cur = (parseFloat(slider.value) / 100) * v.duration;
-        curTimeSpan.textContent = formatSec(cur);
-        durTimeSpan.textContent = `-${formatSec(v.duration - cur)}`;
-      }
-      updateSliderBg();
-    });
+    const updateTitleMarquee = () => {
+      if (!trackTitleText || !titleWrap || !titleTrack) return;
+      titleWrap.classList.remove('has-overflow');
+      titleTrack.classList.remove('is-marquee', 'is-running');
+      titleTrack.style.removeProperty('--marquee-duration');
 
-    // 纯极简 Icon 控制条 (纯 Icon 无文字，极简苹果风格)
-    const ctrlRow = document.createElement('div');
-    ctrlRow.className = 'music-ctrl-row';
+      // 获取单段标题实际渲染宽度（不含 padding-right）
+      const textWidth = trackTitleText.scrollWidth;
+      const containerWidth = titleWrap.clientWidth;
 
-    const muteBtn = document.createElement('button');
-    muteBtn.className = 'music-icon-btn';
-
-    const rewindBtn = document.createElement('button');
-    rewindBtn.className = 'music-icon-btn';
-    rewindBtn.title = '回退 15 秒';
-    rewindBtn.innerHTML = createCircularJumpIcon('rewind', '15');
-    rewindBtn.addEventListener('click', e => {
-      e.stopPropagation();
-      const v = musicCinema ? musicCinema.video : video;
-      if (v && !isNaN(v.duration)) v.currentTime = Math.max(0, v.currentTime - 15);
-    });
-
-    const playToggleBtn = document.createElement('button');
-    playToggleBtn.className = 'music-icon-btn play-main';
-
-    const syncUIStatus = () => {
-      const v = musicCinema ? musicCinema.video : video;
-      if (!v) return;
-      if (!isNaN(v.duration) && v.duration > 0 && !isDraggingSlider) {
-        slider.value = (v.currentTime / v.duration) * 100;
-        curTimeSpan.textContent = formatSec(v.currentTime);
-        durTimeSpan.textContent = `-${formatSec(v.duration - v.currentTime)}`;
-        updateSliderBg();
-      }
-
-      playToggleBtn.title = v.paused ? '播放' : '暂停';
-      playToggleBtn.innerHTML = v.paused
-        ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86a1 1 0 0 0-1.5.86z"/></svg>'
-        : '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1.5"/><rect x="14" y="4" width="4" height="16" rx="1.5"/></svg>';
-
-      muteBtn.title = v.muted ? '取消静音' : '静音';
-      muteBtn.innerHTML = v.muted
-        ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>'
-        : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
-    };
-
-    muteBtn.addEventListener('click', e => {
-      e.stopPropagation();
-      const v = musicCinema ? musicCinema.video : video;
-      if (v) {
-        v.muted = !v.muted;
-        syncUIStatus();
-      }
-    });
-
-    playToggleBtn.addEventListener('click', e => {
-      e.stopPropagation();
-      const v = musicCinema ? musicCinema.video : video;
-      if (v) {
-        if (v.paused) {
-          v.play().catch(() => {});
-        } else {
-          v.pause();
+      if (textWidth > containerWidth + 2) {
+        titleWrap.classList.add('has-overflow');
+        titleTrack.classList.add('is-marquee');
+        if (isUserActive) {
+          titleTrack.classList.add('is-running');
         }
-        syncUIStatus();
+        // 单个单元宽度（文字宽 + 48px 无缝衔接间隔）
+        const singleWidth = textWidth + 48;
+        // 舒缓匀速平滑移动速度：约 20px / 秒
+        const duration = Math.max(14, Math.round(singleWidth / 20));
+        titleTrack.style.setProperty('--marquee-duration', `${duration}s`);
       }
-    });
+    };
 
-    const syncProgressTimer = setInterval(syncUIStatus, 300);
-    syncUIStatus();
-
-    const forwardBtn = document.createElement('button');
-    forwardBtn.className = 'music-icon-btn';
-    forwardBtn.title = '快进 15 秒';
-    forwardBtn.innerHTML = createCircularJumpIcon('forward', '15');
-    forwardBtn.addEventListener('click', e => {
-      e.stopPropagation();
-      const v = musicCinema ? musicCinema.video : video;
-      if (v && !isNaN(v.duration)) v.currentTime = Math.min(v.duration, v.currentTime + 15);
-    });
+    const accessoryBox = document.createElement('div');
+    accessoryBox.className = 'music-accessory';
 
     const subBtn = document.createElement('button');
-    subBtn.className = 'music-icon-btn';
+    subBtn.className = 'music-icon-btn accessory';
     subBtn.title = '加载本地字幕';
     subBtn.innerHTML =
       '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM4 12h4v2H4v-2zm10 4H4v-2h10v2zm6 0h-4v-2h4v2zm0-4H10v-2h10v2z"/></svg>';
@@ -1542,29 +1711,211 @@
     });
     subBtn.appendChild(subFileInput);
 
-    ctrlRow.appendChild(muteBtn);
-    ctrlRow.appendChild(rewindBtn);
-    ctrlRow.appendChild(playToggleBtn);
-    ctrlRow.appendChild(forwardBtn);
-    ctrlRow.appendChild(subBtn);
+    const modeBtn = document.createElement('button');
+    modeBtn.className = 'music-icon-btn accessory';
+    modeBtn.title = '切换至影院模式';
+    modeBtn.innerHTML =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="16" rx="3"/><path d="M10 9v6l5-3z" fill="currentColor" stroke="none"/></svg>';
+    modeBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const v = video;
+      exitMusicMode();
+      enterCinema(v);
+    });
 
-    controlsCard.appendChild(metaBox);
-    controlsCard.appendChild(progressBox);
-    controlsCard.appendChild(ctrlRow);
+    accessoryBox.appendChild(subBtn);
+    accessoryBox.appendChild(modeBtn);
+    metadataEl.appendChild(metaText);
+    metadataEl.appendChild(accessoryBox);
+    console.log('[Music Mode] Metadata row element created');
+
+    // 3. 进度区: 顶部全宽滑块 + 底部两端时间 (已过时间 | 剩余时间)
+    const scrubberWrap = document.createElement('div');
+    scrubberWrap.className = 'music-scrubber-wrap';
+
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.className = 'music-progress-slider';
+    slider.min = '0';
+    slider.max = '100';
+    slider.value = '0';
+
+    const timesRow = document.createElement('div');
+    timesRow.className = 'music-time-row';
+
+    const curTimeSpan = document.createElement('span');
+    curTimeSpan.className = 'music-time music-time-elapsed';
+    curTimeSpan.textContent = '0:00';
+
+    const durTimeSpan = document.createElement('span');
+    durTimeSpan.className = 'music-time music-time-remaining';
+    durTimeSpan.textContent = '-0:00';
+
+    timesRow.appendChild(curTimeSpan);
+    timesRow.appendChild(durTimeSpan);
+
+    scrubberWrap.appendChild(slider);
+    scrubberWrap.appendChild(timesRow);
+
+    const updateSliderBg = () => {
+      const val = parseFloat(slider.value) || 0;
+      slider.style.background = `linear-gradient(to right, #ffffff ${val}%, rgba(255, 255, 255, 0.24) ${val}%)`;
+    };
+
+    let isDraggingSlider = false;
+    slider.addEventListener('mousedown', () => {
+      isDraggingSlider = true;
+    });
+    slider.addEventListener('mouseup', () => {
+      isDraggingSlider = false;
+      const v = musicCinema ? musicCinema.video : video;
+      if (v && !isNaN(v.duration)) {
+        v.currentTime = (parseFloat(slider.value) / 100) * v.duration;
+      }
+      updateSliderBg();
+    });
+    slider.addEventListener('input', () => {
+      const v = musicCinema ? musicCinema.video : video;
+      if (v && !isNaN(v.duration)) {
+        const cur = (parseFloat(slider.value) / 100) * v.duration;
+        curTimeSpan.textContent = formatSec(cur);
+        durTimeSpan.textContent = `-${formatSec(v.duration - cur)}`;
+      }
+      updateSliderBg();
+    });
+
+    // 4. 播放控制行: 上一首 / 播放暂停 / 下一首 (Apple Music 经典三键布局)
+    const controlsRow = document.createElement('div');
+    controlsRow.className = 'music-controls';
+
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'music-icon-btn prev';
+    prevBtn.title = '上一首 / 重新播放';
+    prevBtn.innerHTML =
+      '<svg viewBox="0 0 32 32" fill="currentColor"><path d="M7 6.5a1.5 1.5 0 0 1 3 0v7.197l12.723-8.482A2 2 0 0 1 26 6.88v18.24a2 2 0 0 1-3.277 1.665L10 18.303v7.197a1.5 1.5 0 0 1-3 0V6.5z"/></svg>';
+    prevBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const v = musicCinema ? musicCinema.video : video;
+      const prevTrigger = findPrevVideoTrigger();
+      if (prevTrigger) {
+        prevTrigger.click();
+        showToast('已切换至上一首 / 上一个视频', 'info');
+      } else if (v) {
+        v.currentTime = 0;
+        showToast('已从头重新播放', 'info');
+      } else {
+        showToast('未检测到上一曲', 'info');
+      }
+    });
+
+    const playToggleBtn = document.createElement('button');
+    playToggleBtn.className = 'music-icon-btn play-main';
+
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'music-icon-btn next';
+    nextBtn.title = '下一首 / 下一个视频';
+    nextBtn.innerHTML =
+      '<svg viewBox="0 0 32 32" fill="currentColor"><path d="M25 6.5a1.5 1.5 0 0 0-3 0v7.197L9.277 5.215A2 2 0 0 0 6 6.88v18.24a2 2 0 0 0 3.277 1.665L22 18.303v7.197a1.5 1.5 0 0 0 3 0V6.5z"/></svg>';
+    nextBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const nextTrigger = findNextVideoTrigger();
+      if (nextTrigger) {
+        nextTrigger.click();
+        showToast('已切换至下一首 / 下一个视频', 'info');
+      } else {
+        showToast('当前已是最后一首或未检测到播放列表', 'info');
+      }
+    });
+
+    controlsRow.appendChild(prevBtn);
+    controlsRow.appendChild(playToggleBtn);
+    controlsRow.appendChild(nextBtn);
+
+    let lastKnownTitle = '';
+    const syncUIStatus = () => {
+      const v = musicCinema ? musicCinema.video : video;
+      if (!v) return;
+      if (!isNaN(v.duration) && v.duration > 0 && !isDraggingSlider) {
+        slider.value = (v.currentTime / v.duration) * 100;
+        curTimeSpan.textContent = formatSec(v.currentTime);
+        durTimeSpan.textContent = `-${formatSec(v.duration - v.currentTime)}`;
+        updateSliderBg();
+      }
+
+      playToggleBtn.title = v.paused ? '播放' : '暂停';
+      playToggleBtn.innerHTML = v.paused
+        ? '<svg viewBox="0 0 32 28" fill="currentColor"><path d="M10.345 23.287c.415 0 .763-.15 1.22-.407l12.742-7.404c.838-.481 1.178-.855 1.178-1.46 0-.599-.34-.972-1.178-1.462L11.565 5.158c-.457-.265-.805-.407-1.22-.407-.789 0-1.345.606-1.345 1.57V21.71c0 .971.556 1.577 1.345 1.577z"/></svg>'
+        : '<svg viewBox="0 0 32 28" fill="currentColor"><path d="M13.293 22.772c.955 0 1.436-.481 1.436-1.436V6.677c0-.98-.481-1.427-1.436-1.427h-2.457c-.954 0-1.436.473-1.436 1.427v14.66c-.008.954.473 1.435 1.436 1.435h2.457zm7.87 0c.954 0 1.427-.481 1.427-1.436V6.677c0-.98-.473-1.427-1.428-1.427h-2.465c-.955 0-1.428.473-1.428 1.427v14.66c0 .954.473 1.435 1.428 1.435h2.465z"/></svg>';
+
+      // 同步上一首 / 下一首可用性状态
+      const hasNext = !!findNextVideoTrigger();
+      const hasPrev = !!findPrevVideoTrigger() || (v && v.currentTime > 3);
+      nextBtn.classList.toggle('disabled', !hasNext);
+      nextBtn.title = hasNext ? '下一首 / 下一个视频' : '未检测到下一曲';
+      prevBtn.classList.toggle('disabled', !hasPrev);
+      prevBtn.title = hasPrev
+        ? findPrevVideoTrigger()
+          ? '上一首 / 上一个视频'
+          : '从头重新播放'
+        : '未检测到上一曲';
+
+      // 实时同步切歌后的标题更新与滚动计算
+      const currentRaw = document.title || '未知视频/曲目';
+      const currentClean = cleanPageTitle(currentRaw);
+      if (currentClean && currentClean !== lastKnownTitle && trackTitleText) {
+        lastKnownTitle = currentClean;
+        trackTitleText.textContent = currentClean;
+        if (trackTitleDup) trackTitleDup.textContent = currentClean;
+        if (titleWrap) titleWrap.title = currentClean;
+        if (updateTitleMarquee) updateTitleMarquee();
+      }
+    };
+
+    playToggleBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const v = musicCinema ? musicCinema.video : video;
+      if (v) {
+        if (v.paused) {
+          v.play().catch(() => {});
+        } else {
+          v.pause();
+        }
+        syncUIStatus();
+      }
+    });
+
+    const syncProgressTimer = setInterval(syncUIStatus, 300);
+    syncUIStatus();
+
+    // 组装内容单列与舞台
+    columnEl.appendChild(artworkWrap);
+    columnEl.appendChild(metadataEl);
+    columnEl.appendChild(scrubberWrap);
+    columnEl.appendChild(controlsRow);
 
     const pomodoroBar = createPomodoroBar();
     if (pomodoroBar) {
-      pomodoroBar.style.setProperty('width', `${currentSettings.musicCardWidth}px`, 'important');
+      pomodoroBar.style.setProperty('width', '100%', 'important');
+      columnEl.appendChild(pomodoroBar);
     }
 
-    stageEl.appendChild(clockHeader);
-    stageEl.appendChild(artworkCard);
-    if (pomodoroBar) stageEl.appendChild(pomodoroBar);
-    stageEl.appendChild(controlsCard);
+    stageEl.appendChild(columnEl);
     console.log('[Music Mode] All stage elements added');
+
+    // 右上角关闭按钮 (对应 Apple Music 全屏视图收起按钮)
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'music-close-btn';
+    closeBtn.title = '退出音乐模式 (ESC)';
+    closeBtn.innerHTML =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9.5l6 6 6-6"/></svg>';
+    closeBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      exitMusicMode();
+    });
 
     overlayEl.appendChild(bgBlurEl);
     overlayEl.appendChild(stageEl);
+    overlayEl.appendChild(closeBtn);
 
     // 右下角悬浮番茄钟开关按钮
     const musicPomodoroFab = document.createElement('button');
@@ -1587,20 +1938,26 @@
     // 鼠标在页面/封面卡片上划过与无操作 2.5s 自动柔和隐藏播放器内置控件与番茄钟
     let musicMouseIdleTimer = null;
     const showMusicControls = () => {
+      isUserActive = true;
       overlayEl.classList.add('user-active');
       overlayEl.classList.remove('user-idle');
       stageEl.classList.add('user-active');
       stageEl.classList.remove('user-idle');
       artworkCard.classList.add('user-active');
       artworkCard.classList.remove('user-idle');
+      if (titleTrack && titleTrack.classList.contains('is-marquee')) {
+        titleTrack.classList.add('is-running');
+      }
     };
     const hideMusicControls = () => {
+      isUserActive = false;
       overlayEl.classList.remove('user-active');
       overlayEl.classList.add('user-idle');
       stageEl.classList.remove('user-active');
       stageEl.classList.add('user-idle');
       artworkCard.classList.remove('user-active');
       artworkCard.classList.add('user-idle');
+      // 鼠标静止后不立即终止标题动画，等待当前这一轮完整播放到达开头(animationiteration)后再自然结束
     };
     const handleMusicMouseMove = () => {
       showMusicControls();
@@ -1620,18 +1977,22 @@
       saved,
       overlayEl,
       stageEl,
+      columnEl,
       artworkCard,
-      controlsCard,
+      trackTitleEl: trackTitleText,
+      trackTitleDup,
+      titleTrack,
+      titleWrap,
+      onTitleIteration,
+      updateTitleMarquee,
       pomodoroBar,
-      clockHeader,
       bgBlurEl,
       musicBlurController,
-      clockTimer,
+      radiosityController,
       syncProgressTimer,
       musicMouseIdleTimer,
       handleMusicMouseMove,
-      handleMusicMouseLeave,
-      updateArtworkAspectRatio
+      handleMusicMouseLeave
     };
 
     try {
@@ -1643,6 +2004,9 @@
     ROOT().appendChild(overlayEl);
     console.log('[Music Mode] Overlay appended to DOM');
     console.log('[Music Mode] Music mode initialization complete');
+
+    setTimeout(updateTitleMarquee, 60);
+    window.addEventListener('resize', updateTitleMarquee);
 
     overlayEl.addEventListener('mousemove', handleMusicMouseMove);
     overlayEl.addEventListener('mouseenter', handleMusicMouseMove);
@@ -1664,14 +2028,24 @@
       saved,
       overlayEl,
       artworkCard,
+      titleTrack,
+      onTitleIteration,
+      updateTitleMarquee,
       musicBlurController,
-      clockTimer,
+      radiosityController,
       syncProgressTimer,
       musicMouseIdleTimer,
       handleMusicMouseMove,
-      handleMusicMouseLeave,
-      updateArtworkAspectRatio
+      handleMusicMouseLeave
     } = musicCinema;
+
+    if (titleTrack && onTitleIteration) {
+      titleTrack.removeEventListener('animationiteration', onTitleIteration);
+    }
+
+    if (updateTitleMarquee) {
+      window.removeEventListener('resize', updateTitleMarquee);
+    }
 
     document.documentElement.classList.remove('music-mode-active');
     document.body.classList.remove('music-mode-active');
@@ -1682,9 +2056,8 @@
       musicBlurController.destroy();
     }
 
-    if (video && updateArtworkAspectRatio) {
-      video.removeEventListener('loadedmetadata', updateArtworkAspectRatio);
-      video.removeEventListener('resize', updateArtworkAspectRatio);
+    if (radiosityController) {
+      radiosityController.destroy();
     }
 
     if (overlayEl && handleMusicMouseMove && handleMusicMouseLeave) {
@@ -1700,7 +2073,6 @@
     }
     if (musicMouseIdleTimer) clearTimeout(musicMouseIdleTimer);
 
-    if (clockTimer) clearInterval(clockTimer);
     if (syncProgressTimer) clearInterval(syncProgressTimer);
 
     const isPlayerMoved =
@@ -1806,10 +2178,8 @@
       if (session.musicBlurController) {
         session.musicBlurController.rebindVideo(newVideo);
       }
-      if (session.updateArtworkAspectRatio) {
-        newVideo.addEventListener('loadedmetadata', session.updateArtworkAspectRatio);
-        newVideo.addEventListener('resize', session.updateArtworkAspectRatio);
-        session.updateArtworkAspectRatio();
+      if (session.radiosityController) {
+        session.radiosityController.rebindVideo(newVideo);
       }
       if (!currentSettings.musicStaticCoverEnabled && session.artworkCard) {
         newPlayer.style.setProperty('width', '100%', 'important');
@@ -1825,12 +2195,9 @@
           session.artworkCard.appendChild(newPlayer);
         }
       }
-      if (session.controlsCard) {
-        const titleEl = session.controlsCard.querySelector('.music-track-title');
-        if (titleEl) {
-          const rawTitle = document.title || '未知视频/曲目';
-          titleEl.textContent = rawTitle.replace(/\s*[-_|_—].*$/, '').trim() || rawTitle;
-        }
+      if (session.trackTitleEl) {
+        const rawTitle = document.title || '未知视频/曲目';
+        session.trackTitleEl.textContent = cleanPageTitle(rawTitle);
       }
     }
 
