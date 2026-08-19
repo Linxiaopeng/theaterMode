@@ -1,6 +1,6 @@
 {
   "name": "theater-mode",
-  "version": "2.7.0",
+  "version": "2.8.0",
   "description": "检测到页面有视频播放时显示悬浮按钮，一键进入影院模式，支持快进/回退、快捷键及自定义设置。修复了语法错误、优化了性能、增强了用户体验。",
   "scripts": {
     "build:zip": "mkdir -p dist && zip -r dist/theater-mode-v$npm_package_version.zip . -x '*.git*' -x '*.DS_Store' -x '*.zip' -x 'dist/*' -x 'node_modules/*'",

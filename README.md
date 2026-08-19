@@ -1,6 +1,6 @@
 # 一键影院模式 (Theater Mode Chrome Extension)
 
-[![Version](https://img.shields.io/badge/version-2.7.0-blue.svg)](manifest.json)
+[![Version](https://img.shields.io/badge/version-2.8.0-blue.svg)](manifest.json)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 一个优雅、沉浸式的 Chrome 浏览器扩展。自动检测网页上的视频播放器，提供一键全屏影院模式、Apple Music 美学音乐模式、高精度快捷键操控、BlurHash 算法背景氛围灯光、外挂字幕支持及丰富的外观设置。

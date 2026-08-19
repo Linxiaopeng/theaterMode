@@ -607,6 +607,77 @@ body.music-mode-active {
   overflow: hidden !important;
   user-select: none !important;
   -webkit-user-select: none !important;
+  animation: music-overlay-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes music-overlay-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes music-overlay-out {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes music-stage-in {
+  0% {
+    opacity: 0;
+    transform: translateY(36px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes music-stage-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(120px) scale(0.92);
+  }
+}
+
+@keyframes music-close-btn-out {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.85) translateY(16px);
+  }
+}
+
+/* 退出/向下折叠收起动效 (Apple Music Downward Sheet Collapse) */
+#music-mode-overlay.is-collapsing {
+  pointer-events: none !important;
+  animation: music-overlay-out 0.32s cubic-bezier(0.32, 0.72, 0, 1) forwards !important;
+}
+
+#music-mode-overlay.is-collapsing .music-nowplaying-stage {
+  animation: music-stage-out 0.32s cubic-bezier(0.32, 0.72, 0, 1) forwards !important;
+}
+
+#music-mode-overlay.is-collapsing .music-bg-blur {
+  animation: music-overlay-out 0.32s ease forwards !important;
+}
+
+#music-mode-overlay.is-collapsing .music-close-btn,
+#music-mode-overlay.is-collapsing .music-pomodoro-fab {
+  animation: music-close-btn-out 0.25s cubic-bezier(0.32, 0.72, 0, 1) forwards !important;
 }
 
 .music-bg-blur {
@@ -654,16 +725,19 @@ body.music-mode-active {
   box-sizing: border-box;
   overflow-y: auto;
   scrollbar-width: none;
+  animation: music-stage-in 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
 }
 
 .music-nowplaying-stage::-webkit-scrollbar {
   display: none;
 }
 
-/* 内容单列 (封面 / 元信息 / 进度 / 控制, Apple Music 网格行规格) */
+/* 内容单列 (封面 / 进度 / 控制 / 番茄钟, Apple Music 网格行规格) */
 .music-nowplaying-column {
   display: grid;
-  grid-template-rows: auto 54px 50px 70px 26px;
+  grid-template-rows: auto auto 55px 26px;
+  gap: 14px;
   align-items: center;
   width: 600px;
   max-width: 100%;
@@ -676,8 +750,8 @@ body.music-mode-active {
 .music-artwork-wrap {
   position: relative;
   width: 100%;
-  max-width: min(100%, calc(100vh - 290px));
-  margin: 0 auto 26px auto;
+  max-width: min(100%, calc(100vh - 330px));
+  margin: 0 auto 16px auto;
   aspect-ratio: 1 / 1;
 }
 
@@ -726,26 +800,7 @@ body.music-mode-active {
   position: absolute !important;
 }
 
-/* 2. 元信息行: 标题 / 来源 + 右侧辅助按钮 */
-.music-metadata {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  width: 100%;
-  min-width: 0;
-}
-
-.music-meta-text {
-  min-width: 0;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 3px;
-  overflow: hidden;
-}
-
+/* 2. 标题 / 来源（静止观赏态时于控制行位置居中展示） */
 .music-track-title-wrap {
   width: 100%;
   min-width: 0;
@@ -770,7 +825,7 @@ body.music-mode-active {
   animation-play-state: paused;
 }
 
-/* 由 is-running 类精准控制播放状态，当鼠标静止后保持播放直至完整一轮结束返回起点 */
+/* 由 is-running 类精准控制播放状态，静止观赏态下启动滚动，鼠标活动时暂停 */
 .music-track-title-track.is-marquee.is-running {
   animation-play-state: running;
 }
@@ -818,14 +873,7 @@ body.music-mode-active {
   text-overflow: ellipsis;
 }
 
-.music-accessory {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-/* 元信息行右侧辅助按钮 (字幕 / 模式切换, 28px 圆形半透明无描边背景) */
+/* 辅助按钮 (字幕 / 模式切换, 28px 圆形半透明无描边背景)，分居播放行左右两侧 */
 .music-icon-btn.accessory {
   width: 28px;
   height: 28px;
@@ -835,9 +883,12 @@ body.music-mode-active {
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
   color: rgba(255, 255, 255, 0.88);
-  opacity: 1;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.85);
   box-shadow: none;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s;
+  flex-shrink: 0;
 }
 
 .music-icon-btn.accessory:hover {
@@ -857,7 +908,7 @@ body.music-mode-active {
   height: 14px;
 }
 
-/* 3. 进度区: 顶部全宽滑块 + 底部两端时间 */
+/* 3. 进度区: 时间行 + 滑块（与专辑封面同宽） */
 .music-scrubber-wrap {
   display: flex;
   flex-direction: column;
@@ -874,7 +925,7 @@ body.music-mode-active {
   border-radius: 9999px;
   outline: none;
   cursor: pointer;
-  transition: height 0.2s cubic-bezier(0.16, 1, 0.3, 1), background 0.08s linear;
+  transition: height 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   margin: 0;
   padding: 0;
 }
@@ -924,13 +975,50 @@ body.music-mode-active {
   text-align: right;
 }
 
-/* 4. 播放控制行 (上一首 50px / 播放暂停 55px / 下一首 50px) */
+/* 4. 播放控制行 (辅助按钮分居左右，中间播放三键/标题) */
 .music-controls {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.music-controls-transport {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 48px;
   width: 100%;
+  opacity: 0;
+  transform: translateY(4px);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.music-controls-title {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  width: 100%;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.music-controls-title .music-track-title-wrap {
+  text-align: center;
+}
+
+.music-controls-title .music-track-sub {
+  max-width: 100%;
+  text-align: center;
 }
 
 .music-icon-btn {
@@ -1335,55 +1423,10 @@ body.music-mode-active .cinema-ctrl-btn svg {
 }
 
 /* ==========================================================================
-   🎵 音乐模式 (Apple Music 正在播放美学) 右下角悬浮番茄钟开关与静止隐显
+   🎵 音乐模式 (Apple Music 正在播放美学) 右下角悬浮番茄钟开关（隐藏入口保持极简）
    ========================================================================== */
 .music-pomodoro-fab {
-  position: fixed;
-  bottom: 32px;
-  right: 32px;
-  z-index: 2147483647;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-  font-family: var(--cinema-font-sans);
-  font-size: 13px;
-  font-weight: 600;
-  padding: 8px 16px;
-  border-radius: 9999px;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  cursor: pointer;
-  user-select: none;
-  -webkit-user-select: none;
-  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.music-pomodoro-fab:hover {
-  background: rgba(255, 255, 255, 0.25);
-  border-color: rgba(255, 255, 255, 0.35);
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35), inset 0 1px 0 0 rgba(255, 255, 255, 0.4);
-}
-
-.music-pomodoro-fab:active {
-  transform: translateY(0) scale(0.96);
-}
-
-/* 鼠标活动时自动平滑淡入右下角按钮与番茄钟卡片 */
-#music-mode-overlay.user-active .music-pomodoro-fab,
-.music-nowplaying-stage.user-active .music-pomodoro-fab,
-.music-pomodoro-fab:hover {
-  opacity: 1 !important;
-  visibility: visible !important;
-  pointer-events: auto !important;
-  transform: translateY(0) scale(1) !important;
+  display: none !important;
 }
 
 /* 鼠标静止 2.5 秒后自动隐藏番茄钟卡片与悬浮按钮 */
@@ -1404,6 +1447,34 @@ body.music-mode-active .cinema-pomodoro-bar:hover {
 
 body.music-mode-active .cinema-pomodoro-bar.hidden {
   display: none !important;
+}
+
+/* 鼠标活动时三键显示、标题隐藏 */
+.music-nowplaying-stage.user-active .music-controls-transport {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.music-nowplaying-stage.user-active .music-controls-title {
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+}
+
+/* 辅助按钮在活动态显现，静止态平滑淡出 */
+.music-nowplaying-stage.user-active .music-controls .music-icon-btn.accessory {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+.music-nowplaying-stage.user-active .music-controls .music-icon-btn.accessory:hover {
+  transform: scale(1.06);
+}
+
+.music-nowplaying-stage.user-active .music-controls .music-icon-btn.accessory:active {
+  transform: scale(0.92);
 }
 
 
