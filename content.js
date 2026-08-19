@@ -1605,21 +1605,47 @@
     const trackTitleText = document.createElement('span');
     trackTitleText.className = 'music-track-title-text';
     const rawTitle = document.title || '未知视频/曲目';
-    const cleanTitle = cleanPageTitle(rawTitle);
-    trackTitleText.textContent = cleanTitle;
+    const domContext =
+      typeof MusicMetadataParser !== 'undefined'
+        ? MusicMetadataParser.extractDOMContext()
+        : { mainTitle: rawTitle, partTitle: '', author: '' };
+
+    const parsedInitial =
+      typeof MusicMetadataParser !== 'undefined'
+        ? MusicMetadataParser.parse(rawTitle, domContext)
+        : {
+            queryTitle: cleanPageTitle(rawTitle),
+            queryArtist: '',
+            queryAlbum: '',
+            cleanFallbackTitle: cleanPageTitle(rawTitle)
+          };
+
+    const initialCleanTitle =
+      parsedInitial.queryTitle || parsedInitial.cleanFallbackTitle || cleanPageTitle(rawTitle);
+    trackTitleText.textContent = initialCleanTitle;
 
     const trackTitleDup = document.createElement('span');
     trackTitleDup.className = 'music-track-title-text music-track-title-dup';
-    trackTitleDup.textContent = cleanTitle;
+    trackTitleDup.textContent = initialCleanTitle;
 
     titleTrack.appendChild(trackTitleText);
     titleTrack.appendChild(trackTitleDup);
     titleWrap.appendChild(titleTrack);
-    titleWrap.title = cleanTitle;
+    titleWrap.title = initialCleanTitle;
 
+    const defaultHostSub = window.location.hostname.replace('www.', '');
     const trackSub = document.createElement('div');
     trackSub.className = 'music-track-sub';
-    trackSub.textContent = window.location.hostname.replace('www.', '');
+    if (parsedInitial.isAlbumCollection) {
+      trackSub.textContent = parsedInitial.queryArtist || defaultHostSub;
+      trackSub.title = `艺术家: ${parsedInitial.queryArtist || '未知'} | 专辑: ${parsedInitial.queryAlbum}`;
+    } else {
+      trackSub.textContent = parsedInitial.queryArtist
+        ? parsedInitial.queryAlbum
+          ? `${parsedInitial.queryArtist} — ${parsedInitial.queryAlbum}`
+          : parsedInitial.queryArtist
+        : defaultHostSub;
+    }
 
     let isUserActive = false;
 
@@ -1647,6 +1673,114 @@
         titleTrack.style.setProperty('--marquee-duration', `${duration}s`);
       }
     };
+
+    // 联网检索高精音乐元数据 (歌名、艺术家、专辑名称、专辑封面)
+    const fallbackOnlineCover = () => {
+      if (artworkCard) {
+        const existingCover = artworkCard.querySelector('.music-artwork-online-cover');
+        if (existingCover) {
+          existingCover.classList.remove('is-loaded');
+          setTimeout(() => {
+            if (existingCover && existingCover.parentNode) {
+              existingCover.remove();
+            }
+          }, 450);
+        }
+      }
+      if (radiosityController && radiosityController.clearCustomImageSource) {
+        radiosityController.clearCustomImageSource();
+      }
+      if (musicBlurController && musicBlurController.clearCustomImageSource) {
+        musicBlurController.clearCustomImageSource();
+      }
+    };
+
+    const loadOnlineMetadata = (currentRawTitle, explicitContext = null) => {
+      if (typeof MusicMetadataService === 'undefined' || typeof MusicMetadataParser === 'undefined')
+        return;
+      const ctx = explicitContext || MusicMetadataParser.extractDOMContext();
+      const parsed = MusicMetadataParser.parse(currentRawTitle, ctx);
+      MusicMetadataService.fetchMetadata(parsed)
+        .then(meta => {
+          if (!meta || !musicCinema || musicCinema.video !== video) {
+            fallbackOnlineCover();
+            return;
+          }
+
+          // 1. 更新歌曲/专辑标题与跑马灯
+          const displayTitle = meta.title || meta.album;
+          if (displayTitle && trackTitleText) {
+            trackTitleText.textContent = displayTitle;
+            if (trackTitleDup) trackTitleDup.textContent = displayTitle;
+            if (titleWrap)
+              titleWrap.title = `${displayTitle}${meta.artist ? ' - ' + meta.artist : ''}`;
+          }
+
+          // 2. 更新副标题 (单曲显示 艺术家 — 专辑名称 或 艺术家；专辑合集纯粹呈现 艺术家)
+          if (trackSub) {
+            if (meta.isAlbumCollection) {
+              trackSub.textContent = meta.artist || defaultHostSub;
+              trackSub.title = `艺术家: ${meta.artist} | 专辑: ${meta.album || displayTitle}`;
+            } else if (meta.artist && meta.album) {
+              trackSub.textContent = `${meta.artist} — ${meta.album}`;
+              trackSub.title = `艺术家: ${meta.artist} | 专辑: ${meta.album}`;
+            } else if (meta.artist) {
+              trackSub.textContent = meta.artist;
+              trackSub.title = `艺术家: ${meta.artist}`;
+            }
+          }
+
+          // 3. 更新官方高清专辑封面与背景流光
+          if (meta.cover && artworkCard) {
+            let coverImg = artworkCard.querySelector('.music-artwork-online-cover');
+            if (!coverImg) {
+              coverImg = document.createElement('img');
+              coverImg.className = 'music-artwork-online-cover';
+              coverImg.crossOrigin = 'anonymous';
+              artworkCard.appendChild(coverImg);
+            }
+            if (coverImg.src !== meta.cover) {
+              coverImg.classList.remove('is-loaded');
+              coverImg.onload = () => {
+                if (!musicCinema || musicCinema.video !== video) return;
+                coverImg.classList.add('is-loaded');
+                if (radiosityController && radiosityController.setCustomImageSource) {
+                  radiosityController.setCustomImageSource(coverImg);
+                }
+                if (musicBlurController && musicBlurController.setCustomImageSource) {
+                  musicBlurController.setCustomImageSource(coverImg);
+                }
+              };
+              coverImg.onerror = () => {
+                fallbackOnlineCover();
+              };
+              coverImg.src = meta.cover;
+              if (coverImg.complete && coverImg.naturalWidth) {
+                coverImg.onload();
+              }
+            } else if (coverImg.complete && coverImg.naturalWidth) {
+              if (radiosityController && radiosityController.setCustomImageSource) {
+                radiosityController.setCustomImageSource(coverImg);
+              }
+              if (musicBlurController && musicBlurController.setCustomImageSource) {
+                musicBlurController.setCustomImageSource(coverImg);
+              }
+            }
+          } else {
+            fallbackOnlineCover();
+          }
+
+          if (updateTitleMarquee) {
+            setTimeout(updateTitleMarquee, 50);
+          }
+        })
+        .catch(err => {
+          console.warn('[Music Mode] Metadata retrieval fallback:', err);
+          fallbackOnlineCover();
+        });
+    };
+
+    loadOnlineMetadata(rawTitle);
 
     const subBtn = document.createElement('button');
     subBtn.className = 'music-icon-btn accessory';
@@ -1705,6 +1839,16 @@
     timesRow.appendChild(curTimeSpan);
     timesRow.appendChild(durTimeSpan);
 
+    const progressContainer = document.createElement('div');
+    progressContainer.className = 'music-progress-container';
+
+    const progressTrack = document.createElement('div');
+    progressTrack.className = 'music-progress-track';
+
+    const progressFill = document.createElement('div');
+    progressFill.className = 'music-progress-fill';
+    progressTrack.appendChild(progressFill);
+
     const slider = document.createElement('input');
     slider.type = 'range';
     slider.className = 'music-progress-slider';
@@ -1712,14 +1856,17 @@
     slider.max = '100';
     slider.value = '0';
 
+    progressContainer.appendChild(progressTrack);
+    progressContainer.appendChild(slider);
+
     const scrubberWrap = document.createElement('div');
     scrubberWrap.className = 'music-scrubber-wrap';
     scrubberWrap.appendChild(timesRow);
-    scrubberWrap.appendChild(slider);
+    scrubberWrap.appendChild(progressContainer);
 
     const updateSliderBg = val => {
       const pct = typeof val === 'number' ? val : parseFloat(slider.value) || 0;
-      slider.style.background = `linear-gradient(to right, #ffffff ${pct}%, rgba(255, 255, 255, 0.24) ${pct}%)`;
+      progressFill.style.width = `${pct}%`;
     };
 
     let isDraggingSlider = false;
@@ -1867,15 +2014,37 @@
           : '从头重新播放'
         : '未检测到上一曲';
 
-      // 实时同步切歌后的标题更新与滚动计算
+      // 实时同步切歌/分P切换后的标题更新与滚动计算
       const currentRaw = document.title || '未知视频/曲目';
-      const currentClean = cleanPageTitle(currentRaw);
-      if (currentClean && currentClean !== lastKnownTitle && trackTitleText) {
-        lastKnownTitle = currentClean;
-        trackTitleText.textContent = currentClean;
-        if (trackTitleDup) trackTitleDup.textContent = currentClean;
-        if (titleWrap) titleWrap.title = currentClean;
+      const currentCtx =
+        typeof MusicMetadataParser !== 'undefined'
+          ? MusicMetadataParser.extractDOMContext()
+          : { mainTitle: currentRaw, partTitle: '', author: '' };
+      const currentSignature = `${currentRaw}____${currentCtx.partTitle || ''}`;
+
+      if (currentSignature !== lastKnownTitle && trackTitleText) {
+        lastKnownTitle = currentSignature;
+        const currentParsed =
+          typeof MusicMetadataParser !== 'undefined'
+            ? MusicMetadataParser.parse(currentRaw, currentCtx)
+            : { queryTitle: cleanPageTitle(currentRaw) };
+        const displayTitle = currentParsed.queryTitle || cleanPageTitle(currentRaw);
+        trackTitleText.textContent = displayTitle;
+        if (trackTitleDup) trackTitleDup.textContent = displayTitle;
+        if (titleWrap) titleWrap.title = displayTitle;
+        if (trackSub) {
+          if (currentParsed.isAlbumCollection) {
+            trackSub.textContent = currentParsed.queryArtist || defaultHostSub;
+          } else {
+            trackSub.textContent = currentParsed.queryArtist
+              ? currentParsed.queryAlbum
+                ? `${currentParsed.queryArtist} — ${currentParsed.queryAlbum}`
+                : currentParsed.queryArtist
+              : defaultHostSub;
+          }
+        }
         if (updateTitleMarquee) updateTitleMarquee();
+        loadOnlineMetadata(currentRaw, currentCtx);
       }
     };
 
@@ -2146,7 +2315,7 @@
       session.overlayEl.classList.add('is-collapsing');
       session.collapseTimer = setTimeout(() => {
         cleanup();
-      }, 320);
+      }, 360);
     }
   }
 
