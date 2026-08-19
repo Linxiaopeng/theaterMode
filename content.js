@@ -1412,7 +1412,7 @@
       return;
     }
     if (cinema) exitCinema();
-    if (musicCinema) exitMusicMode();
+    if (musicCinema) exitMusicMode(true);
 
     recordWatchHistory(video);
 
@@ -1595,13 +1595,7 @@
       mountLivePlayerToCard();
     }
 
-    // 2. 元信息行: 标题 / 来源 + 右侧辅助按钮 (字幕加载 / 模式切换)
-    const metadataEl = document.createElement('div');
-    metadataEl.className = 'music-metadata';
-
-    const metaText = document.createElement('div');
-    metaText.className = 'music-meta-text';
-
+    // 2. 标题 / 来源（静止观赏态时于控制行位置居中展示）+ 辅助按钮 (字幕加载 / 模式切换)
     const titleWrap = document.createElement('div');
     titleWrap.className = 'music-track-title-wrap';
 
@@ -1627,17 +1621,7 @@
     trackSub.className = 'music-track-sub';
     trackSub.textContent = window.location.hostname.replace('www.', '');
 
-    metaText.appendChild(titleWrap);
-    metaText.appendChild(trackSub);
-
     let isUserActive = false;
-
-    const onTitleIteration = () => {
-      if (!isUserActive && titleTrack) {
-        titleTrack.classList.remove('is-running');
-      }
-    };
-    titleTrack.addEventListener('animationiteration', onTitleIteration);
 
     const updateTitleMarquee = () => {
       if (!trackTitleText || !titleWrap || !titleTrack) return;
@@ -1652,7 +1636,8 @@
       if (textWidth > containerWidth + 2) {
         titleWrap.classList.add('has-overflow');
         titleTrack.classList.add('is-marquee');
-        if (isUserActive) {
+        // 反转逻辑：静止观赏态下标题可见，此时才启动滚动；鼠标活动时暂停
+        if (!isUserActive) {
           titleTrack.classList.add('is-running');
         }
         // 单个单元宽度（文字宽 + 48px 无缝衔接间隔）
@@ -1662,9 +1647,6 @@
         titleTrack.style.setProperty('--marquee-duration', `${duration}s`);
       }
     };
-
-    const accessoryBox = document.createElement('div');
-    accessoryBox.className = 'music-accessory';
 
     const subBtn = document.createElement('button');
     subBtn.className = 'music-icon-btn accessory';
@@ -1704,27 +1686,11 @@
     modeBtn.addEventListener('click', e => {
       e.stopPropagation();
       const v = video;
-      exitMusicMode();
+      exitMusicMode(true);
       enterCinema(v);
     });
 
-    accessoryBox.appendChild(subBtn);
-    accessoryBox.appendChild(modeBtn);
-    metadataEl.appendChild(metaText);
-    metadataEl.appendChild(accessoryBox);
-    console.log('[Music Mode] Metadata row element created');
-
-    // 3. 进度区: 顶部全宽滑块 + 底部两端时间 (已过时间 | 剩余时间)
-    const scrubberWrap = document.createElement('div');
-    scrubberWrap.className = 'music-scrubber-wrap';
-
-    const slider = document.createElement('input');
-    slider.type = 'range';
-    slider.className = 'music-progress-slider';
-    slider.min = '0';
-    slider.max = '100';
-    slider.value = '0';
-
+    // 3. 进度区: 时间行 + 滑块（与专辑封面同宽）
     const timesRow = document.createElement('div');
     timesRow.className = 'music-time-row';
 
@@ -1739,26 +1705,43 @@
     timesRow.appendChild(curTimeSpan);
     timesRow.appendChild(durTimeSpan);
 
-    scrubberWrap.appendChild(slider);
-    scrubberWrap.appendChild(timesRow);
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.className = 'music-progress-slider';
+    slider.min = '0';
+    slider.max = '100';
+    slider.value = '0';
 
-    const updateSliderBg = () => {
-      const val = parseFloat(slider.value) || 0;
-      slider.style.background = `linear-gradient(to right, #ffffff ${val}%, rgba(255, 255, 255, 0.24) ${val}%)`;
+    const scrubberWrap = document.createElement('div');
+    scrubberWrap.className = 'music-scrubber-wrap';
+    scrubberWrap.appendChild(timesRow);
+    scrubberWrap.appendChild(slider);
+
+    const updateSliderBg = val => {
+      const pct = typeof val === 'number' ? val : parseFloat(slider.value) || 0;
+      slider.style.background = `linear-gradient(to right, #ffffff ${pct}%, rgba(255, 255, 255, 0.24) ${pct}%)`;
     };
 
     let isDraggingSlider = false;
-    slider.addEventListener('mousedown', () => {
+    let lastRenderedTimeSec = -1;
+
+    const onSliderDragStart = () => {
       isDraggingSlider = true;
-    });
-    slider.addEventListener('mouseup', () => {
+    };
+    const onSliderDragEnd = () => {
       isDraggingSlider = false;
       const v = musicCinema ? musicCinema.video : video;
       if (v && !isNaN(v.duration)) {
         v.currentTime = (parseFloat(slider.value) / 100) * v.duration;
       }
+      lastRenderedTimeSec = -1;
       updateSliderBg();
-    });
+    };
+
+    slider.addEventListener('mousedown', onSliderDragStart);
+    slider.addEventListener('mouseup', onSliderDragEnd);
+    slider.addEventListener('touchstart', onSliderDragStart, { passive: true });
+    slider.addEventListener('touchend', onSliderDragEnd);
     slider.addEventListener('input', () => {
       const v = musicCinema ? musicCinema.video : video;
       if (v && !isNaN(v.duration)) {
@@ -1769,9 +1752,13 @@
       updateSliderBg();
     });
 
-    // 4. 播放控制行: 上一首 / 播放暂停 / 下一首 (Apple Music 经典三键布局)
+    // 4. 播放控制行: 辅助按钮分居左右，中间播放三键 / 标题（静止时）
+    //    鼠标移动时显示三键；静止时三键隐藏，于原位置居中展示主副标题
     const controlsRow = document.createElement('div');
     controlsRow.className = 'music-controls';
+
+    const transportEl = document.createElement('div');
+    transportEl.className = 'music-controls-transport';
 
     const prevBtn = document.createElement('button');
     prevBtn.className = 'music-icon-btn prev';
@@ -1812,20 +1799,56 @@
       }
     });
 
-    controlsRow.appendChild(prevBtn);
-    controlsRow.appendChild(playToggleBtn);
-    controlsRow.appendChild(nextBtn);
+    transportEl.appendChild(prevBtn);
+    transportEl.appendChild(playToggleBtn);
+    transportEl.appendChild(nextBtn);
+
+    // 静止观赏态标题层（与三键同位置互斥切换）
+    const controlsTitleEl = document.createElement('div');
+    controlsTitleEl.className = 'music-controls-title';
+    controlsTitleEl.appendChild(titleWrap);
+    controlsTitleEl.appendChild(trackSub);
+
+    controlsRow.appendChild(subBtn);
+    controlsRow.appendChild(transportEl);
+    controlsRow.appendChild(modeBtn);
+    controlsRow.appendChild(controlsTitleEl);
+
+    // 满帧动力学进度渲染循环 (requestAnimationFrame)
+    const startProgressLoop = () => {
+      if (musicCinema && musicCinema.progressRafId) {
+        cancelAnimationFrame(musicCinema.progressRafId);
+      }
+      const loop = () => {
+        if (!musicCinema || musicCinema.isExiting) return;
+        const v = musicCinema.video || video;
+        if (v && !isDraggingSlider && !isNaN(v.duration) && v.duration > 0) {
+          const cur = v.currentTime;
+          const dur = v.duration;
+          const pct = Math.max(0, Math.min(100, (cur / dur) * 100));
+          slider.value = pct;
+          updateSliderBg(pct);
+
+          const curSecFloor = Math.floor(cur);
+          if (curSecFloor !== lastRenderedTimeSec) {
+            lastRenderedTimeSec = curSecFloor;
+            curTimeSpan.textContent = formatSec(cur);
+            durTimeSpan.textContent = `-${formatSec(dur - cur)}`;
+          }
+        }
+        if (musicCinema) {
+          musicCinema.progressRafId = requestAnimationFrame(loop);
+        }
+      };
+      if (musicCinema) {
+        musicCinema.progressRafId = requestAnimationFrame(loop);
+      }
+    };
 
     let lastKnownTitle = '';
     const syncUIStatus = () => {
       const v = musicCinema ? musicCinema.video : video;
       if (!v) return;
-      if (!isNaN(v.duration) && v.duration > 0 && !isDraggingSlider) {
-        slider.value = (v.currentTime / v.duration) * 100;
-        curTimeSpan.textContent = formatSec(v.currentTime);
-        durTimeSpan.textContent = `-${formatSec(v.duration - v.currentTime)}`;
-        updateSliderBg();
-      }
 
       playToggleBtn.title = v.paused ? '播放' : '暂停';
       playToggleBtn.innerHTML = v.paused
@@ -1876,7 +1899,6 @@
 
     // 组装内容单列与舞台
     columnEl.appendChild(artworkWrap);
-    columnEl.appendChild(metadataEl);
     columnEl.appendChild(scrubberWrap);
     columnEl.appendChild(controlsRow);
 
@@ -1889,10 +1911,10 @@
     stageEl.appendChild(columnEl);
     console.log('[Music Mode] All stage elements added');
 
-    // 右上角关闭按钮 (对应 Apple Music 全屏视图收起按钮)
+    // 右上角关闭/收起按钮 (对应 Apple Music 全屏视图收起按钮)
     const closeBtn = document.createElement('button');
     closeBtn.className = 'music-close-btn';
-    closeBtn.title = '退出音乐模式 (ESC)';
+    closeBtn.title = '收起音乐模式 (ESC)';
     closeBtn.innerHTML =
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9.5l6 6 6-6"/></svg>';
     closeBtn.addEventListener('click', e => {
@@ -1932,8 +1954,9 @@
       stageEl.classList.remove('user-idle');
       artworkCard.classList.add('user-active');
       artworkCard.classList.remove('user-idle');
-      if (titleTrack && titleTrack.classList.contains('is-marquee')) {
-        titleTrack.classList.add('is-running');
+      // 鼠标活动时标题隐藏，暂停无缝滚动
+      if (titleTrack) {
+        titleTrack.classList.remove('is-running');
       }
     };
     const hideMusicControls = () => {
@@ -1944,14 +1967,17 @@
       stageEl.classList.add('user-idle');
       artworkCard.classList.remove('user-active');
       artworkCard.classList.add('user-idle');
-      // 鼠标静止后不立即终止标题动画，等待当前这一轮完整播放到达开头(animationiteration)后再自然结束
+      // 静止观赏态下标题可见，若标题溢出则启动无缝滚动
+      if (titleTrack && titleTrack.classList.contains('is-marquee')) {
+        titleTrack.classList.add('is-running');
+      }
     };
     const handleMusicMouseMove = () => {
       showMusicControls();
       if (musicMouseIdleTimer) clearTimeout(musicMouseIdleTimer);
       musicMouseIdleTimer = setTimeout(() => {
         hideMusicControls();
-      }, 2500);
+      }, 3500);
     };
     const handleMusicMouseLeave = () => {
       if (musicMouseIdleTimer) clearTimeout(musicMouseIdleTimer);
@@ -1970,13 +1996,13 @@
       trackTitleDup,
       titleTrack,
       titleWrap,
-      onTitleIteration,
       updateTitleMarquee,
       pomodoroBar,
       bgBlurEl,
       musicBlurController,
       radiosityController,
       syncProgressTimer,
+      progressRafId: null,
       musicMouseIdleTimer,
       handleMusicMouseMove,
       handleMusicMouseLeave
@@ -1991,6 +2017,8 @@
     ROOT().appendChild(overlayEl);
     console.log('[Music Mode] Overlay appended to DOM');
     console.log('[Music Mode] Music mode initialization complete');
+
+    startProgressLoop();
 
     setTimeout(updateTitleMarquee, 60);
     window.addEventListener('resize', updateTitleMarquee);
@@ -2007,102 +2035,119 @@
     setButtonVisible(false);
   }
 
-  function exitMusicMode() {
+  function exitMusicMode(immediate = false) {
     if (!musicCinema) return;
-    const {
-      video,
-      player,
-      saved,
-      overlayEl,
-      artworkCard,
-      titleTrack,
-      onTitleIteration,
-      updateTitleMarquee,
-      musicBlurController,
-      radiosityController,
-      syncProgressTimer,
-      musicMouseIdleTimer,
-      handleMusicMouseMove,
-      handleMusicMouseLeave
-    } = musicCinema;
+    if (musicCinema.isExiting && !immediate) return;
 
-    if (titleTrack && onTitleIteration) {
-      titleTrack.removeEventListener('animationiteration', onTitleIteration);
-    }
+    const session = musicCinema;
 
-    if (updateTitleMarquee) {
-      window.removeEventListener('resize', updateTitleMarquee);
-    }
-
-    document.documentElement.classList.remove('music-mode-active');
-    document.body.classList.remove('music-mode-active');
-    document.documentElement.classList.remove('clean-player-active');
-    document.body.classList.remove('clean-player-active');
-
-    if (musicBlurController) {
-      musicBlurController.destroy();
-    }
-
-    if (radiosityController) {
-      radiosityController.destroy();
-    }
-
-    if (overlayEl && handleMusicMouseMove && handleMusicMouseLeave) {
-      overlayEl.removeEventListener('mousemove', handleMusicMouseMove);
-      overlayEl.removeEventListener('mouseenter', handleMusicMouseMove);
-      overlayEl.removeEventListener('mouseleave', handleMusicMouseLeave);
-    }
-
-    if (artworkCard && handleMusicMouseMove && handleMusicMouseLeave) {
-      artworkCard.removeEventListener('mousemove', handleMusicMouseMove);
-      artworkCard.removeEventListener('mouseenter', handleMusicMouseMove);
-      artworkCard.removeEventListener('mouseleave', handleMusicMouseLeave);
-    }
-    if (musicMouseIdleTimer) clearTimeout(musicMouseIdleTimer);
-
-    if (syncProgressTimer) clearInterval(syncProgressTimer);
-
-    const isPlayerMoved =
-      saved &&
-      (saved.playerMoved || (player && player.parentNode && player.parentNode !== saved.parent));
-    if (isPlayerMoved && player && saved) {
-      if (player.parentNode) {
-        player.parentNode.removeChild(player);
+    const cleanup = () => {
+      if (session.collapseTimer) {
+        clearTimeout(session.collapseTimer);
+        session.collapseTimer = null;
       }
-      if (saved.playerStyle != null) {
-        player.setAttribute('style', saved.playerStyle);
-      } else {
-        player.removeAttribute('style');
+
+      const {
+        video,
+        player,
+        saved,
+        overlayEl,
+        artworkCard,
+        updateTitleMarquee,
+        musicBlurController,
+        radiosityController,
+        syncProgressTimer,
+        musicMouseIdleTimer,
+        handleMusicMouseMove,
+        handleMusicMouseLeave
+      } = session;
+
+      if (updateTitleMarquee) {
+        window.removeEventListener('resize', updateTitleMarquee);
       }
-      if (saved.videoStyle != null) {
-        video.setAttribute('style', saved.videoStyle);
-      } else {
-        video.removeAttribute('style');
+
+      document.documentElement.classList.remove('music-mode-active');
+      document.body.classList.remove('music-mode-active');
+      document.documentElement.classList.remove('clean-player-active');
+      document.body.classList.remove('clean-player-active');
+
+      if (musicBlurController) {
+        musicBlurController.destroy();
       }
-      if (saved.parent) {
-        if (saved.next && saved.next.parentNode === saved.parent) {
-          saved.parent.insertBefore(player, saved.next);
+
+      if (radiosityController) {
+        radiosityController.destroy();
+      }
+
+      if (overlayEl && handleMusicMouseMove && handleMusicMouseLeave) {
+        overlayEl.removeEventListener('mousemove', handleMusicMouseMove);
+        overlayEl.removeEventListener('mouseenter', handleMusicMouseMove);
+        overlayEl.removeEventListener('mouseleave', handleMusicMouseLeave);
+      }
+
+      if (artworkCard && handleMusicMouseMove && handleMusicMouseLeave) {
+        artworkCard.removeEventListener('mousemove', handleMusicMouseMove);
+        artworkCard.removeEventListener('mouseenter', handleMusicMouseMove);
+        artworkCard.removeEventListener('mouseleave', handleMusicMouseLeave);
+      }
+      if (musicMouseIdleTimer) clearTimeout(musicMouseIdleTimer);
+
+      if (session.progressRafId) {
+        cancelAnimationFrame(session.progressRafId);
+        session.progressRafId = null;
+      }
+      if (syncProgressTimer) clearInterval(syncProgressTimer);
+
+      const isPlayerMoved =
+        saved &&
+        (saved.playerMoved || (player && player.parentNode && player.parentNode !== saved.parent));
+      if (isPlayerMoved && player && saved) {
+        if (player.parentNode) {
+          player.parentNode.removeChild(player);
+        }
+        if (saved.playerStyle != null) {
+          player.setAttribute('style', saved.playerStyle);
         } else {
-          saved.parent.appendChild(player);
+          player.removeAttribute('style');
+        }
+        if (saved.videoStyle != null) {
+          video.setAttribute('style', saved.videoStyle);
+        } else {
+          video.removeAttribute('style');
+        }
+        if (saved.parent) {
+          if (saved.next && saved.next.parentNode === saved.parent) {
+            saved.parent.insertBefore(player, saved.next);
+          } else {
+            saved.parent.appendChild(player);
+          }
         }
       }
-    }
 
-    if (overlayEl) overlayEl.remove();
-    if (pomodoroBarEl) pomodoroBarEl = null;
+      if (overlayEl) overlayEl.remove();
+      if (pomodoroBarEl) pomodoroBarEl = null;
 
-    musicCinema = null;
-    console.log('[Exit Music Mode] musicCinema set to null');
-    updateMusicModeSettings();
-    if (keydownListener) {
-      document.removeEventListener('keydown', keydownListener);
-      keydownListener = null;
+      if (musicCinema === session) {
+        musicCinema = null;
+      }
+      console.log('[Exit Music Mode] musicCinema set to null');
+      updateMusicModeSettings();
+      // 延迟调用 updateButton，确保视频状态已更新
+      setTimeout(() => {
+        console.log('[Exit Music Mode] Calling updateButton() with delay');
+        updateButton();
+      }, 100);
+    };
+
+    if (immediate || !session.overlayEl) {
+      cleanup();
+    } else {
+      session.isExiting = true;
+      session.overlayEl.classList.add('is-collapsing');
+      session.collapseTimer = setTimeout(() => {
+        cleanup();
+      }, 320);
     }
-    // 延迟调用 updateButton，确保视频状态已更新
-    setTimeout(() => {
-      console.log('[Exit Music Mode] Calling updateButton() with delay');
-      updateButton();
-    }, 100);
   }
 
   /* ---------- 状态刷新与自愈恢复 ---------- */
@@ -2226,7 +2271,7 @@
           musicCinema.disconnectCount = (musicCinema.disconnectCount || 0) + 1;
           if (musicCinema.disconnectCount >= 3) {
             console.warn('[Self-Healing] Music video lost for 3 checks while visible. Exiting...');
-            exitMusicMode();
+            exitMusicMode(true);
           }
         }
       } else {
