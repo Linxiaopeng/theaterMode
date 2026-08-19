@@ -1764,7 +1764,6 @@
             if (!coverImg) {
               coverImg = document.createElement('img');
               coverImg.className = 'music-artwork-online-cover';
-              coverImg.crossOrigin = 'anonymous';
               artworkCard.appendChild(coverImg);
             }
             if (coverImg.src !== meta.cover) {
@@ -1780,13 +1779,22 @@
                 }
               };
               coverImg.onerror = () => {
-                fallbackOnlineCover();
+                // 若由于 crossOrigin 策略被拦截，剥离跨域限制直接作为普通图片展示
+                if (coverImg.crossOrigin) {
+                  coverImg.removeAttribute('crossorigin');
+                  coverImg.src = meta.cover;
+                } else {
+                  console.warn('[Music Mode] Failed to load cover image:', meta.cover);
+                  fallbackOnlineCover();
+                }
               };
+              coverImg.crossOrigin = 'anonymous';
               coverImg.src = meta.cover;
               if (coverImg.complete && coverImg.naturalWidth) {
                 coverImg.onload();
               }
             } else if (coverImg.complete && coverImg.naturalWidth) {
+              coverImg.classList.add('is-loaded');
               if (radiosityController && radiosityController.setCustomImageSource) {
                 radiosityController.setCustomImageSource(coverImg);
               }
@@ -1809,6 +1817,16 @@
     };
 
     loadOnlineMetadata(rawTitle);
+
+    // YouTube 等单页应用常在初次渲染后异步加载结构化信息，错峰检测二次自愈
+    setTimeout(() => {
+      if (musicCinema && musicCinema.video === video) {
+        const ctx = MusicMetadataParser.extractDOMContext();
+        if (ctx.ytSong || ctx.musicId || ctx.discoveryTitle) {
+          loadOnlineMetadata(rawTitle, ctx);
+        }
+      }
+    }, 800);
 
     const subBtn = document.createElement('button');
     subBtn.className = 'music-icon-btn accessory';
