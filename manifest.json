@@ -1,9 +1,13 @@
 {
   "manifest_version": 3,
   "name": "一键影院模式",
-  "version": "2.8.0",
+  "version": "2.9.0",
   "description": "检测到页面有视频播放时显示悬浮按钮，一键进入影院模式，支持快进/回退、快捷键及 BlurHash 动态流光背景。",
   "permissions": ["storage"],
+  "host_permissions": ["https://api.lrc.cx/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_popup": "popup.html"
   },
@@ -19,6 +23,7 @@
         "lib/blurhash.js",
         "lib/blur-background.js",
         "lib/shader-gradient.js",
+        "lib/music-metadata.js",
         "subtitles/parser.js",
         "subtitles/renderer.js",
         "content.js"
