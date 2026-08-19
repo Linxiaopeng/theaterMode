@@ -110,8 +110,15 @@
 
   function cleanPageTitle(rawTitle) {
     if (!rawTitle || typeof rawTitle !== 'string') return '未知视频/曲目';
+    if (typeof MusicMetadataParser !== 'undefined' && MusicMetadataParser.stripNoise) {
+      const stripped = MusicMetadataParser.stripNoise(rawTitle);
+      if (stripped) return stripped;
+    }
     let title = rawTitle.trim();
-
+    title = title.replace(
+      /^\s*(?:[([（][^)）]{0,16}(?:消息|播放|暂停|缓冲)[^)）]{0,6}[)）\]]|(?:\(|\[|（)\s*\d+\+?\s*(?:\)|\]|）)|[▶⏸⏯])\s*/gi,
+      ''
+    );
     // 精准剥离常见视频网站的固定后缀（保留原标题中所有曲名、歌手、分集、标签、横杠等）
     // B站: _哔哩哔哩_bilibili, _哔哩哔哩, -哔哩哔哩, _bilibili
     title = title.replace(/\s*([_—\-–]\s*)?(哔哩哔哩(_bilibili)?|bilibili)\s*$/i, '');
@@ -1703,12 +1710,33 @@
       MusicMetadataService.fetchMetadata(parsed)
         .then(meta => {
           if (!meta || !musicCinema || musicCinema.video !== video) {
+            const fallbackTitle =
+              parsed.queryTitle || parsed.cleanFallbackTitle || cleanPageTitle(currentRawTitle);
+            if (trackTitleText) {
+              trackTitleText.textContent = fallbackTitle;
+              if (trackTitleDup) trackTitleDup.textContent = fallbackTitle;
+              if (titleWrap) titleWrap.title = fallbackTitle;
+            }
+            if (trackSub) {
+              if (parsed.isAlbumCollection) {
+                trackSub.textContent = parsed.queryArtist || defaultHostSub;
+              } else {
+                trackSub.textContent = parsed.queryArtist
+                  ? parsed.queryAlbum
+                    ? `${parsed.queryArtist} — ${parsed.queryAlbum}`
+                    : parsed.queryArtist
+                  : defaultHostSub;
+              }
+            }
             fallbackOnlineCover();
+            if (updateTitleMarquee) {
+              setTimeout(updateTitleMarquee, 50);
+            }
             return;
           }
 
           // 1. 更新歌曲/专辑标题与跑马灯
-          const displayTitle = meta.title || meta.album;
+          const displayTitle = meta.title || meta.album || parsed.queryTitle;
           if (displayTitle && trackTitleText) {
             trackTitleText.textContent = displayTitle;
             if (trackTitleDup) trackTitleDup.textContent = displayTitle;
@@ -2020,30 +2048,18 @@
         typeof MusicMetadataParser !== 'undefined'
           ? MusicMetadataParser.extractDOMContext()
           : { mainTitle: currentRaw, partTitle: '', author: '' };
-      const currentSignature = `${currentRaw}____${currentCtx.partTitle || ''}`;
+      const cleanMain =
+        typeof MusicMetadataParser !== 'undefined'
+          ? MusicMetadataParser.stripNoise(currentRaw)
+          : cleanPageTitle(currentRaw);
+      const cleanPart =
+        typeof MusicMetadataParser !== 'undefined'
+          ? MusicMetadataParser.stripNoise(currentCtx.partTitle)
+          : '';
+      const currentSignature = `${cleanMain}____${cleanPart}`;
 
       if (currentSignature !== lastKnownTitle && trackTitleText) {
         lastKnownTitle = currentSignature;
-        const currentParsed =
-          typeof MusicMetadataParser !== 'undefined'
-            ? MusicMetadataParser.parse(currentRaw, currentCtx)
-            : { queryTitle: cleanPageTitle(currentRaw) };
-        const displayTitle = currentParsed.queryTitle || cleanPageTitle(currentRaw);
-        trackTitleText.textContent = displayTitle;
-        if (trackTitleDup) trackTitleDup.textContent = displayTitle;
-        if (titleWrap) titleWrap.title = displayTitle;
-        if (trackSub) {
-          if (currentParsed.isAlbumCollection) {
-            trackSub.textContent = currentParsed.queryArtist || defaultHostSub;
-          } else {
-            trackSub.textContent = currentParsed.queryArtist
-              ? currentParsed.queryAlbum
-                ? `${currentParsed.queryArtist} — ${currentParsed.queryAlbum}`
-                : currentParsed.queryArtist
-              : defaultHostSub;
-          }
-        }
-        if (updateTitleMarquee) updateTitleMarquee();
         loadOnlineMetadata(currentRaw, currentCtx);
       }
     };
@@ -2170,6 +2186,7 @@
       bgBlurEl,
       musicBlurController,
       radiosityController,
+      loadOnlineMetadata,
       syncProgressTimer,
       progressRafId: null,
       musicMouseIdleTimer,
@@ -2396,9 +2413,8 @@
           session.artworkCard.appendChild(newPlayer);
         }
       }
-      if (session.trackTitleEl) {
-        const rawTitle = document.title || '未知视频/曲目';
-        session.trackTitleEl.textContent = cleanPageTitle(rawTitle);
+      if (session.loadOnlineMetadata) {
+        session.loadOnlineMetadata(document.title || '');
       }
     }
 
