@@ -1818,15 +1818,17 @@
 
     loadOnlineMetadata(rawTitle);
 
-    // YouTube 等单页应用常在初次渲染后异步加载结构化信息，错峰检测二次自愈
-    setTimeout(() => {
-      if (musicCinema && musicCinema.video === video) {
-        const ctx = MusicMetadataParser.extractDOMContext();
-        if (ctx.ytSong || ctx.musicId || ctx.discoveryTitle) {
-          loadOnlineMetadata(rawTitle, ctx);
+    // YouTube 等单页应用常在初次渲染后异步加载结构化信息，错峰多级检测自愈
+    [350, 1000].forEach(delay => {
+      setTimeout(() => {
+        if (musicCinema && musicCinema.video === video) {
+          const ctx = MusicMetadataParser.extractDOMContext();
+          if (ctx.ytSong || ctx.musicId || ctx.discoveryTitle) {
+            loadOnlineMetadata(rawTitle, ctx);
+          }
         }
-      }
-    }, 800);
+      }, delay);
+    });
 
     const subBtn = document.createElement('button');
     subBtn.className = 'music-icon-btn accessory';
