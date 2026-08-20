@@ -2368,6 +2368,7 @@
     if (best && isPlayingVideo(best)) {
       ensureButton();
       setButtonVisible(true);
+      autoExpandYouTubeDescription();
     } else {
       setButtonVisible(false);
     }
@@ -2594,6 +2595,55 @@
       cinema.updateStageDimensions();
     }
   });
+
+  /**
+   * 针对 YouTube 视频页面：页面加载与切歌时自动提前展开下方说明栏
+   * 使得 Polymer 音乐版权卡片 (yt-video-attribute-view-model) 与高清封面从打开页面起即加载就绪
+   */
+  function autoExpandYouTubeDescription() {
+    if (typeof location === 'undefined' || !location.hostname.includes('youtube.com')) return;
+
+    const tryExpand = () => {
+      const expandBtn = document.querySelector(
+        '#description-inline-expander #expand, ' +
+          'ytd-text-inline-expander #expand, ' +
+          '#description #expand, ' +
+          '#description-inline-expander [aria-label*="more"], ' +
+          '#description-inline-expander [aria-label*="展开"], ' +
+          'tp-yt-paper-button#expand'
+      );
+      if (expandBtn && typeof expandBtn.click === 'function') {
+        const isCollapsed =
+          document.querySelector(
+            '#description-inline-expander[collapsed], ytd-text-inline-expander[collapsed]'
+          ) || expandBtn.offsetParent !== null;
+        if (isCollapsed) {
+          try {
+            expandBtn.click();
+          } catch (e) {
+            // 忽略非交互异常
+          }
+        }
+      }
+    };
+
+    tryExpand();
+    setTimeout(tryExpand, 600);
+    setTimeout(tryExpand, 1800);
+  }
+
+  if (
+    typeof window !== 'undefined' &&
+    typeof location !== 'undefined' &&
+    location.hostname.includes('youtube.com')
+  ) {
+    window.addEventListener('yt-navigate-finish', () => autoExpandYouTubeDescription(), true);
+    window.addEventListener('yt-page-data-updated', () => autoExpandYouTubeDescription(), true);
+    window.addEventListener('spfdone', () => autoExpandYouTubeDescription(), true);
+    window.addEventListener('popstate', () => autoExpandYouTubeDescription(), true);
+    document.addEventListener('DOMContentLoaded', () => autoExpandYouTubeDescription(), true);
+    autoExpandYouTubeDescription();
+  }
 
   ensureButton();
   updateButton();
