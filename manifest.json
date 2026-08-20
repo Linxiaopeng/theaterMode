@@ -1,10 +1,18 @@
 {
   "manifest_version": 3,
   "name": "一键影院模式",
-  "version": "2.9.0",
+  "version": "3.0.0",
   "description": "检测到页面有视频播放时显示悬浮按钮，一键进入影院模式，支持快进/回退、快捷键及 BlurHash 动态流光背景。",
   "permissions": ["storage"],
-  "host_permissions": ["https://api.lrc.cx/*", "*://*.bilibili.com/*", "*://*.youtube.com/*"],
+  "host_permissions": [
+    "https://api.lrc.cx/*",
+    "https://musicbrainz.org/*",
+    "*://*.bilibili.com/*",
+    "*://*.youtube.com/*",
+    "*://*.music.163.com/*",
+    "*://*.163.com/*",
+    "*://*.126.net/*"
+  ],
   "background": {
     "service_worker": "background.js"
   },

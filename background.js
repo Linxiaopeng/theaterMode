@@ -14,11 +14,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
 
+    const headers = {
+      Accept: 'application/json'
+    };
+
+    if (url.includes('musicbrainz.org')) {
+      headers['User-Agent'] = 'TheaterMode/2.9.0 ( https://github.com/theaterMode )';
+    }
+
     fetch(url, {
       method: 'GET',
-      headers: {
-        Accept: 'application/json'
-      },
+      headers,
       signal: controller.signal
     })
       .then(async res => {

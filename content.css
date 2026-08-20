@@ -54,6 +54,24 @@ body.cinema-mode-active::-webkit-scrollbar {
   z-index: 2147483646 !important;
 }
 
+#cinema-mode-toggle-btn.cinema-float-bar.is-music-site {
+  bottom: 74px !important;
+}
+
+body.has-cinema-overlay #cinema-mode-toggle-btn,
+body.has-music-overlay #cinema-mode-toggle-btn,
+body.music-mode-active #cinema-mode-toggle-btn,
+body.clean-player-active #cinema-mode-toggle-btn,
+html.music-mode-active #cinema-mode-toggle-btn,
+html.cinema-mode-active #cinema-mode-toggle-btn,
+#music-mode-overlay ~ #cinema-mode-toggle-btn,
+#cinema-mode-overlay ~ #cinema-mode-toggle-btn {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 .cinema-float-btn {
   display: inline-flex;
   align-items: center;
@@ -1593,6 +1611,169 @@ body.music-mode-active .cinema-pomodoro-bar.hidden {
 
 .music-nowplaying-stage.user-active .music-controls .music-icon-btn.accessory:active {
   transform: scale(0.92);
+}
+
+/* =========================================================================
+ * 5. 沉浸式动态歌词系统 (Apple Music Style Immersive Synced Lyrics)
+ * ========================================================================= */
+
+/* 舞台双列布局激活态：整体向左优雅平移，右侧展开全高歌词 */
+.music-nowplaying-stage.has-lyrics {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: clamp(36px, 5.5vw, 88px) !important;
+  padding: 40px clamp(24px, 4vw, 80px) !important;
+  max-width: 1560px !important;
+  margin: 0 auto !important;
+  overflow: hidden !important;
+}
+
+.music-nowplaying-stage.has-lyrics .music-nowplaying-column {
+  margin: 0 !important;
+  width: min(440px, 38vw) !important;
+  max-width: 440px !important;
+  flex-shrink: 0 !important;
+  transition: width 0.48s cubic-bezier(0.16, 1, 0.3, 1), transform 0.48s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.music-nowplaying-stage.has-lyrics .music-artwork-wrap {
+  max-width: min(100%, calc(100vh - 320px)) !important;
+  margin-bottom: 12px !important;
+}
+
+/* 歌词容器 */
+.music-lyrics-container {
+  display: none;
+  flex: 1;
+  height: min(720px, calc(100vh - 120px));
+  max-width: 680px;
+  min-width: 280px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  padding: calc(50vh - 140px) 0;
+  box-sizing: border-box;
+  mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.7) 12%, rgba(0, 0, 0, 1) 25%, rgba(0, 0, 0, 1) 75%, rgba(0, 0, 0, 0.7) 88%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.7) 12%, rgba(0, 0, 0, 1) 25%, rgba(0, 0, 0, 1) 75%, rgba(0, 0, 0, 0.7) 88%, transparent 100%);
+  animation: music-lyrics-stage-enter 0.48s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+
+.music-lyrics-container::-webkit-scrollbar {
+  display: none;
+}
+
+.music-nowplaying-stage.has-lyrics .music-lyrics-container {
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes music-lyrics-stage-enter {
+  0% {
+    opacity: 0;
+    transform: translateX(36px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.music-lyrics-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+/* 单行歌词 */
+.music-lyrics-line {
+  font-size: clamp(20px, 2.2vw, 28px);
+  font-weight: 600;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.35);
+  padding: 10px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transform-origin: left center;
+  transition: font-size 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.2s ease;
+  filter: blur(0.4px);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.music-lyrics-line:hover {
+  color: rgba(255, 255, 255, 0.75);
+  background-color: rgba(255, 255, 255, 0.08);
+  filter: blur(0);
+}
+
+/* 当前激活歌词句 (放大高亮与光晕阴影) */
+.music-lyrics-line.is-active {
+  font-size: clamp(25px, 2.7vw, 34px);
+  font-weight: 700;
+  color: #ffffff;
+  opacity: 1;
+  filter: blur(0);
+  transform: scale(1.03);
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* 歌词开关按钮激活高亮态 */
+.music-icon-btn.accessory.music-lyrics-toggle-btn.is-active {
+  background: rgba(255, 255, 255, 0.32) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.25) !important;
+}
+
+/* 空状态 (暂无歌词 / 支持上传) */
+.music-lyrics-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 16px;
+  padding: 60px 20px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.music-lyrics-empty .empty-icon {
+  font-size: 42px;
+  opacity: 0.75;
+}
+
+.music-lyrics-empty .empty-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.music-lyrics-upload-btn {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px 18px;
+  border-radius: 9999px;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.2s ease;
+}
+
+.music-lyrics-upload-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  transform: translateY(-1px);
 }
 
 

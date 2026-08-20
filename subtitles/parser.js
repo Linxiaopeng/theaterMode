@@ -21,15 +21,78 @@ class SubtitleParser {
     const ext = fileName.split('.').pop().toLowerCase();
 
     // 根据扩展名或内容自动识别解析策略
-    if (ext === 'vtt' || fileContent.trim().startsWith('WEBVTT')) {
+    if (
+      ext === 'lrc' ||
+      (fileContent.includes('[') &&
+        fileContent.includes(']') &&
+        /\[\d{1,2}:\d{2}/.test(fileContent))
+    ) {
+      return SubtitleParser.parseLRC(fileContent);
+    } else if (ext === 'vtt' || fileContent.trim().startsWith('WEBVTT')) {
       return SubtitleParser.parseVTT(fileContent);
     } else if (ext === 'srt') {
-      // 默认按 .srt 解析
       return SubtitleParser.parseSRT(fileContent);
     } else {
-      // 不支持的格式，抛出错误提示
-      throw new Error('暂不支持 ' + ext.toUpperCase() + ' 格式，仅支持 .srt 和 .vtt');
+      if (/\[\d{1,2}:\d{2}/.test(fileContent)) {
+        return SubtitleParser.parseLRC(fileContent);
+      }
+      return SubtitleParser.parseSRT(fileContent);
     }
+  }
+
+  /**
+   * 解析 LRC 格式同步歌词
+   * @param {string} content
+   * @returns {Array<{start: number, end: number, time: number, text: string}>}
+   */
+  static parseLRC(content) {
+    if (!content || typeof content !== 'string') return [];
+    const normalized = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    const lines = normalized.split('\n');
+    const cues = [];
+    const timeTagRegex = /\[(\d{1,2}):(\d{1,2}(?:\.\d{1,3})?)\]/g;
+
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line) continue;
+
+      // 忽略 ID 标签 [ti:...], [ar:...], [al:...], [by:...], [offset:...] 等
+      if (/^\[(ti|ar|al|by|offset|length|re|ve|hash):/i.test(line)) continue;
+
+      const timestamps = [];
+      let match;
+      timeTagRegex.lastIndex = 0;
+      while ((match = timeTagRegex.exec(line)) !== null) {
+        const min = parseInt(match[1], 10) || 0;
+        const sec = parseFloat(match[2]) || 0;
+        timestamps.push(min * 60 + sec);
+      }
+
+      if (timestamps.length === 0) continue;
+
+      const text = line.replace(timeTagRegex, '').trim();
+      if (!text) continue;
+
+      for (const time of timestamps) {
+        cues.push({
+          start: time,
+          time,
+          end: time + 6,
+          text
+        });
+      }
+    }
+
+    cues.sort((a, b) => a.start - b.start);
+    for (let i = 0; i < cues.length; i++) {
+      if (i < cues.length - 1) {
+        cues[i].end = cues[i + 1].start;
+      } else {
+        cues[i].end = cues[i].start + 10;
+      }
+    }
+
+    return cues;
   }
 
   /**
